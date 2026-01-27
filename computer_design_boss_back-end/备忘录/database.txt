@@ -1,0 +1,133 @@
+岗位表建表sql
+CREATE TABLE job_post (
+    id              BIGINT AUTO_INCREMENT PRIMARY KEY COMMENT '主键',
+    boss_job_id     VARCHAR(64) NOT NULL COMMENT 'Boss 直聘平台原始ID',
+    title           VARCHAR(200) NOT NULL COMMENT '岗位名称',
+    company_id      BIGINT NOT NULL COMMENT '所属公司（关联 company 表）',
+    city_id         INT NOT NULL COMMENT '城市ID（关联 city 表）',
+    district        VARCHAR(100) DEFAULT NULL COMMENT '区县/商圈',
+    address         VARCHAR(500) DEFAULT NULL COMMENT '详细工作地址',
+    category_id     INT NOT NULL COMMENT '职位类别ID',
+    emp_type        TINYINT NOT NULL DEFAULT 1 COMMENT '1=全职 2=兼职 3=实习',
+    salary_min      DECIMAL(10,2) DEFAULT NULL COMMENT '薪资下限（元/月）',
+    salary_max      DECIMAL(10,2) DEFAULT NULL COMMENT '薪资上限（元/月）',
+    salary_desc     VARCHAR(200) DEFAULT NULL COMMENT '原始薪资文本，如“5-6K”',
+    edu_req         VARCHAR(50) DEFAULT NULL COMMENT '学历要求',
+    exp_req         VARCHAR(50) DEFAULT NULL COMMENT '经验要求',
+    recruiter_id    BIGINT DEFAULT NULL COMMENT '招聘者ID（关联 recruiter 表）',
+    description     TEXT COMMENT '职位描述',
+    require_list    JSON COMMENT '任职要求数组，方便快速搜索',
+    welfare_list    JSON COMMENT '福利标签数组',
+    publish_time    DATETIME DEFAULT NULL COMMENT '发布时间',
+    refresh_time    DATETIME DEFAULT NULL COMMENT '刷新时间',
+    status          TINYINT NOT NULL DEFAULT 1 COMMENT '1=在招 2=下架 3=暂停',
+    created_at      DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at      DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    UNIQUE KEY uk_boss_job_id (boss_job_id),
+    KEY idx_company (company_id),
+    KEY idx_city (city_id),
+    KEY idx_category (category_id),
+    KEY idx_publish (publish_time)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='岗位主表';
+
+
+职位表建表sql
+CREATE TABLE job_category_simple (
+    id              INT AUTO_INCREMENT PRIMARY KEY COMMENT '主键',
+    name            VARCHAR(100) NOT NULL COMMENT '类别名称',
+    intro           TEXT COMMENT '岗位类别简介（长文本）',
+    parent_id       INT DEFAULT NULL COMMENT '上级类别ID',
+    next_category_id INT DEFAULT NULL COMMENT '下一个关联类别ID（用于特殊关联需求）',
+    sort_order      INT NOT NULL DEFAULT 0 COMMENT '排序值',
+    is_active       TINYINT NOT NULL DEFAULT 1 COMMENT '是否启用：1=启用 0=禁用',
+    created_at      DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at      DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+
+    UNIQUE KEY uk_name (name),
+    KEY idx_parent (parent_id),
+    KEY idx_next (next_category_id),
+
+    -- 外键约束
+    CONSTRAINT fk_category_parent FOREIGN KEY (parent_id)
+        REFERENCES job_category_simple(id) ON DELETE SET NULL ON UPDATE CASCADE,
+    CONSTRAINT fk_category_next FOREIGN KEY (next_category_id)
+        REFERENCES job_category_simple(id) ON DELETE SET NULL ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='岗位类别表（扁平结构）';
+
+论坛表建表sql
+CREATE TABLE forum_comments (
+    id              INT AUTO_INCREMENT PRIMARY KEY COMMENT '评论ID（主键）',
+    category_id     INT DEFAULT NULL COMMENT '关联的岗位类别ID',
+    user_id         INT NOT NULL COMMENT '发布评论的用户ID',
+    parent_id       INT DEFAULT NULL COMMENT '回复的父评论ID（自关联）',
+    content         TEXT NOT NULL COMMENT '评论内容',
+    level           INT NOT NULL DEFAULT 1 COMMENT '评论层级：1=一级评论 2=二级回复',
+    sort_order      INT NOT NULL DEFAULT 0 COMMENT '排序值（在同一父评论下）',
+    is_deleted      TINYINT NOT NULL DEFAULT 0 COMMENT '是否删除：1=删除 0=正常',
+    created_at      DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at      DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+
+    -- 唯一索引：用户+内容+父ID（防止重复评论）
+    UNIQUE KEY uk_user_content_parent (user_id, content(100), parent_id),
+
+    -- 普通索引
+    KEY idx_category (category_id),
+    KEY idx_user (user_id),
+    KEY idx_parent (parent_id),
+    KEY idx_created (created_at),
+    KEY idx_category_parent (category_id, parent_id),
+    KEY idx_user_category (user_id, category_id),
+
+    -- 外键约束
+    CONSTRAINT fk_comment_category FOREIGN KEY (category_id)
+        REFERENCES job_category_simple(next_category_id) ON DELETE SET NULL ON UPDATE CASCADE,
+
+    -- 自关联外键（回复的评论）
+    CONSTRAINT fk_comment_parent FOREIGN KEY (parent_id)
+        REFERENCES forum_comments(id) ON DELETE CASCADE ON UPDATE CASCADE,
+
+    -- 用户外键（引用用户表）
+    CONSTRAINT fk_comment_user FOREIGN KEY (user_id)
+        REFERENCES users(id) ON DELETE CASCADE ON UPDATE CASCADE
+
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='论坛评论表';
+
+用户表建表sql
+
+CREATE TABLE sys_user (
+    id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '内部主键（自增，聚簇索引，不对外暴露）',
+    user_id BIGINT UNSIGNED NOT NULL COMMENT '用户业务ID（对外关联键，建议雪花ID，如1143526543212345678）',
+    mobile VARCHAR(20) NOT NULL COMMENT '手机号',
+    email VARCHAR(100) DEFAULT NULL COMMENT '邮箱',
+    password_hash VARCHAR(255) NOT NULL COMMENT '密码哈希值',
+    bio TEXT DEFAULT NULL COMMENT '个人简介',
+    avatar_url VARCHAR(500) DEFAULT NULL COMMENT '头像URL',
+    status TINYINT UNSIGNED NOT NULL DEFAULT 1 COMMENT '账号状态：0-禁用，1-正常，2-未激活，3-锁定',
+    job_status TINYINT UNSIGNED DEFAULT 0 COMMENT '求职状态：0-待业，1-实习中，2-应届求职',
+    real_name VARCHAR(50) DEFAULT NULL COMMENT '真实姓名',
+    gender TINYINT UNSIGNED DEFAULT 0 COMMENT '性别：0-未知，1-男，2-女',
+    birth_date DATE DEFAULT NULL COMMENT '出生日期',
+    education_level VARCHAR(20) DEFAULT NULL COMMENT '学历层次',
+    major VARCHAR(50) DEFAULT NULL COMMENT '专业',
+    enrollment_year YEAR DEFAULT NULL COMMENT '入学年份',
+    graduation_year YEAR DEFAULT NULL COMMENT '毕业年份',
+    register_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '注册时间',
+    last_login_time DATETIME DEFAULT NULL COMMENT '最后登录时间',
+    last_login_ip VARCHAR(50) DEFAULT NULL COMMENT '最后登录IP',
+    last_device_model VARCHAR(100) DEFAULT NULL COMMENT '最近登录设备型号',
+    last_device_time DATETIME DEFAULT NULL COMMENT '最近设备登录时间',
+    last_device_type TINYINT UNSIGNED DEFAULT 0 COMMENT '设备类型：0-未知，1-PC，2-Android，3-iOS，4-小程序',
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '记录创建时间',
+    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '记录更新时间',
+    deleted_at DATETIME DEFAULT NULL COMMENT '软删除时间',
+    is_deleted TINYINT UNSIGNED NOT NULL DEFAULT 0 COMMENT '是否删除：0-否，1-是',
+
+    PRIMARY KEY (id),
+    UNIQUE KEY uk_user_id (user_id),
+    UNIQUE KEY uk_mobile (mobile),
+    UNIQUE KEY uk_email (email),
+    KEY idx_status (status),
+    KEY idx_job_status (job_status)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='用户基础信息表';
+
+简历表建表sql

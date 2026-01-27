@@ -1,0 +1,1142 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flask后端API测试工具</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #f5f7fa;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .status-bar {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+
+        .server-status {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 15px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            flex: 1;
+            margin-right: 15px;
+        }
+
+        .status-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background-color: #4CAF50;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.6; }
+            100% { opacity: 1; }
+        }
+
+        .api-count {
+            padding: 15px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            text-align: center;
+            min-width: 180px;
+        }
+
+        .api-count h3 {
+            color: #6a11cb;
+            margin-bottom: 5px;
+        }
+
+        .main-content {
+            display: flex;
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+
+        .api-list {
+            flex: 1;
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            max-height: 800px;
+            overflow-y: auto;
+        }
+
+        .api-item {
+            padding: 15px;
+            border-left: 4px solid #6a11cb;
+            margin-bottom: 15px;
+            background-color: #f9f9ff;
+            border-radius: 0 8px 8px 0;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .api-item:hover {
+            background-color: #f0f2ff;
+            transform: translateX(5px);
+        }
+
+        .api-item.active {
+            background-color: #e8ebff;
+            border-left-color: #2575fc;
+        }
+
+        .api-method {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            margin-right: 10px;
+            color: white;
+        }
+
+        .get { background-color: #4CAF50; }
+        .post { background-color: #2196F3; }
+
+        .api-path {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .api-desc {
+            font-size: 0.9rem;
+            color: #666;
+        }
+
+        .test-panel {
+            flex: 2;
+            background: white;
+            border-radius: 10px;
+            padding: 25px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        }
+
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .panel-title {
+            font-size: 1.4rem;
+            color: #333;
+        }
+
+        .test-btn {
+            background: linear-gradient(to right, #6a11cb, #2575fc);
+            color: white;
+            border: none;
+            padding: 10px 25px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .test-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(106, 17, 203, 0.3);
+        }
+
+        .test-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .input-section {
+            margin-bottom: 25px;
+        }
+
+        .input-group {
+            margin-bottom: 15px;
+        }
+
+        .input-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #444;
+        }
+
+        .input-field {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 1rem;
+            transition: border 0.3s;
+        }
+
+        .input-field:focus {
+            border-color: #6a11cb;
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(106, 17, 203, 0.1);
+        }
+
+        .result-section {
+            margin-top: 30px;
+        }
+
+        .result-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .result-title {
+            font-size: 1.2rem;
+            color: #333;
+        }
+
+        .result-status {
+            padding: 6px 15px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: bold;
+            color: white;
+        }
+
+        .success { background-color: #4CAF50; }
+        .error { background-color: #f44336; }
+        .pending { background-color: #ff9800; }
+
+        .result-content {
+            background-color: #f8f9fa;
+            border: 1px solid #eee;
+            border-radius: 8px;
+            padding: 20px;
+            min-height: 200px;
+            max-height: 400px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            white-space: pre-wrap;
+        }
+
+        .empty-result {
+            color: #999;
+            text-align: center;
+            padding: 40px 0;
+        }
+
+        .api-categories {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .category-btn {
+            padding: 8px 15px;
+            background-color: #f0f2ff;
+            border: 1px solid #d0d5ff;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            color: #444;
+            transition: all 0.2s;
+        }
+
+        .category-btn.active {
+            background-color: #6a11cb;
+            color: white;
+            border-color: #6a11cb;
+        }
+
+        .log-section {
+            background-color: #1e1e1e;
+            color: #d4d4d4;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 30px;
+            max-height: 200px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 0.85rem;
+        }
+
+        .log-header {
+            color: #4ec9b0;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+
+        .log-item {
+            margin-bottom: 5px;
+            padding-bottom: 5px;
+            border-bottom: 1px solid #333;
+        }
+
+        .log-time {
+            color: #6A9955;
+        }
+
+        .log-message {
+            color: #dcdcaa;
+        }
+
+        .log-error {
+            color: #f44747;
+        }
+
+        footer {
+            text-align: center;
+            padding: 20px;
+            color: #777;
+            font-size: 0.9rem;
+            border-top: 1px solid #eee;
+            margin-top: 30px;
+        }
+
+        @media (max-width: 1024px) {
+            .main-content {
+                flex-direction: column;
+            }
+
+            .api-list {
+                max-height: 400px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .status-bar {
+                flex-direction: column;
+                gap: 15px;
+            }
+
+            .server-status {
+                margin-right: 0;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1><i class="fas fa-server"></i> Flask后端API测试工具</h1>
+            <div class="subtitle">测试您的Flask后端接口，检查API响应和错误状态</div>
+        </header>
+
+        <div class="status-bar">
+            <div class="server-status">
+                <div class="status-indicator"></div>
+                <div>
+                    <div>服务器状态: <strong>运行中</strong></div>
+                    <div>API地址: <strong>http://localhost:5000</strong></div>
+                </div>
+            </div>
+            <div class="api-count">
+                <h3>API总数: 15</h3>
+                <div>已测试: <span id="tested-count">0</span></div>
+            </div>
+        </div>
+
+        <div class="api-categories">
+            <button class="category-btn active" data-category="all">全部API</button>
+            <button class="category-btn" data-category="job">岗位相关</button>
+            <button class="category-btn" data-category="forum">论坛相关</button>
+            <button class="category-btn" data-category="other">其他</button>
+        </div>
+
+        <div class="main-content">
+            <div class="api-list" id="api-list">
+                <!-- API列表将通过JavaScript动态生成 -->
+            </div>
+
+            <div class="test-panel">
+                <div class="panel-header">
+                    <div class="panel-title">API测试面板</div>
+                    <button class="test-btn" id="run-test-btn">运行测试</button>
+                </div>
+
+                <div class="input-section">
+                    <div class="input-group">
+                        <label class="input-label">API路径:</label>
+                        <input type="text" id="api-path" class="input-field" readonly>
+                    </div>
+                    <div class="input-group">
+                        <label class="input-label">请求方法:</label>
+                        <input type="text" id="api-method" class="input-field" readonly>
+                    </div>
+                    <div id="dynamic-inputs">
+                        <!-- 动态输入字段将在这里生成 -->
+                    </div>
+                </div>
+
+                <div class="result-section">
+                    <div class="result-header">
+                        <div class="result-title">测试结果</div>
+                        <div class="result-status pending" id="result-status">等待测试</div>
+                    </div>
+                    <div class="result-content" id="result-content">
+                        <div class="empty-result">选择API并点击"运行测试"查看结果</div>
+                    </div>
+                </div>
+
+                <div class="log-section">
+                    <div class="log-header">请求日志</div>
+                    <div id="request-logs">
+                        <!-- 日志将通过JavaScript动态生成 -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <footer>
+            <p>Flask后端API测试工具 &copy; 2023 | 用于测试和调试后端API接口</p>
+            <p>注意: 此工具仅用于测试目的，确保您的后端服务器正在运行在 http://localhost:5000</p>
+        </footer>
+    </div>
+
+    <script>
+        // API定义
+        const apiEndpoints = [
+            {
+                id: 1,
+                name: "获取全部岗位列表",
+                path: "/api/job/Job_List_all",
+                method: "GET",
+                category: "job",
+                description: "获取全部岗位数据，用于列表展示",
+                inputs: []
+            },
+            {
+                id: 2,
+                name: "获取单类别岗位列表",
+                path: "/api/job/job_lis_one_type",
+                method: "POST",
+                category: "job",
+                description: "基于岗位类别获取岗位列表数据",
+                inputs: [
+                    { name: "category_id", label: "岗位类别ID", type: "text", placeholder: "例如: 1001", required: true }
+                ]
+            },
+            {
+                id: 3,
+                name: "获取双条件岗位列表",
+                path: "/api/job/job_list_two_given",
+                method: "POST",
+                category: "job",
+                description: "基于大类+小类获取岗位数据",
+                inputs: [
+                    { name: "category_id", label: "岗位类别ID", type: "text", placeholder: "例如: 1001", required: true },
+                    { name: "emp_type", label: "工作类型", type: "text", placeholder: "1=全职, 2=兼职, 3=实习", required: true }
+                ]
+            },
+            {
+                id: 4,
+                name: "岗位搜索",
+                path: "/api/job/job_search",
+                method: "POST",
+                category: "job",
+                description: "根据用户输入搜索岗位",
+                inputs: [
+                    { name: "user_input", label: "搜索关键词", type: "text", placeholder: "例如: 开发工程师", required: true }
+                ]
+            },
+            {
+                id: 5,
+                name: "岗位详情",
+                path: "/api/job/job_details",
+                method: "POST",
+                category: "job",
+                description: "获取岗位详情数据",
+                inputs: [
+                    { name: "id", label: "岗位ID", type: "text", placeholder: "岗位的唯一ID", required: true }
+                ]
+            },
+            {
+                id: 6,
+                name: "岗位分类介绍列表",
+                path: "/api/job_intro/job_intro_list",
+                method: "GET",
+                category: "job",
+                description: "查询所有岗位分类",
+                inputs: []
+            },
+            {
+                id: 7,
+                name: "获取所有论坛评论",
+                path: "/api/forum/all_forum_data",
+                method: "GET",
+                category: "forum",
+                description: "查询所有的评论",
+                inputs: []
+            },
+            {
+                id: 8,
+                name: "获取单类别论坛评论",
+                path: "/api/forum/forum_one_category",
+                method: "POST",
+                category: "forum",
+                description: "查询某一岗位分类下的评论",
+                inputs: [
+                    { name: "category_id", label: "岗位分类ID", type: "text", placeholder: "岗位分类ID", required: true }
+                ]
+            },
+            {
+                id: 9,
+                name: "获取所有一级评论",
+                path: "/api/forum/forum_all_first_talk",
+                method: "GET",
+                category: "forum",
+                description: "查询所有一级评论",
+                inputs: []
+            },
+            {
+                id: 10,
+                name: "获取评论回复",
+                path: "/api/forum/forums_back",
+                method: "POST",
+                category: "forum",
+                description: "查询该评论的所有回复（二级评论）",
+                inputs: [
+                    { name: "parent_id", label: "父评论ID", type: "text", placeholder: "被回复评论的ID", required: true }
+                ]
+            },
+            {
+                id: 11,
+                name: "发表新评论",
+                path: "/api/forum/forums_add",
+                method: "POST",
+                category: "forum",
+                description: "发表新的评论",
+                inputs: [
+                    { name: "category_id", label: "岗位分类ID", type: "text", placeholder: "职位分类ID", required: true },
+                    { name: "user_id", label: "用户ID", type: "text", placeholder: "发布评论的用户ID", required: true },
+                    { name: "parent_id", label: "父评论ID", type: "text", placeholder: "所回复的评论ID (可选)", required: false },
+                    { name: "content", label: "评论内容", type: "textarea", placeholder: "评论内容", required: true },
+                    { name: "level", label: "评论层级", type: "text", placeholder: "1=一级评论, 2=二级评论", required: true },
+                    { name: "sort_order", label: "展示层级", type: "text", placeholder: "前端展示层级", required: true }
+                ]
+            },
+            {
+                id: 12,
+                name: "删除评论",
+                path: "/api/forum/forum_delete",
+                method: "POST",
+                category: "forum",
+                description: "删除评论",
+                inputs: [
+                    { name: "id", label: "评论ID", type: "text", placeholder: "被删除评论的ID", required: true }
+                ]
+            },
+            {
+                id: 13,
+                name: "评论计数",
+                path: "/api/forum/forum_count",
+                method: "POST",
+                category: "forum",
+                description: "评论计数工具",
+                inputs: [
+                    { name: "switch", label: "计数类型", type: "text", placeholder: "all/category/back/user", required: true },
+                    { name: "category_id", label: "岗位分类ID", type: "text", placeholder: "岗位分类ID (可选)", required: false },
+                    { name: "parent_id", label: "父评论ID", type: "text", placeholder: "父评论ID (可选)", required: false },
+                    { name: "user_id", label: "用户ID", type: "text", placeholder: "用户ID (可选)", required: false }
+                ]
+            },
+            {
+                id: 14,
+                name: "健康检查",
+                path: "/api/health",
+                method: "GET",
+                category: "other",
+                description: "健康检查接口",
+                inputs: []
+            },
+            {
+                id: 15,
+                name: "测试所有API",
+                path: "all",
+                method: "TEST ALL",
+                category: "other",
+                description: "批量测试所有API接口",
+                inputs: []
+            }
+        ];
+
+        // 全局变量
+        let selectedApi = null;
+        let testResults = {};
+        let requestLogs = [];
+        const baseUrl = "http://localhost:5000";
+
+        // DOM加载完成后初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            initApiList();
+            initCategoryFilters();
+            initTestButton();
+            checkServerStatus();
+        });
+
+        // 初始化API列表
+        function initApiList() {
+            const apiListContainer = document.getElementById('api-list');
+            apiListContainer.innerHTML = '';
+
+            apiEndpoints.forEach(api => {
+                const apiItem = document.createElement('div');
+                apiItem.className = 'api-item';
+                apiItem.dataset.id = api.id;
+                apiItem.dataset.category = api.category;
+
+                apiItem.innerHTML = `
+                    <div>
+                        <span class="api-method ${api.method.toLowerCase()}">${api.method}</span>
+                        <span class="api-path">${api.path}</span>
+                    </div>
+                    <div class="api-desc">${api.name}</div>
+                `;
+
+                apiItem.addEventListener('click', () => selectApi(api));
+                apiListContainer.appendChild(apiItem);
+            });
+
+            // 默认选择第一个API
+            if (apiEndpoints.length > 0) {
+                selectApi(apiEndpoints[0]);
+            }
+        }
+
+        // 初始化分类过滤器
+        function initCategoryFilters() {
+            const categoryBtns = document.querySelectorAll('.category-btn');
+            categoryBtns.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    // 移除所有激活状态
+                    categoryBtns.forEach(b => b.classList.remove('active'));
+                    // 激活当前按钮
+                    this.classList.add('active');
+
+                    // 过滤API列表
+                    const category = this.dataset.category;
+                    filterApiList(category);
+                });
+            });
+        }
+
+        // 过滤API列表
+        function filterApiList(category) {
+            const apiItems = document.querySelectorAll('.api-item');
+
+            apiItems.forEach(item => {
+                if (category === 'all' || item.dataset.category === category) {
+                    item.style.display = 'block';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+        }
+
+        // 选择API
+        function selectApi(api) {
+            // 更新选中状态
+            document.querySelectorAll('.api-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            document.querySelector(`.api-item[data-id="${api.id}"]`).classList.add('active');
+
+            // 更新选中的API
+            selectedApi = api;
+
+            // 更新面板信息
+            document.getElementById('api-path').value = api.path === "all" ? "批量测试所有API" : baseUrl + api.path;
+            document.getElementById('api-method').value = api.method;
+
+            // 更新动态输入字段
+            updateDynamicInputs(api.inputs);
+
+            // 更新测试按钮文本
+            const testBtn = document.getElementById('run-test-btn');
+            if (api.path === "all") {
+                testBtn.textContent = "批量测试所有API";
+            } else {
+                testBtn.textContent = "运行测试";
+            }
+
+            // 显示之前的测试结果（如果有）
+            displayTestResult(api.id);
+        }
+
+        // 更新动态输入字段
+        function updateDynamicInputs(inputs) {
+            const inputsContainer = document.getElementById('dynamic-inputs');
+            inputsContainer.innerHTML = '';
+
+            if (inputs.length === 0) {
+                const noInputsMsg = document.createElement('div');
+                noInputsMsg.className = 'input-group';
+                noInputsMsg.innerHTML = '<p style="color:#666; font-style:italic;">此接口无需输入参数</p>';
+                inputsContainer.appendChild(noInputsMsg);
+                return;
+            }
+
+            inputs.forEach(input => {
+                const inputGroup = document.createElement('div');
+                inputGroup.className = 'input-group';
+
+                let inputElement = '';
+                if (input.type === 'textarea') {
+                    inputElement = `
+                        <textarea
+                            id="input-${input.name}"
+                            class="input-field"
+                            placeholder="${input.placeholder || ''}"
+                            rows="3"
+                            ${input.required ? 'required' : ''}
+                        ></textarea>
+                    `;
+                } else {
+                    inputElement = `
+                        <input
+                            type="${input.type || 'text'}"
+                            id="input-${input.name}"
+                            class="input-field"
+                            placeholder="${input.placeholder || ''}"
+                            ${input.required ? 'required' : ''}
+                        >
+                    `;
+                }
+
+                inputGroup.innerHTML = `
+                    <label class="input-label">${input.label}:</label>
+                    ${inputElement}
+                `;
+
+                inputsContainer.appendChild(inputGroup);
+            });
+        }
+
+        // 初始化测试按钮
+        function initTestButton() {
+            const testBtn = document.getElementById('run-test-btn');
+            testBtn.addEventListener('click', runApiTest);
+        }
+
+        // 运行API测试
+        async function runApiTest() {
+            if (!selectedApi) return;
+
+            // 如果是批量测试
+            if (selectedApi.path === "all") {
+                await runBatchTest();
+                return;
+            }
+
+            // 单个API测试
+            const testBtn = document.getElementById('run-test-btn');
+            testBtn.disabled = true;
+            testBtn.textContent = "测试中...";
+
+            // 更新结果状态
+            updateResultStatus('pending', '测试中...');
+
+            // 收集输入数据
+            const requestData = {};
+            selectedApi.inputs.forEach(input => {
+                const inputElement = document.getElementById(`input-${input.name}`);
+                if (inputElement && inputElement.value.trim() !== '') {
+                    requestData[input.name] = inputElement.value.trim();
+                }
+            });
+
+            // 记录请求日志
+            addRequestLog(`发送 ${selectedApi.method} 请求到 ${selectedApi.path}`, 'info');
+
+            try {
+                const options = {
+                    method: selectedApi.method,
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                };
+
+                if (selectedApi.method === 'POST' && Object.keys(requestData).length > 0) {
+                    options.body = JSON.stringify(requestData);
+                }
+
+                const response = await fetch(baseUrl + selectedApi.path, options);
+                const responseData = await response.json();
+
+                // 存储测试结果
+                testResults[selectedApi.id] = {
+                    status: response.status,
+                    data: responseData,
+                    timestamp: new Date().toLocaleTimeString()
+                };
+
+                // 更新已测试计数
+                updateTestedCount();
+
+                // 显示结果
+                displayTestResult(selectedApi.id);
+
+                // 记录响应日志
+                addRequestLog(`响应状态: ${response.status} ${response.ok ? '成功' : '失败'}`, response.ok ? 'info' : 'error');
+
+                // 更新结果状态
+                if (response.ok) {
+                    updateResultStatus('success', '成功');
+                } else {
+                    updateResultStatus('error', `失败: ${response.status}`);
+                }
+
+            } catch (error) {
+                // 存储错误结果
+                testResults[selectedApi.id] = {
+                    status: 'error',
+                    data: { error: error.message },
+                    timestamp: new Date().toLocaleTimeString()
+                };
+
+                // 显示错误结果
+                displayTestResult(selectedApi.id);
+
+                // 记录错误日志
+                addRequestLog(`请求失败: ${error.message}`, 'error');
+
+                // 更新结果状态
+                updateResultStatus('error', '请求失败');
+            } finally {
+                // 恢复按钮状态
+                testBtn.disabled = false;
+                testBtn.textContent = selectedApi.path === "all" ? "批量测试所有API" : "运行测试";
+            }
+        }
+
+        // 批量测试所有API
+        async function runBatchTest() {
+            const testBtn = document.getElementById('run-test-btn');
+            testBtn.disabled = true;
+            testBtn.textContent = "批量测试中...";
+
+            // 更新结果状态
+            updateResultStatus('pending', '批量测试中...');
+
+            // 清空结果区域
+            document.getElementById('result-content').innerHTML = '<div class="empty-result">批量测试中，请稍候...</div>';
+
+            // 记录批量测试开始
+            addRequestLog('开始批量测试所有API', 'info');
+
+            const results = [];
+            let successCount = 0;
+            let failCount = 0;
+
+            // 排除批量测试自身
+            const apisToTest = apiEndpoints.filter(api => api.path !== "all");
+
+            for (let i = 0; i < apisToTest.length; i++) {
+                const api = apisToTest[i];
+
+                // 记录当前测试
+                addRequestLog(`测试 ${api.method} ${api.path}`, 'info');
+
+                try {
+                    const options = {
+                        method: api.method,
+                        headers: {
+                            'Content-Type': 'application/json'
+                        }
+                    };
+
+                    // 对于POST请求，如果API需要参数，提供示例数据
+                    if (api.method === 'POST') {
+                        const exampleData = {};
+                        api.inputs.forEach(input => {
+                            // 提供示例数据
+                            if (input.name === 'category_id') exampleData[input.name] = '1001';
+                            else if (input.name === 'emp_type') exampleData[input.name] = '1';
+                            else if (input.name === 'user_input') exampleData[input.name] = '开发工程师';
+                            else if (input.name === 'id') exampleData[input.name] = '1';
+                            else if (input.name === 'parent_id') exampleData[input.name] = '1';
+                            else if (input.name === 'user_id') exampleData[input.name] = '1';
+                            else if (input.name === 'content') exampleData[input.name] = '测试评论';
+                            else if (input.name === 'level') exampleData[input.name] = '1';
+                            else if (input.name === 'sort_order') exampleData[input.name] = '1';
+                            else if (input.name === 'switch') exampleData[input.name] = 'all';
+                        });
+
+                        if (Object.keys(exampleData).length > 0) {
+                            options.body = JSON.stringify(exampleData);
+                        }
+                    }
+
+                    const response = await fetch(baseUrl + api.path, options);
+                    const responseData = await response.json();
+
+                    const result = {
+                        api: api.name,
+                        path: api.path,
+                        method: api.method,
+                        status: response.status,
+                        success: response.ok,
+                        timestamp: new Date().toLocaleTimeString()
+                    };
+
+                    results.push(result);
+
+                    if (response.ok) {
+                        successCount++;
+                        addRequestLog(`✓ ${api.path} 测试成功`, 'info');
+                    } else {
+                        failCount++;
+                        addRequestLog(`✗ ${api.path} 测试失败: ${response.status}`, 'error');
+                    }
+
+                    // 存储测试结果
+                    testResults[api.id] = {
+                        status: response.status,
+                        data: responseData,
+                        timestamp: result.timestamp
+                    };
+
+                } catch (error) {
+                    const result = {
+                        api: api.name,
+                        path: api.path,
+                        method: api.method,
+                        status: 'error',
+                        success: false,
+                        error: error.message,
+                        timestamp: new Date().toLocaleTimeString()
+                    };
+
+                    results.push(result);
+                    failCount++;
+
+                    addRequestLog(`✗ ${api.path} 请求失败: ${error.message}`, 'error');
+
+                    // 存储错误结果
+                    testResults[api.id] = {
+                        status: 'error',
+                        data: { error: error.message },
+                        timestamp: result.timestamp
+                    };
+                }
+            }
+
+            // 更新已测试计数
+            updateTestedCount();
+
+            // 显示批量测试结果
+            displayBatchTestResults(results, successCount, failCount);
+
+            // 更新结果状态
+            if (failCount === 0) {
+                updateResultStatus('success', `批量测试完成: ${successCount} 成功, ${failCount} 失败`);
+            } else {
+                updateResultStatus('error', `批量测试完成: ${successCount} 成功, ${failCount} 失败`);
+            }
+
+            // 记录批量测试完成
+            addRequestLog(`批量测试完成: 成功 ${successCount}, 失败 ${failCount}`, 'info');
+
+            // 恢复按钮状态
+            testBtn.disabled = false;
+            testBtn.textContent = "批量测试所有API";
+        }
+
+        // 显示测试结果
+        function displayTestResult(apiId) {
+            const result = testResults[apiId];
+            const resultContent = document.getElementById('result-content');
+
+            if (!result) {
+                resultContent.innerHTML = '<div class="empty-result">此API尚未测试</div>';
+                updateResultStatus('pending', '等待测试');
+                return;
+            }
+
+            let resultHtml = '';
+
+            if (result.status === 'error') {
+                resultHtml = `
+                    <div><strong>测试时间:</strong> ${result.timestamp}</div>
+                    <div><strong>状态:</strong> <span style="color:#f44336;">请求失败</span></div>
+                    <div><strong>错误信息:</strong> ${result.data.error}</div>
+                `;
+            } else {
+                resultHtml = `
+                    <div><strong>测试时间:</strong> ${result.timestamp}</div>
+                    <div><strong>HTTP状态码:</strong> ${result.status}</div>
+                    <div><strong>响应数据:</strong></div>
+                    <pre style="margin-top:10px;">${JSON.stringify(result.data, null, 2)}</pre>
+                `;
+            }
+
+            resultContent.innerHTML = resultHtml;
+
+            // 更新结果状态
+            if (result.status === 'error') {
+                updateResultStatus('error', '请求失败');
+            } else if (result.status >= 200 && result.status < 300) {
+                updateResultStatus('success', '成功');
+            } else {
+                updateResultStatus('error', `失败: ${result.status}`);
+            }
+        }
+
+        // 显示批量测试结果
+        function displayBatchTestResults(results, successCount, failCount) {
+            const resultContent = document.getElementById('result-content');
+
+            let resultHtml = `
+                <div style="margin-bottom:15px;">
+                    <div><strong>批量测试完成时间:</strong> ${new Date().toLocaleTimeString()}</div>
+                    <div><strong>总计测试API:</strong> ${results.length} 个</div>
+                    <div><strong>成功:</strong> <span style="color:#4CAF50;">${successCount}</span></div>
+                    <div><strong>失败:</strong> <span style="color:#f44336;">${failCount}</span></div>
+                </div>
+                <div style="margin-top:20px;">
+                    <strong>详细结果:</strong>
+                </div>
+                <table style="width:100%; margin-top:10px; border-collapse:collapse;">
+                    <thead>
+                        <tr style="background-color:#f1f1f1;">
+                            <th style="padding:8px; text-align:left; border:1px solid #ddd;">API名称</th>
+                            <th style="padding:8px; text-align:left; border:1px solid #ddd;">路径</th>
+                            <th style="padding:8px; text-align:left; border:1px solid #ddd;">方法</th>
+                            <th style="padding:8px; text-align:left; border:1px solid #ddd;">状态</th>
+                            <th style="padding:8px; text-align:left; border:1px solid #ddd;">时间</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+
+            results.forEach(result => {
+                const statusColor = result.success ? '#4CAF50' : '#f44336';
+                const statusText = result.success ? '成功' : (result.status === 'error' ? '请求失败' : `失败: ${result.status}`);
+
+                resultHtml += `
+                    <tr>
+                        <td style="padding:8px; border:1px solid #ddd;">${result.api}</td>
+                        <td style="padding:8px; border:1px solid #ddd;">${result.path}</td>
+                        <td style="padding:8px; border:1px solid #ddd;">${result.method}</td>
+                        <td style="padding:8px; border:1px solid #ddd; color:${statusColor}">${statusText}</td>
+                        <td style="padding:8px; border:1px solid #ddd;">${result.timestamp}</td>
+                    </tr>
+                `;
+            });
+
+            resultHtml += '</tbody></table>';
+            resultContent.innerHTML = resultHtml;
+        }
+
+        // 更新结果状态
+        function updateResultStatus(status, text) {
+            const statusElement = document.getElementById('result-status');
+            statusElement.className = 'result-status ' + status;
+            statusElement.textContent = text;
+        }
+
+        // 添加请求日志
+        function addRequestLog(message, type = 'info') {
+            const logsContainer = document.getElementById('request-logs');
+            const logItem = document.createElement('div');
+            logItem.className = 'log-item';
+
+            const time = new Date().toLocaleTimeString();
+            const messageClass = type === 'error' ? 'log-error' : 'log-message';
+
+            logItem.innerHTML = `
+                <span class="log-time">[${time}]</span>
+                <span class="${messageClass}">${message}</span>
+            `;
+
+            logsContainer.appendChild(logItem);
+
+            // 保持日志容器滚动到底部
+            logsContainer.scrollTop = logsContainer.scrollHeight;
+
+            // 限制日志数量，最多保留50条
+            const logItems = logsContainer.querySelectorAll('.log-item');
+            if (logItems.length > 50) {
+                logsContainer.removeChild(logItems[0]);
+            }
+        }
+
+        // 更新已测试计数
+        function updateTestedCount() {
+            const testedCount = Object.keys(testResults).length;
+            document.getElementById('tested-count').textContent = testedCount;
+        }
+
+        // 检查服务器状态
+        async function checkServerStatus() {
+            try {
+                const response = await fetch(baseUrl + '/api/health');
+                if (response.ok) {
+                    addRequestLog('服务器健康检查: 正常', 'info');
+                } else {
+                    addRequestLog('服务器健康检查: 失败', 'error');
+                }
+            } catch (error) {
+                addRequestLog(`无法连接到服务器: ${error.message}`, 'error');
+                updateResultStatus('error', '服务器连接失败');
+
+                // 禁用测试按钮
+                document.getElementById('run-test-btn').disabled = true;
+                document.getElementById('run-test-btn').textContent = "服务器不可用";
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,937 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>后端API测试工具</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #f5f7fa;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+            color: white;
+            padding: 25px 0;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+
+        header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .api-section {
+            background-color: white;
+            border-radius: 10px;
+            padding: 25px;
+            margin-bottom: 25px;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+            transition: transform 0.3s ease;
+        }
+
+        .api-section:hover {
+            transform: translateY(-5px);
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .section-header i {
+            font-size: 1.5rem;
+            margin-right: 15px;
+            color: #2575fc;
+        }
+
+        .section-header h2 {
+            font-size: 1.5rem;
+            color: #2c3e50;
+        }
+
+        .endpoint-info {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 4px solid #2575fc;
+        }
+
+        .endpoint-info .method {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 4px;
+            font-weight: bold;
+            margin-right: 10px;
+            font-size: 0.9rem;
+        }
+
+        .method.get {
+            background-color: #61affe;
+            color: white;
+        }
+
+        .method.post {
+            background-color: #49cc90;
+            color: white;
+        }
+
+        .endpoint-info .url {
+            font-family: monospace;
+            background-color: #f1f3f4;
+            padding: 8px 12px;
+            border-radius: 4px;
+            display: block;
+            margin-top: 10px;
+            word-break: break-all;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #495057;
+        }
+
+        .form-group input, .form-group textarea {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 1rem;
+            transition: border 0.3s;
+        }
+
+        .form-group input:focus, .form-group textarea:focus {
+            border-color: #2575fc;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(37, 117, 252, 0.1);
+        }
+
+        .btn {
+            display: inline-block;
+            background-color: #2575fc;
+            color: white;
+            padding: 12px 25px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+
+        .btn:hover {
+            background-color: #1a68e8;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(37, 117, 252, 0.3);
+        }
+
+        .btn i {
+            margin-right: 8px;
+        }
+
+        .response-container {
+            margin-top: 25px;
+            border-radius: 8px;
+            overflow: hidden;
+            border: 1px solid #eaeaea;
+        }
+
+        .response-header {
+            background-color: #2c3e50;
+            color: white;
+            padding: 12px 20px;
+            font-weight: 600;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .response-body {
+            max-height: 400px;
+            overflow-y: auto;
+            background-color: #f8f9fa;
+            padding: 20px;
+        }
+
+        pre {
+            margin: 0;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            line-height: 1.5;
+        }
+
+        .status-success {
+            color: #28a745;
+        }
+
+        .status-error {
+            color: #dc3545;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+            color: #6c757d;
+        }
+
+        .loading i {
+            font-size: 2rem;
+            margin-bottom: 10px;
+            color: #2575fc;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .success-message {
+            background-color: #d4edda;
+            color: #155724;
+            padding: 12px 20px;
+            border-radius: 6px;
+            margin-top: 15px;
+            display: none;
+        }
+
+        .error-message {
+            background-color: #f8d7da;
+            color: #721c24;
+            padding: 12px 20px;
+            border-radius: 6px;
+            margin-top: 15px;
+            display: none;
+        }
+
+        .instructions {
+            background-color: #f0f8ff;
+            border-left: 4px solid #2575fc;
+            padding: 15px;
+            margin-top: 15px;
+            border-radius: 0 6px 6px 0;
+            font-size: 0.9rem;
+        }
+
+        .instructions h4 {
+            margin-bottom: 8px;
+            color: #2575fc;
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid #eaeaea;
+            color: #6c757d;
+            font-size: 0.9rem;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 15px;
+            }
+
+            header h1 {
+                font-size: 2rem;
+            }
+
+            .api-section {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1><i class="fas fa-code"></i> 后端API测试工具</h1>
+            <p>测试Flask后端提供的所有接口功能</p>
+        </header>
+
+        <!-- 健康检查接口 -->
+        <section class="api-section">
+            <div class="section-header">
+                <i class="fas fa-heartbeat"></i>
+                <h2>健康检查接口</h2>
+            </div>
+
+            <div class="endpoint-info">
+                <span class="method get">GET</span> 健康检查
+                <div class="url">http://localhost:5000/api/health</div>
+            </div>
+
+            <div class="instructions">
+                <h4>说明：</h4>
+                <p>此接口用于检查后端服务是否正常运行，以及数据库连接状态。</p>
+            </div>
+
+            <button class="btn" onclick="testHealthCheck()">
+                <i class="fas fa-play"></i> 测试健康检查
+            </button>
+
+            <div class="loading" id="healthLoading">
+                <i class="fas fa-spinner"></i>
+                <p>正在检查服务状态...</p>
+            </div>
+
+            <div class="success-message" id="healthSuccess">
+                <i class="fas fa-check-circle"></i> 服务运行正常！
+            </div>
+
+            <div class="error-message" id="healthError">
+                <i class="fas fa-exclamation-circle"></i> 服务检查失败！
+            </div>
+
+            <div class="response-container" id="healthResponse" style="display:none;">
+                <div class="response-header">
+                    <span>响应结果</span>
+                    <span class="status-success">状态: 成功</span>
+                </div>
+                <div class="response-body">
+                    <pre id="healthResponseData"></pre>
+                </div>
+            </div>
+        </section>
+
+        <!-- 获取所有工作列表 -->
+        <section class="api-section">
+            <div class="section-header">
+                <i class="fas fa-list"></i>
+                <h2>获取所有工作列表</h2>
+            </div>
+
+            <div class="endpoint-info">
+                <span class="method get">GET</span> 获取所有职位
+                <div class="url">http://localhost:5000/api/job/Job_List_all</div>
+            </div>
+
+            <div class="instructions">
+                <h4>说明：</h4>
+                <p>此接口获取数据库中所有的工作岗位信息列表。</p>
+            </div>
+
+            <button class="btn" onclick="testJobListAll()">
+                <i class="fas fa-play"></i> 获取所有工作列表
+            </button>
+
+            <div class="loading" id="jobListAllLoading">
+                <i class="fas fa-spinner"></i>
+                <p>正在获取工作列表...</p>
+            </div>
+
+            <div class="response-container" id="jobListAllResponse" style="display:none;">
+                <div class="response-header">
+                    <span>响应结果</span>
+                    <span class="status-success">状态: 成功</span>
+                </div>
+                <div class="response-body">
+                    <pre id="jobListAllResponseData"></pre>
+                </div>
+            </div>
+        </section>
+
+        <!-- 按工作分类获取列表 -->
+        <section class="api-section">
+            <div class="section-header">
+                <i class="fas fa-filter"></i>
+                <h2>按分类获取工作列表</h2>
+            </div>
+
+            <div class="endpoint-info">
+                <span class="method post">POST</span> 获取某一分类的工作
+                <div class="url">http://localhost:5000/api/job/job_lis_one_type</div>
+            </div>
+
+            <div class="instructions">
+                <h4>说明：</h4>
+                <p>根据工作分类ID获取该分类下的所有工作岗位。</p>
+            </div>
+
+            <div class="form-group">
+                <label for="categoryId">工作分类ID</label>
+                <input type="text" id="categoryId" placeholder="例如: tech, sales, marketing">
+            </div>
+
+            <button class="btn" onclick="testJobListOneType()">
+                <i class="fas fa-play"></i> 按分类获取工作
+            </button>
+
+            <div class="loading" id="jobListOneTypeLoading">
+                <i class="fas fa-spinner"></i>
+                <p>正在获取分类工作列表...</p>
+            </div>
+
+            <div class="response-container" id="jobListOneTypeResponse" style="display:none;">
+                <div class="response-header">
+                    <span>响应结果</span>
+                    <span class="status-success">状态: 成功</span>
+                </div>
+                <div class="response-body">
+                    <pre id="jobListOneTypeResponseData"></pre>
+                </div>
+            </div>
+        </section>
+
+        <!-- 按两个条件获取工作列表 -->
+        <section class="api-section">
+            <div class="section-header">
+                <i class="fas fa-filter"></i>
+                <h2>按两个条件获取工作列表</h2>
+            </div>
+
+            <div class="endpoint-info">
+                <span class="method post">POST</span> 获取全职/兼职的某一分类工作
+                <div class="url">http://localhost:5000/api/job/job_list_two_given</div>
+            </div>
+
+            <div class="instructions">
+                <h4>说明：</h4>
+                <p>根据工作分类ID和雇佣类型(全职/兼职)获取工作岗位。</p>
+            </div>
+
+            <div class="form-group">
+                <label for="categoryId2">工作分类ID</label>
+                <input type="text" id="categoryId2" placeholder="例如: tech, sales, marketing">
+            </div>
+
+            <div class="form-group">
+                <label for="empType">雇佣类型</label>
+                <input type="text" id="empType" placeholder="例如: full_time, part_time, contract">
+            </div>
+
+            <button class="btn" onclick="testJobListTwoGiven()">
+                <i class="fas fa-play"></i> 按两个条件获取工作
+            </button>
+
+            <div class="loading" id="jobListTwoGivenLoading">
+                <i class="fas fa-spinner"></i>
+                <p>正在获取工作列表...</p>
+            </div>
+
+            <div class="response-container" id="jobListTwoGivenResponse" style="display:none;">
+                <div class="response-header">
+                    <span>响应结果</span>
+                    <span class="status-success">状态: 成功</span>
+                </div>
+                <div class="response-body">
+                    <pre id="jobListTwoGivenResponseData"></pre>
+                </div>
+            </div>
+        </section>
+
+        <!-- 搜索工作 -->
+        <section class="api-section">
+            <div class="section-header">
+                <i class="fas fa-search"></i>
+                <h2>搜索工作</h2>
+            </div>
+
+            <div class="endpoint-info">
+                <span class="method post">POST</span> 根据关键词搜索工作
+                <div class="url">http://localhost:5000/api/job/job_search</div>
+            </div>
+
+            <div class="instructions">
+                <h4>说明：</h4>
+                <p>根据用户输入的关键词搜索相关工作岗位。</p>
+            </div>
+
+            <div class="form-group">
+                <label for="userInput">搜索关键词</label>
+                <input type="text" id="userInput" placeholder="例如: 前端开发, 数据分析, 项目经理">
+            </div>
+
+            <button class="btn" onclick="testJobSearch()">
+                <i class="fas fa-play"></i> 搜索工作
+            </button>
+
+            <div class="loading" id="jobSearchLoading">
+                <i class="fas fa-spinner"></i>
+                <p>正在搜索工作...</p>
+            </div>
+
+            <div class="response-container" id="jobSearchResponse" style="display:none;">
+                <div class="response-header">
+                    <span>响应结果</span>
+                    <span class="status-success">状态: 成功</span>
+                </div>
+                <div class="response-body">
+                    <pre id="jobSearchResponseData"></pre>
+                </div>
+            </div>
+        </section>
+
+        <!-- 获取工作详情 -->
+        <section class="api-section">
+            <div class="section-header">
+                <i class="fas fa-info-circle"></i>
+                <h2>获取工作详情</h2>
+            </div>
+
+            <div class="endpoint-info">
+                <span class="method post">POST</span> 获取单个工作的详细信息
+                <div class="url">http://localhost:5000/api/job/job_details</div>
+            </div>
+
+            <div class="instructions">
+                <h4>说明：</h4>
+                <p>根据工作ID获取该工作的详细信息。</p>
+            </div>
+
+            <div class="form-group">
+                <label for="jobId">工作ID</label>
+                <input type="text" id="jobId" placeholder="输入工作ID">
+            </div>
+
+            <button class="btn" onclick="testJobDetails()">
+                <i class="fas fa-play"></i> 获取工作详情
+            </button>
+
+            <div class="loading" id="jobDetailsLoading">
+                <i class="fas fa-spinner"></i>
+                <p>正在获取工作详情...</p>
+            </div>
+
+            <div class="response-container" id="jobDetailsResponse" style="display:none;">
+                <div class="response-header">
+                    <span>响应结果</span>
+                    <span class="status-success">状态: 成功</span>
+                </div>
+                <div class="response-body">
+                    <pre id="jobDetailsResponseData"></pre>
+                </div>
+            </div>
+        </section>
+
+        <!-- 批量测试所有接口 -->
+        <section class="api-section">
+            <div class="section-header">
+                <i class="fas fa-vial"></i>
+                <h2>批量测试所有接口</h2>
+            </div>
+
+            <div class="instructions">
+                <h4>说明：</h4>
+                <p>一键测试所有API接口，查看整体服务状态。</p>
+            </div>
+
+            <button class="btn" onclick="testAllApis()" style="background-color: #6a11cb;">
+                <i class="fas fa-bolt"></i> 测试所有接口
+            </button>
+
+            <div class="loading" id="allApisLoading">
+                <i class="fas fa-spinner"></i>
+                <p>正在测试所有接口，请稍候...</p>
+            </div>
+
+            <div class="response-container" id="allApisResponse" style="display:none;">
+                <div class="response-header">
+                    <span>批量测试结果</span>
+                    <span class="status-success">状态: 完成</span>
+                </div>
+                <div class="response-body">
+                    <pre id="allApisResponseData"></pre>
+                </div>
+            </div>
+        </section>
+
+        <footer>
+            <p>后端API测试工具 &copy; 2023 | 确保后端服务正在运行 (http://localhost:5000)</p>
+        </footer>
+    </div>
+
+    <script>
+        const API_BASE_URL = 'http://localhost:5000';
+
+        // 健康检查接口测试
+        async function testHealthCheck() {
+            showLoading('health');
+            hideMessages('health');
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/health`);
+                const data = await response.json();
+
+                hideLoading('health');
+                showResponse('health', data);
+
+                if (response.ok) {
+                    showSuccess('health');
+                } else {
+                    showError('health');
+                }
+            } catch (error) {
+                hideLoading('health');
+                showError('health');
+                showResponse('health', { error: error.message });
+                console.error('健康检查失败:', error);
+            }
+        }
+
+        // 获取所有工作列表
+        async function testJobListAll() {
+            showLoading('jobListAll');
+            hideResponse('jobListAll');
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/job/Job_List_all`);
+                const data = await response.json();
+
+                hideLoading('jobListAll');
+                showResponse('jobListAll', data);
+
+                if (response.ok) {
+                    updateStatus('jobListAll', '成功');
+                } else {
+                    updateStatus('jobListAll', '失败');
+                }
+            } catch (error) {
+                hideLoading('jobListAll');
+                showResponse('jobListAll', { error: error.message });
+                updateStatus('jobListAll', '失败');
+                console.error('获取所有工作列表失败:', error);
+            }
+        }
+
+        // 按分类获取工作列表
+        async function testJobListOneType() {
+            const categoryId = document.getElementById('categoryId').value.trim();
+
+            if (!categoryId) {
+                alert('请输入工作分类ID');
+                return;
+            }
+
+            showLoading('jobListOneType');
+            hideResponse('jobListOneType');
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/job/job_lis_one_type`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ category_id: categoryId })
+                });
+
+                const data = await response.json();
+                hideLoading('jobListOneType');
+                showResponse('jobListOneType', data);
+
+                if (response.ok) {
+                    updateStatus('jobListOneType', '成功');
+                } else {
+                    updateStatus('jobListOneType', '失败');
+                }
+            } catch (error) {
+                hideLoading('jobListOneType');
+                showResponse('jobListOneType', { error: error.message });
+                updateStatus('jobListOneType', '失败');
+                console.error('按分类获取工作列表失败:', error);
+            }
+        }
+
+        // 按两个条件获取工作列表
+        async function testJobListTwoGiven() {
+            const categoryId = document.getElementById('categoryId2').value.trim();
+            const empType = document.getElementById('empType').value.trim();
+
+            if (!categoryId || !empType) {
+                alert('请输入工作分类ID和雇佣类型');
+                return;
+            }
+
+            showLoading('jobListTwoGiven');
+            hideResponse('jobListTwoGiven');
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/job/job_list_two_given`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        category_id: categoryId,
+                        emp_type: empType
+                    })
+                });
+
+                const data = await response.json();
+                hideLoading('jobListTwoGiven');
+                showResponse('jobListTwoGiven', data);
+
+                if (response.ok) {
+                    updateStatus('jobListTwoGiven', '成功');
+                } else {
+                    updateStatus('jobListTwoGiven', '失败');
+                }
+            } catch (error) {
+                hideLoading('jobListTwoGiven');
+                showResponse('jobListTwoGiven', { error: error.message });
+                updateStatus('jobListTwoGiven', '失败');
+                console.error('按两个条件获取工作列表失败:', error);
+            }
+        }
+
+        // 搜索工作
+        async function testJobSearch() {
+            const userInput = document.getElementById('userInput').value.trim();
+
+            if (!userInput) {
+                alert('请输入搜索关键词');
+                return;
+            }
+
+            showLoading('jobSearch');
+            hideResponse('jobSearch');
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/job/job_search`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ user_input: userInput })
+                });
+
+                const data = await response.json();
+                hideLoading('jobSearch');
+                showResponse('jobSearch', data);
+
+                if (response.ok) {
+                    updateStatus('jobSearch', '成功');
+                } else {
+                    updateStatus('jobSearch', '失败');
+                }
+            } catch (error) {
+                hideLoading('jobSearch');
+                showResponse('jobSearch', { error: error.message });
+                updateStatus('jobSearch', '失败');
+                console.error('搜索工作失败:', error);
+            }
+        }
+
+        // 获取工作详情
+        async function testJobDetails() {
+            const jobId = document.getElementById('jobId').value.trim();
+
+            if (!jobId) {
+                alert('请输入工作ID');
+                return;
+            }
+
+            showLoading('jobDetails');
+            hideResponse('jobDetails');
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/job/job_details`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ id: jobId })
+                });
+
+                const data = await response.json();
+                hideLoading('jobDetails');
+                showResponse('jobDetails', data);
+
+                if (response.ok) {
+                    updateStatus('jobDetails', '成功');
+                } else {
+                    updateStatus('jobDetails', '失败');
+                }
+            } catch (error) {
+                hideLoading('jobDetails');
+                showResponse('jobDetails', { error: error.message });
+                updateStatus('jobDetails', '失败');
+                console.error('获取工作详情失败:', error);
+            }
+        }
+
+        // 批量测试所有接口
+        async function testAllApis() {
+            showLoading('allApis');
+            hideResponse('allApis');
+
+            const results = {
+                timestamp: new Date().toISOString(),
+                tests: []
+            };
+
+            // 测试健康检查
+            try {
+                const healthResponse = await fetch(`${API_BASE_URL}/api/health`);
+                const healthData = await healthResponse.json();
+                results.tests.push({
+                    name: '健康检查',
+                    endpoint: '/api/health',
+                    method: 'GET',
+                    status: healthResponse.status,
+                    ok: healthResponse.ok,
+                    data: healthData
+                });
+            } catch (error) {
+                results.tests.push({
+                    name: '健康检查',
+                    endpoint: '/api/health',
+                    method: 'GET',
+                    status: 0,
+                    ok: false,
+                    error: error.message
+                });
+            }
+
+            // 测试获取所有工作列表
+            try {
+                const jobListResponse = await fetch(`${API_BASE_URL}/api/job/Job_List_all`);
+                const jobListData = await jobListResponse.json();
+                results.tests.push({
+                    name: '获取所有工作列表',
+                    endpoint: '/api/job/Job_List_all',
+                    method: 'GET',
+                    status: jobListResponse.status,
+                    ok: jobListResponse.ok,
+                    data: jobListData
+                });
+            } catch (error) {
+                results.tests.push({
+                    name: '获取所有工作列表',
+                    endpoint: '/api/job/Job_List_all',
+                    method: 'GET',
+                    status: 0,
+                    ok: false,
+                    error: error.message
+                });
+            }
+
+            // 测试按分类获取工作列表（使用默认分类）
+            try {
+                const categoryResponse = await fetch(`${API_BASE_URL}/api/job/job_lis_one_type`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ category_id: 'tech' })
+                });
+                const categoryData = await categoryResponse.json();
+                results.tests.push({
+                    name: '按分类获取工作列表',
+                    endpoint: '/api/job/job_lis_one_type',
+                    method: 'POST',
+                    status: categoryResponse.status,
+                    ok: categoryResponse.ok,
+                    data: categoryData
+                });
+            } catch (error) {
+                results.tests.push({
+                    name: '按分类获取工作列表',
+                    endpoint: '/api/job/job_lis_one_type',
+                    method: 'POST',
+                    status: 0,
+                    ok: false,
+                    error: error.message
+                });
+            }
+
+            hideLoading('allApis');
+            showResponse('allApis', results);
+            updateStatus('allApis', '完成');
+        }
+
+        // 显示加载动画
+        function showLoading(apiName) {
+            document.getElementById(`${apiName}Loading`).style.display = 'block';
+        }
+
+        // 隐藏加载动画
+        function hideLoading(apiName) {
+            document.getElementById(`${apiName}Loading`).style.display = 'none';
+        }
+
+        // 显示成功消息
+        function showSuccess(apiName) {
+            document.getElementById(`${apiName}Success`).style.display = 'block';
+        }
+
+        // 显示错误消息
+        function showError(apiName) {
+            document.getElementById(`${apiName}Error`).style.display = 'block';
+        }
+
+        // 隐藏所有消息
+        function hideMessages(apiName) {
+            document.getElementById(`${apiName}Success`).style.display = 'none';
+            document.getElementById(`${apiName}Error`).style.display = 'none';
+        }
+
+        // 显示响应结果
+        function showResponse(apiName, data) {
+            const responseElement = document.getElementById(`${apiName}Response`);
+            const dataElement = document.getElementById(`${apiName}ResponseData`);
+
+            dataElement.textContent = JSON.stringify(data, null, 2);
+            responseElement.style.display = 'block';
+        }
+
+        // 隐藏响应结果
+        function hideResponse(apiName) {
+            document.getElementById(`${apiName}Response`).style.display = 'none';
+        }
+
+        // 更新状态显示
+        function updateStatus(apiName, status) {
+            const statusElement = document.querySelector(`#${apiName}Response .response-header span:last-child`);
+            if (statusElement) {
+                statusElement.textContent = `状态: ${status}`;
+                if (status === '成功' || status === '完成') {
+                    statusElement.className = 'status-success';
+                } else {
+                    statusElement.className = 'status-error';
+                }
+            }
+        }
+
+        // 页面加载时测试健康检查
+        window.onload = function() {
+            console.log('API测试页面已加载，后端服务地址:', API_BASE_URL);
+        };
+    </script>
+</body>
+</html>
