@@ -195,7 +195,7 @@ class Test_Sys_user(Sys_user):
         print(f"   总数: {result['total']}, 当前页数量: {len(result['users'])}, 总页数: {result['total_pages']}")
 
         # 测试用例2：按关键词搜索
-        result = self.search_users(keyword='1380013', page=1, page_size=5)
+        result = self.search_users(keyword='李思', page=1, page_size=5)
         print(f"2. 按关键词'1380013'搜索:")
         print(f"   找到 {result['total']} 个用户")
 

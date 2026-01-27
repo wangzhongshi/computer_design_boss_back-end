@@ -1,4 +1,5 @@
-from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity
+from flask_jwt_extended import JWTManager, create_access_token, verify_jwt_in_request, get_jwt_identity, get_jwt
+from flask_jwt_extended.exceptions import NoAuthorizationError, InvalidHeaderError, JWTDecodeError
 from flask_sqlalchemy import SQLAlchemy
 from datetime import  timedelta
 import bcrypt
@@ -13,14 +14,27 @@ import os
 from X1_ws import think_speaker
 import logging
 from pathlib import Path
-from sql_data_demo import EndDemoDatabase, Job_prot, Job_category_simple, Forum_comments
+from sql_data_demo import EndDemoDatabase, Job_prot, Job_category_simple, Forum_comments, Sys_user
+from flask import jsonify, request, g
+from datetime import datetime
+from sqlalchemy import text
+import hashlib
+# import jwt as pyjwt
+import re
+from functools import wraps
+
 
 db = EndDemoDatabase(host='localhost', user='root', password='123456')
 job_prot = Job_prot(db.connection)
 job_category_simple = Job_category_simple(db.connection)
 forum_comments = Forum_comments(db.connection)
+sys_user = Sys_user(db.connection)
 
 think_speaker = think_speaker()
+
+# 假设的JWT密钥和配置
+JWT_SECRET = 'your-secret-key'
+JWT_ALGORITHM = 'HS256'
 
 app = Flask(__name__)
 CORS(app)  # 允许跨域
@@ -86,6 +100,77 @@ CORS(app, supports_credentials=True)
 jwt = JWTManager(app)
 db = SQLAlchemy(app)
 
+# 辅助函数：验证手机号格式
+def validate_mobile(mobile):
+    """验证手机号格式"""
+    pattern = r'^1[3-9]\d{9}$'
+    return bool(re.match(pattern, mobile))
+
+
+# 辅助函数：验证邮箱格式
+def validate_email(email):
+    """验证邮箱格式"""
+    pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+    return bool(re.match(pattern, email))
+
+
+# 装饰器：需要登录
+def login_required(func):
+    """登录验证装饰器 - flask_jwt_extended 版本"""
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        try:
+            # 验证 token 并获取 payload
+            verify_jwt_in_request()
+            jwt_data = get_jwt()
+            g.user_id = jwt_data.get('user_id') or get_jwt_identity()
+            g.user_info = jwt_data
+
+            # 验证用户状态
+            user = sys_user.get_user_by_field('user_id', g.user_id)
+            if not user:
+                return jsonify({
+                    'code': 401,
+                    'message': '用户不存在',
+                    'data': None
+                }), 401
+
+            if user['status'] == 0:
+                return jsonify({
+                    'code': 403,
+                    'message': '账号已被禁用',
+                    'data': None
+                }), 403
+
+            if user['status'] == 3:
+                return jsonify({
+                    'code': 403,
+                    'message': '账号已被锁定',
+                    'data': None
+                }), 403
+
+        except NoAuthorizationError:
+            return jsonify({
+                'code': 401,
+                'message': '未提供认证令牌',
+                'data': None
+            }), 401
+        except (InvalidHeaderError, JWTDecodeError):
+            return jsonify({
+                'code': 401,
+                'message': '无效的认证令牌',
+                'data': None
+            }), 401
+        except Exception as e:
+            return jsonify({
+                'code': 500,
+                'message': f'认证失败: {str(e)}',
+                'data': None
+            }), 500
+
+        return func(*args, **kwargs)
+
+    return wrapper
 
 # 错误处理
 @app.errorhandler(400)
@@ -607,8 +692,689 @@ def forum_count_data():
             'message': '服务器内部错误'
         }), 500
 
+@app.route('/api/user/register', methods=['POST'])
+def user_register():
+    """用户注册"""
+    try:
+        data = request.get_json()
+
+        # 验证必填字段
+        required_fields = ['mobile', 'password', 'sms_code']
+        for field in required_fields:
+            if field not in data or not data[field]:
+                return jsonify({
+                    'code': 400,
+                    'message': f'缺少必填字段: {field}',
+                    'data': None
+                }), 400
+
+        # 验证手机号格式
+        if not validate_mobile(data['mobile']):
+            return jsonify({
+                'code': 400,
+                'message': '手机号格式不正确',
+                'data': None
+            }), 400
+
+        # 验证密码强度
+        password = data['password']
+        if len(password) < 8:
+            return jsonify({
+                'code': 400,
+                'message': '密码长度至少8位',
+                'data': None
+            }), 400
+
+        # TODO: 验证短信验证码
+        # 这里需要实现短信验证码验证逻辑
+        sms_code_valid = True  # 假设验证通过
+        if not sms_code_valid:
+            return jsonify({
+                'code': 400,
+                'message': '短信验证码错误或已过期',
+                'data': None
+            }), 400
+
+        # 检查手机号是否已注册
+        exists = sys_user.check_user_exists(mobile=data['mobile'])
+        if exists:
+            return jsonify({
+                'code': 400,
+                'message': '该手机号已注册',
+                'data': None
+            }), 400
+
+        # 生成用户ID（这里简化为时间戳，实际应用中应该使用雪花算法）
+        user_id = int(datetime.now().timestamp() * 1000)
+
+        # 密码加密
+        password_hash = hashlib.sha256(password.encode()).hexdigest()
+
+        # 构建用户数据
+        user_data = {
+            'user_id': user_id,
+            'mobile': data['mobile'],
+            'password_hash': password_hash,
+            'status': 2,  # 未激活状态
+            'register_time': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        }
+
+        # 可选字段
+        if 'email' in data and data['email']:
+            if not validate_email(data['email']):
+                return jsonify({
+                    'code': 400,
+                    'message': '邮箱格式不正确',
+                    'data': None
+                }), 400
+            user_data['email'] = data['email']
+
+        # 创建用户
+        created_id = sys_user.create_user(user_data)
+
+        if created_id:
+            return jsonify({
+                'code': 200,
+                'message': '注册成功',
+                'data': {
+                    'user_id': user_id,
+                    'mobile': data['mobile'],
+                    'register_time': user_data['register_time']
+                }
+            })
+        else:
+            return jsonify({
+                'code': 500,
+                'message': '注册失败',
+                'data': None
+            }), 500
+
+    except Exception as e:
+        return jsonify({
+            'code': 500,
+            'message': f'注册异常: {str(e)}',
+            'data': None
+        }), 500
 
 
+@app.route('/api/user/login', methods=['POST'])
+def user_login():
+    """用户登录"""
+    try:
+        data = request.get_json()
+
+        # 验证必填字段
+        if 'mobile' not in data or not data['mobile']:
+            return jsonify({
+                'code': 400,
+                'message': '请输入手机号',
+                'data': None
+            }), 400
+
+        if 'password' not in data or not data['password']:
+            return jsonify({
+                'code': 400,
+                'message': '请输入密码',
+                'data': None
+            }), 400
+
+        # 获取设备信息
+        device_model = request.headers.get('X-Device-Model', 'Unknown')
+        device_type = request.headers.get('X-Device-Type', '0')
+        login_ip = request.remote_addr
+
+        # 查询用户
+        user = sys_user.get_user_by_field('mobile', data['mobile'])
+
+        if not user:
+            return jsonify({
+                'code': 400,
+                'message': '用户不存在',
+                'data': None
+            }), 400
+
+        # 验证密码
+        password_hash = hashlib.sha256(data['password'].encode()).hexdigest()
+        if password_hash != user['password_hash']:
+            return jsonify({
+                'code': 400,
+                'message': '密码错误',
+                'data': None
+            }), 400
+
+        # 验证账号状态
+        if user['status'] == 0:
+            return jsonify({
+                'code': 403,
+                'message': '账号已被禁用',
+                'data': None
+            }), 403
+
+        if user['status'] == 3:
+            return jsonify({
+                'code': 403,
+                'message': '账号已被锁定',
+                'data': None
+            }), 403
+
+        # 更新登录信息
+        sys_user.update_last_login(
+            user['user_id'],
+            login_ip,
+            device_model,
+            device_type
+        )
+
+        # 生成JWT令牌
+        token_payload = {
+            'user_id': user['user_id'],
+            'mobile': user['mobile'],
+            'exp': datetime.now().timestamp() + 7 * 24 * 3600  # 7天过期
+        }
+
+
+        # token = jwt.encode(token_payload, JWT_SECRET, algorithm=JWT_ALGORITHM)
+        access_token = create_access_token(identity=str(user['user_id']))
+
+        # 返回用户信息（排除敏感信息）
+        user_info = {
+            'user_id': user['user_id'],
+            'mobile': user['mobile'],
+            'email': user['email'],
+            'real_name': user['real_name'],
+            'avatar_url': user['avatar_url'],
+            'status': user['status'],
+            'job_status': user['job_status'],
+            'last_login_time': user['last_login_time']
+        }
+
+        print('shi-1')
+        print(user_info)
+        print('shi-1')
+
+        return jsonify({
+            'code': 200,
+            'message': '登录成功',
+            'data': {
+                'token': access_token,
+                'user_info': user_info
+            }
+        })
+
+    except Exception as e:
+        app.logger.error(f'登录异常：{e}')
+        return jsonify({
+            'code': 500,
+            'message': f'登录异常: {str(e)}',
+            'data': None
+        }), 500
+
+
+@app.route('/api/user/profile', methods=['GET'])
+@login_required
+def get_user_profile():
+    """获取当前用户个人信息"""
+    try:
+        user_id = g.user_id
+        # 查询用户信息
+        user = sys_user.get_user_by_field('user_id', user_id)
+        if not user:
+            return jsonify({
+                'code': 404,
+                'message': '用户不存在',
+                'data': None
+            }), 404
+
+        # 组织返回数据（排除敏感信息）
+        profile_data = {
+            'user_id': user['user_id'],
+            'mobile': user['mobile'],
+            'email': user['email'],
+            'real_name': user['real_name'],
+            'gender': user['gender'],
+            'birth_date': user['birth_date'],
+            'education_level': user['education_level'],
+            'major': user['major'],
+            'enrollment_year': user['enrollment_year'],
+            'graduation_year': user['graduation_year'],
+            'bio': user['bio'],
+            'avatar_url': user['avatar_url'],
+            'status': user['status'],
+            'job_status': user['job_status'],
+            'register_time': user['register_time'],
+            'last_login_time': user['last_login_time']
+        }
+
+
+        return jsonify({
+            'code': 200,
+            'message': '获取成功',
+            'data': profile_data
+        })
+
+    except Exception as e:
+        print(f'获取个人信息异常: {str(e)}')
+        app.logger.error(f'获取个人信息异常: {str(e)}')
+        return jsonify({
+            'code': 500,
+            'message': f'获取个人信息异常: {str(e)}',
+            'data': None
+        }), 500
+
+
+@app.route('/api/user/profile', methods=['PUT'])
+@login_required
+def update_user_profile():
+    """更新个人信息"""
+    try:
+        user_id = g.user_id
+        data = request.get_json()
+
+        if not data:
+            return jsonify({
+                'code': 400,
+                'message': '请求数据不能为空',
+                'data': None
+            }), 400
+
+        # 不允许更新的字段
+        protected_fields = ['user_id', 'mobile', 'password_hash', 'status', 'register_time', 'created_at', 'updated_at',
+                            'deleted_at', 'is_deleted']
+
+        # 过滤出允许更新的字段
+        update_data = {}
+        for key, value in data.items():
+            if key not in protected_fields and value is not None:
+                update_data[key] = value
+
+        # 验证邮箱格式（如果提供）
+        if 'email' in update_data and update_data['email']:
+            if not validate_email(update_data['email']):
+                return jsonify({
+                    'code': 400,
+                    'message': '邮箱格式不正确',
+                    'data': None
+                }), 400
+
+        # 检查邮箱是否已被其他用户使用
+        if 'email' in update_data and update_data['email']:
+            exists = sys_user.check_user_exists(email=update_data['email'], exclude_user_id=user_id)
+            if exists:
+                return jsonify({
+                    'code': 400,
+                    'message': '该邮箱已被其他用户使用',
+                    'data': None
+                }), 400
+
+        # 更新用户信息
+        success = sys_user.update_user_profile(user_id, update_data)
+
+        if success:
+            # 重新查询更新后的信息
+            user = sys_user.get_user_by_field('user_id', user_id)
+            updated_profile = {
+                'real_name': user['real_name'],
+                'email': user['email'],
+                'gender': user['gender'],
+                'birth_date': user['birth_date'],
+                'education_level': user['education_level'],
+                'major': user['major'],
+                'bio': user['bio'],
+                'avatar_url': user['avatar_url'],
+                'updated_at': user['updated_at']
+            }
+
+            return jsonify({
+                'code': 200,
+                'message': '更新成功',
+                'data': updated_profile
+            })
+        else:
+            return jsonify({
+                'code': 500,
+                'message': '更新失败',
+                'data': None
+            }), 500
+
+    except Exception as e:
+        return jsonify({
+            'code': 500,
+            'message': f'更新个人信息异常: {str(e)}',
+            'data': None
+        }), 500
+
+
+@app.route('/api/user/password', methods=['PUT'])
+@login_required
+def update_password():
+    """修改密码"""
+    try:
+        user_id = g.user_id
+        data = request.get_json()
+
+        # 验证必填字段
+        required_fields = ['old_password', 'new_password']
+        for field in required_fields:
+            if field not in data or not data[field]:
+                return jsonify({
+                    'code': 400,
+                    'message': f'缺少必填字段: {field}',
+                    'data': None
+                }), 400
+
+        old_password = data['old_password']
+        new_password = data['new_password']
+
+        # 验证新密码强度
+        if len(new_password) < 8:
+            return jsonify({
+                'code': 400,
+                'message': '新密码长度至少8位',
+                'data': None
+            }), 400
+
+        # 查询用户信息
+        user = sys_user.get_user_by_field('user_id', user_id)
+
+        if not user:
+            return jsonify({
+                'code': 404,
+                'message': '用户不存在',
+                'data': None
+            }), 404
+
+        # 验证旧密码
+        old_password_hash = hashlib.sha256(old_password.encode()).hexdigest()
+        if old_password_hash != user['password_hash']:
+            return jsonify({
+                'code': 400,
+                'message': '原密码错误',
+                'data': None
+            }), 400
+
+        # 生成新密码哈希
+        new_password_hash = hashlib.sha256(new_password.encode()).hexdigest()
+
+        # 更新密码
+        update_data = {
+            'password_hash': new_password_hash
+        }
+
+        success = sys_user.update_user_profile(user_id, update_data)
+
+        if success:
+            return jsonify({
+                'code': 200,
+                'message': '密码修改成功',
+                'data': {
+                    'updated_at': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+                }
+            })
+        else:
+            return jsonify({
+                'code': 500,
+                'message': '密码修改失败',
+                'data': None
+            }), 500
+
+    except Exception as e:
+        return jsonify({
+            'code': 500,
+            'message': f'修改密码异常: {str(e)}',
+            'data': None
+        }), 500
+
+
+@app.route('/api/user/avatar', methods=['POST'])
+@login_required
+def update_avatar():
+    """更新头像"""
+    try:
+        user_id = g.user_id
+        data = request.get_json()
+
+        if 'avatar_url' not in data or not data['avatar_url']:
+            return jsonify({
+                'code': 400,
+                'message': '缺少头像URL',
+                'data': None
+            }), 400
+
+        avatar_url = data['avatar_url']
+
+        # 更新头像
+        update_data = {
+            'avatar_url': avatar_url
+        }
+
+        success = sys_user.update_user_profile(user_id, update_data)
+
+        if success:
+            return jsonify({
+                'code': 200,
+                'message': '头像更新成功',
+                'data': {
+                    'avatar_url': avatar_url,
+                    'updated_at': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+                }
+            })
+        else:
+            return jsonify({
+                'code': 500,
+                'message': '头像更新失败',
+                'data': None
+            }), 500
+
+    except Exception as e:
+        return jsonify({
+            'code': 500,
+            'message': f'更新头像异常: {str(e)}',
+            'data': None
+        }), 500
+
+
+@app.route('/api/user/status', methods=['GET'])
+@login_required
+def get_user_status():
+    """获取用户状态"""
+    try:
+        user_id = g.user_id
+
+        # 查询用户状态
+        user = sys_user.get_user_by_field('user_id', user_id)
+
+        if not user:
+            return jsonify({
+                'code': 404,
+                'message': '用户不存在',
+                'data': None
+            }), 404
+
+        status_info = {
+            'user_id': user['user_id'],
+            'status': user['status'],
+            'status_text': {
+                0: '禁用',
+                1: '正常',
+                2: '未激活',
+                3: '锁定'
+            }.get(user['status'], '未知'),
+            'job_status': user['job_status'],
+            'job_status_text': {
+                0: '待业',
+                1: '实习中',
+                2: '应届求职'
+            }.get(user['job_status'], '未知'),
+            'last_login_time': user['last_login_time'],
+            'last_device_type': user['last_device_type']
+        }
+
+        return jsonify({
+            'code': 200,
+            'message': '获取成功',
+            'data': status_info
+        })
+
+    except Exception as e:
+        return jsonify({
+            'code': 500,
+            'message': f'获取用户状态异常: {str(e)}',
+            'data': None
+        }), 500
+
+
+@app.route('/api/user/logout', methods=['POST'])
+@login_required
+def user_logout():
+    """用户登出"""
+    try:
+        # 这里可以记录登出日志，或使当前token失效
+        # 实际应用中可能需要将token加入黑名单
+
+        return jsonify({
+            'code': 200,
+            'message': '登出成功',
+            'data': {
+                'logout_time': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+            }
+        })
+
+    except Exception as e:
+        return jsonify({
+            'code': 500,
+            'message': f'登出异常: {str(e)}',
+            'data': None
+        }), 500
+
+
+@app.route('/api/user/search', methods=['GET'])
+def search_users():
+    """搜索用户（公开接口，返回有限信息）"""
+    try:
+        keyword = request.args.get('keyword', '')
+        page = int(request.args.get('page', 1))
+        page_size = int(request.args.get('page_size', 20))
+
+        # 搜索用户
+        result = sys_user.search_users(
+            keyword=keyword if keyword else None,
+            status=1,  # 只搜索正常状态的用户
+            page=page,
+            page_size=page_size
+        )
+        print(result)
+
+        # 过滤敏感信息，只返回公开信息
+        public_users = []
+        for user in result['users']:
+            public_users.append({
+                'user_id': user['user_id'],
+                'real_name': user['real_name'],
+                'avatar_url': user['avatar_url'],
+                'bio': user['bio'],
+                'education_level': user['education_level'],
+                'major': user['major'],
+                'graduation_year': user['graduation_year'],
+                'job_status': user['job_status']
+            })
+
+        return jsonify({
+            'code': 200,
+            'message': '搜索成功',
+            'data': {
+                'users': public_users,
+                'total': result['total'],
+                'page': result['page'],
+                'page_size': result['page_size'],
+                'total_pages': result['total_pages']
+            }
+        })
+
+    except Exception as e:
+        return jsonify({
+            'code': 500,
+            'message': f'搜索用户异常: {str(e)}',
+            'data': None
+        }), 500
+
+
+@app.route('/api/user/public/<user_id>', methods=['GET'])
+def get_public_profile(user_id):
+    """获取用户公开信息"""
+    try:
+        # 查询用户信息（只返回正常状态的用户）
+        user = sys_user.get_user_by_field('user_id', user_id)
+
+        if not user or user['status'] != 1:  # 只返回正常状态的用户
+            return jsonify({
+                'code': 404,
+                'message': '用户不存在或不可见',
+                'data': None
+            }), 404
+
+        # 返回公开信息
+        public_profile = {
+            'user_id': user['user_id'],
+            'real_name': user['real_name'],
+            'avatar_url': user['avatar_url'],
+            'bio': user['bio'],
+            'education_level': user['education_level'],
+            'major': user['major'],
+            'enrollment_year': user['enrollment_year'],
+            'graduation_year': user['graduation_year'],
+            'job_status': user['job_status']
+        }
+
+        return jsonify({
+            'code': 200,
+            'message': '获取成功',
+            'data': public_profile
+        })
+
+    except Exception as e:
+        return jsonify({
+            'code': 500,
+            'message': f'获取公开信息异常: {str(e)}',
+            'data': None
+        }), 500
+
+
+@app.route('/api/user/statistics', methods=['GET'])
+@login_required
+def get_user_statistics():
+    """获取用户统计信息（仅管理员或用户自己可见）"""
+    try:
+        user_id = g.user_id
+
+        # 这里可以根据需要统计各种数据
+        # 示例：统计各类用户数量
+
+        total_users = sys_user.user_count_all('all')
+        active_users = sys_user.user_count_all('active')
+        disabled_users = sys_user.user_count_all('status', status=0)
+
+        statistics = {
+            'total_users': total_users,
+            'active_users': active_users,
+            'disabled_users': disabled_users,
+            'job_seekers': sys_user.user_count_all('job_status', job_status=0),
+            'interns': sys_user.user_count_all('job_status', job_status=1),
+            'fresh_graduates': sys_user.user_count_all('job_status', job_status=2),
+            'timestamp': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        }
+
+        return jsonify({
+            'code': 200,
+            'message': '获取成功',
+            'data': statistics
+        })
+
+    except Exception as e:
+        return jsonify({
+            'code': 500,
+            'message': f'获取统计信息异常: {str(e)}',
+            'data': None
+        }), 500
 
 
 @app.route('/api/health', methods=['GET'])

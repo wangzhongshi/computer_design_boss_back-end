@@ -1,0 +1,1444 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>用户接口测试页面</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            color: #333;
+            line-height: 1.6;
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 25px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+            border-left: 6px solid #3498db;
+        }
+
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+            font-size: 2.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+        }
+
+        .subtitle {
+            color: #7f8c8d;
+            font-size: 1.1rem;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .token-section {
+            background: #2c3e50;
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 25px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .token-display {
+            background: rgba(255,255,255,0.1);
+            padding: 10px 15px;
+            border-radius: 5px;
+            flex-grow: 1;
+            margin-right: 15px;
+            word-break: break-all;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 60px;
+            overflow-y: auto;
+        }
+
+        .token-empty {
+            color: #95a5a6;
+            font-style: italic;
+        }
+
+        .btn-copy {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .btn-copy:hover {
+            background: #2980b9;
+        }
+
+        .test-section {
+            background: white;
+            border-radius: 10px;
+            padding: 25px;
+            margin-bottom: 25px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+        }
+
+        .section-title {
+            color: #2c3e50;
+            border-bottom: 2px solid #ecf0f1;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+            font-size: 1.4rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .section-title i {
+            color: #3498db;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-row {
+            display: flex;
+            gap: 15px;
+        }
+
+        .form-row .form-group {
+            flex: 1;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #555;
+        }
+
+        .label-required::after {
+            content: " *";
+            color: #e74c3c;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+            transition: border 0.3s;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 80px;
+            font-family: monospace;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: #3498db;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #2980b9;
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background: #95a5a6;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #7f8c8d;
+        }
+
+        .btn-success {
+            background: #2ecc71;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #27ae60;
+        }
+
+        .btn-danger {
+            background: #e74c3c;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #c0392b;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .result-container {
+            margin-top: 25px;
+            padding: 20px;
+            border-radius: 8px;
+            background: #f8f9fa;
+            border: 1px solid #ecf0f1;
+            display: none;
+        }
+
+        .result-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .result-title {
+            font-weight: 700;
+            color: #2c3e50;
+            font-size: 1.1rem;
+        }
+
+        .response-status {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 0.85rem;
+        }
+
+        .status-200 { background: #2ecc71; color: white; }
+        .status-400 { background: #e74c3c; color: white; }
+        .status-401 { background: #f39c12; color: white; }
+        .status-403 { background: #d35400; color: white; }
+        .status-404 { background: #8e44ad; color: white; }
+        .status-500 { background: #7f8c8d; color: white; }
+
+        .result-content {
+            font-family: monospace;
+            white-space: pre-wrap;
+            background: #2c3e50;
+            color: #ecf0f1;
+            padding: 15px;
+            border-radius: 5px;
+            max-height: 400px;
+            overflow-y: auto;
+            font-size: 13px;
+            line-height: 1.5;
+        }
+
+        .user-info-display {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .info-item {
+            background: #ecf0f1;
+            padding: 12px;
+            border-radius: 5px;
+        }
+
+        .info-label {
+            font-size: 0.85rem;
+            color: #7f8c8d;
+            margin-bottom: 3px;
+        }
+
+        .info-value {
+            font-weight: 600;
+            color: #2c3e50;
+            word-break: break-word;
+        }
+
+        .avatar-preview {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid #3498db;
+            margin: 10px 0;
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 30px;
+            padding: 20px;
+            color: #7f8c8d;
+            font-size: 0.9rem;
+        }
+
+        .tab-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            margin-bottom: 25px;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 10px;
+        }
+
+        .tab {
+            padding: 10px 20px;
+            cursor: pointer;
+            background: #f8f9fa;
+            border: 1px solid #ddd;
+            border-radius: 5px 5px 0 0;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+
+        .tab:hover {
+            background: #ecf0f1;
+        }
+
+        .tab.active {
+            background: #3498db;
+            color: white;
+            border-color: #3498db;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        @media (max-width: 768px) {
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .form-row {
+                flex-direction: column;
+                gap: 15px;
+            }
+
+            .token-section {
+                flex-direction: column;
+                gap: 15px;
+            }
+
+            .token-display {
+                margin-right: 0;
+                margin-bottom: 10px;
+            }
+
+            h1 {
+                font-size: 2rem;
+                flex-direction: column;
+                gap: 10px;
+            }
+        }
+    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1><i class="fas fa-users"></i> 用户接口测试系统</h1>
+            <p class="subtitle">专门用于测试Flask用户管理接口，包括注册、登录、个人信息管理、密码修改等功能</p>
+        </header>
+
+        <div class="token-section">
+            <div>
+                <div style="font-weight: 600; margin-bottom: 5px;">当前Token:</div>
+                <div class="token-display" id="token-display">
+                    <span class="token-empty">未登录，请先进行登录操作</span>
+                </div>
+            </div>
+            <button class="btn-copy" onclick="copyToken()">
+                <i class="fas fa-copy"></i> 复制Token
+            </button>
+        </div>
+
+        <div class="tab-container">
+            <button class="tab active" onclick="switchTab('auth')">认证相关</button>
+            <button class="tab" onclick="switchTab('profile')">个人信息</button>
+            <button class="tab" onclick="switchTab('security')">安全设置</button>
+            <button class="tab" onclick="switchTab('other')">其他功能</button>
+        </div>
+
+        <!-- 认证相关标签 -->
+        <div id="auth-tab" class="tab-content active">
+            <!-- 用户注册 -->
+            <div class="test-section">
+                <h2 class="section-title"><i class="fas fa-user-plus"></i> 用户注册</h2>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="register_mobile" class="label-required">手机号</label>
+                        <input type="text" id="register_mobile" value="13800138000" placeholder="请输入11位手机号">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="register_email">邮箱</label>
+                        <input type="email" id="register_email" value="test@example.com" placeholder="可选，请输入邮箱">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="register_password" class="label-required">密码</label>
+                        <input type="password" id="register_password" value="12345678" placeholder="密码长度至少8位">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="register_sms_code" class="label-required">短信验证码</label>
+                        <input type="text" id="register_sms_code" value="123456" placeholder="请输入6位短信验证码">
+                    </div>
+                </div>
+
+                <div class="btn-group">
+                    <button class="btn btn-primary" onclick="testRegister()">
+                        <i class="fas fa-paper-plane"></i> 测试注册接口
+                    </button>
+                    <button class="btn btn-secondary" onclick="fillTestRegisterData()">
+                        <i class="fas fa-magic"></i> 填充测试数据
+                    </button>
+                </div>
+
+                <div class="result-container" id="result-register">
+                    <div class="result-header">
+                        <div class="result-title">测试结果</div>
+                        <div class="response-status" id="status-register"></div>
+                    </div>
+                    <div class="result-content" id="content-register"></div>
+                </div>
+            </div>
+
+            <!-- 用户登录 -->
+            <div class="test-section">
+                <h2 class="section-title"><i class="fas fa-sign-in-alt"></i> 用户登录</h2>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="login_mobile" class="label-required">手机号</label>
+                        <input type="text" id="login_mobile" placeholder="请输入注册时的手机号">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="login_password" class="label-required">密码</label>
+                        <input type="password" id="login_password" placeholder="请输入密码">
+                    </div>
+                </div>
+
+                <div class="btn-group">
+                    <button class="btn btn-primary" onclick="testLogin()">
+                        <i class="fas fa-key"></i> 测试登录接口
+                    </button>
+                    <button class="btn btn-secondary" onclick="fillTestLoginData()">
+                        <i class="fas fa-magic"></i> 填充测试数据
+                    </button>
+                </div>
+
+                <div class="result-container" id="result-login">
+                    <div class="result-header">
+                        <div class="result-title">测试结果</div>
+                        <div class="response-status" id="status-login"></div>
+                    </div>
+                    <div class="result-content" id="content-login"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 个人信息标签 -->
+        <div id="profile-tab" class="tab-content">
+            <!-- 获取个人信息 -->
+            <div class="test-section">
+                <h2 class="section-title"><i class="fas fa-user-circle"></i> 获取个人信息</h2>
+                <p style="color: #7f8c8d; margin-bottom: 15px;">需要先登录获取Token，Token将自动从登录结果中获取或手动输入</p>
+
+                <div class="form-group">
+                    <label for="profile_token">认证Token (自动填充)</label>
+                    <input type="text" id="profile_token" placeholder="自动从登录结果获取，也可手动输入">
+                </div>
+
+                <div class="btn-group">
+                    <button class="btn btn-primary" onclick="testGetProfile()">
+                        <i class="fas fa-download"></i> 获取个人信息
+                    </button>
+                </div>
+
+                <div class="result-container" id="result-get-profile">
+                    <div class="result-header">
+                        <div class="result-title">个人信息</div>
+                        <div class="response-status" id="status-get-profile"></div>
+                    </div>
+                    <div id="profile-display"></div>
+                    <div class="result-content" id="content-get-profile"></div>
+                </div>
+            </div>
+
+            <!-- 更新个人信息 -->
+            <div class="test-section">
+                <h2 class="section-title"><i class="fas fa-edit"></i> 更新个人信息</h2>
+
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="update_real_name">真实姓名</label>
+                        <input type="text" id="update_real_name" placeholder="请输入真实姓名">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="update_email">邮箱</label>
+                        <input type="email" id="update_email" placeholder="请输入新邮箱">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="update_gender">性别</label>
+                        <select id="update_gender">
+                            <option value="">请选择性别</option>
+                            <option value="1">男</option>
+                            <option value="2">女</option>
+                            <option value="0">保密</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="update_birth_date">出生日期</label>
+                        <input type="date" id="update_birth_date">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="update_education_level">学历</label>
+                        <select id="update_education_level">
+                            <option value="">请选择学历</option>
+                            <option value="1">高中及以下</option>
+                            <option value="2">专科</option>
+                            <option value="3">本科</option>
+                            <option value="4">硕士</option>
+                            <option value="5">博士</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="update_major">专业</label>
+                        <input type="text" id="update_major" placeholder="请输入专业">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="update_bio">个人简介</label>
+                        <textarea id="update_bio" placeholder="请输入个人简介"></textarea>
+                    </div>
+                </div>
+
+                <div class="btn-group">
+                    <button class="btn btn-primary" onclick="testUpdateProfile()">
+                        <i class="fas fa-save"></i> 更新个人信息
+                    </button>
+                    <button class="btn btn-secondary" onclick="fillTestUpdateData()">
+                        <i class="fas fa-magic"></i> 填充测试数据
+                    </button>
+                </div>
+
+                <div class="result-container" id="result-update-profile">
+                    <div class="result-header">
+                        <div class="result-title">测试结果</div>
+                        <div class="response-status" id="status-update-profile"></div>
+                    </div>
+                    <div class="result-content" id="content-update-profile"></div>
+                </div>
+            </div>
+
+            <!-- 更新头像 -->
+            <div class="test-section">
+                <h2 class="section-title"><i class="fas fa-portrait"></i> 更新头像</h2>
+
+                <div class="form-group">
+                    <label for="avatar_url">头像URL</label>
+                    <input type="text" id="avatar_url" value="https://randomuser.me/api/portraits/men/32.jpg" placeholder="请输入头像图片URL">
+                </div>
+
+                <div style="text-align: center; margin: 20px 0;">
+                    <img id="avatar-preview" class="avatar-preview" src="https://randomuser.me/api/portraits/men/32.jpg" alt="头像预览">
+                </div>
+
+                <div class="btn-group">
+                    <button class="btn btn-primary" onclick="testUpdateAvatar()">
+                        <i class="fas fa-image"></i> 更新头像
+                    </button>
+                    <button class="btn btn-secondary" onclick="randomAvatar()">
+                        <i class="fas fa-random"></i> 随机头像
+                    </button>
+                </div>
+
+                <div class="result-container" id="result-update-avatar">
+                    <div class="result-header">
+                        <div class="result-title">测试结果</div>
+                        <div class="response-status" id="status-update-avatar"></div>
+                    </div>
+                    <div class="result-content" id="content-update-avatar"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 安全设置标签 -->
+        <div id="security-tab" class="tab-content">
+            <!-- 修改密码 -->
+            <div class="test-section">
+                <h2 class="section-title"><i class="fas fa-key"></i> 修改密码</h2>
+
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="old_password" class="label-required">原密码</label>
+                        <input type="password" id="old_password" placeholder="请输入原密码">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="new_password" class="label-required">新密码</label>
+                        <input type="password" id="new_password" placeholder="请输入新密码（至少8位）">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="confirm_password" class="label-required">确认新密码</label>
+                        <input type="password" id="confirm_password" placeholder="请再次输入新密码">
+                    </div>
+                </div>
+
+                <div class="btn-group">
+                    <button class="btn btn-primary" onclick="testUpdatePassword()">
+                        <i class="fas fa-lock"></i> 修改密码
+                    </button>
+                    <button class="btn btn-secondary" onclick="fillTestPasswordData()">
+                        <i class="fas fa-magic"></i> 填充测试数据
+                    </button>
+                </div>
+
+                <div class="result-container" id="result-update-password">
+                    <div class="result-header">
+                        <div class="result-title">测试结果</div>
+                        <div class="response-status" id="status-update-password"></div>
+                    </div>
+                    <div class="result-content" id="content-update-password"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 其他功能标签 -->
+        <div id="other-tab" class="tab-content">
+            <!-- 获取用户状态 -->
+            <div class="test-section">
+                <h2 class="section-title"><i class="fas fa-chart-bar"></i> 获取用户状态</h2>
+
+                <div class="btn-group">
+                    <button class="btn btn-primary" onclick="testGetUserStatus()">
+                        <i class="fas fa-chart-line"></i> 获取用户状态
+                    </button>
+                </div>
+
+                <div class="result-container" id="result-user-status">
+                    <div class="result-header">
+                        <div class="result-title">用户状态信息</div>
+                        <div class="response-status" id="status-user-status"></div>
+                    </div>
+                    <div id="status-display"></div>
+                    <div class="result-content" id="content-user-status"></div>
+                </div>
+            </div>
+
+            <!-- 搜索用户 -->
+            <div class="test-section">
+                <h2 class="section-title"><i class="fas fa-search"></i> 搜索用户</h2>
+
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="search_keyword">关键词</label>
+                        <input type="text" id="search_keyword" placeholder="请输入用户名、专业等关键词">
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="search_page">页码</label>
+                            <input type="number" id="search_page" value="1" min="1">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="search_page_size">每页数量</label>
+                            <select id="search_page_size">
+                                <option value="10">10</option>
+                                <option value="20" selected>20</option>
+                                <option value="50">50</option>
+                                <option value="100">100</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="btn-group">
+                    <button class="btn btn-primary" onclick="testSearchUsers()">
+                        <i class="fas fa-search"></i> 搜索用户
+                    </button>
+                </div>
+
+                <div class="result-container" id="result-search-users">
+                    <div class="result-header">
+                        <div class="result-title">搜索结果</div>
+                        <div class="response-status" id="status-search-users"></div>
+                    </div>
+                    <div id="search-results"></div>
+                    <div class="result-content" id="content-search-users"></div>
+                </div>
+            </div>
+
+            <!-- 用户统计 -->
+            <div class="test-section">
+                <h2 class="section-title"><i class="fas fa-chart-pie"></i> 用户统计信息</h2>
+
+                <div class="btn-group">
+                    <button class="btn btn-primary" onclick="testUserStatistics()">
+                        <i class="fas fa-chart-pie"></i> 获取用户统计
+                    </button>
+                </div>
+
+                <div class="result-container" id="result-user-statistics">
+                    <div class="result-header">
+                        <div class="result-title">用户统计</div>
+                        <div class="response-status" id="status-user-statistics"></div>
+                    </div>
+                    <div id="statistics-display"></div>
+                    <div class="result-content" id="content-user-statistics"></div>
+                </div>
+            </div>
+
+            <!-- 用户登出 -->
+            <div class="test-section">
+                <h2 class="section-title"><i class="fas fa-sign-out-alt"></i> 用户登出</h2>
+
+                <div class="btn-group">
+                    <button class="btn btn-danger" onclick="testLogout()">
+                        <i class="fas fa-sign-out-alt"></i> 用户登出
+                    </button>
+                </div>
+
+                <div class="result-container" id="result-logout">
+                    <div class="result-header">
+                        <div class="result-title">测试结果</div>
+                        <div class="response-status" id="status-logout"></div>
+                    </div>
+                    <div class="result-content" id="content-logout"></div>
+                </div>
+            </div>
+        </div>
+
+        <footer>
+            <p>用户接口测试工具 &copy; 2023 | 后端地址: <span id="backend-url">http://localhost:5000</span></p>
+            <p>注意：部分功能需要先登录获取Token才能正常使用</p>
+        </footer>
+    </div>
+
+    <script>
+        // 后端基础URL
+        const BASE_URL = 'http://localhost:5000';
+        // 全局存储当前token
+        let currentToken = '';
+
+        // 更新token显示
+        function updateTokenDisplay() {
+            const tokenDisplay = document.getElementById('token-display');
+            if (currentToken) {
+                tokenDisplay.innerHTML = `<span style="color: #2ecc71;">${currentToken.substring(0, 50)}${currentToken.length > 50 ? '...' : ''}</span>`;
+                // 更新profile页面的token输入框
+                document.getElementById('profile_token').value = currentToken;
+            } else {
+                tokenDisplay.innerHTML = '<span class="token-empty">未登录，请先进行登录操作</span>';
+            }
+        }
+
+        // 复制token到剪贴板
+        function copyToken() {
+            if (!currentToken) {
+                alert('当前没有可复制的Token，请先登录');
+                return;
+            }
+
+            navigator.clipboard.writeText(currentToken).then(() => {
+                alert('Token已复制到剪贴板');
+            }).catch(err => {
+                console.error('复制失败: ', err);
+                alert('复制失败，请手动复制');
+            });
+        }
+
+        // 切换标签页
+        function switchTab(tabName) {
+            // 隐藏所有标签内容
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+
+            // 移除所有标签的激活状态
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+
+            // 显示选中的标签内容
+            document.getElementById(`${tabName}-tab`).classList.add('active');
+
+            // 激活选中的标签
+            event.target.classList.add('active');
+        }
+
+        // 格式化JSON显示
+        function formatJSON(jsonString) {
+            try {
+                const parsed = JSON.parse(jsonString);
+                return JSON.stringify(parsed, null, 2);
+            } catch (e) {
+                return jsonString;
+            }
+        }
+
+        // 显示测试结果
+        function showResult(endpointId, statusCode, data) {
+            const resultContainer = document.getElementById(`result-${endpointId}`);
+            const statusElement = document.getElementById(`status-${endpointId}`);
+            const contentElement = document.getElementById(`content-${endpointId}`);
+
+            // 设置状态码样式
+            statusElement.textContent = statusCode;
+            statusElement.className = 'response-status';
+
+            if (statusCode >= 200 && statusCode < 300) {
+                statusElement.classList.add('status-200');
+            } else if (statusCode === 400) {
+                statusElement.classList.add('status-400');
+            } else if (statusCode === 401) {
+                statusElement.classList.add('status-401');
+            } else if (statusCode === 403) {
+                statusElement.classList.add('status-403');
+            } else if (statusCode === 404) {
+                statusElement.classList.add('status-404');
+            } else if (statusCode >= 500) {
+                statusElement.classList.add('status-500');
+            } else {
+                statusElement.classList.add('status-200');
+            }
+
+            // 设置响应内容
+            contentElement.textContent = formatJSON(data);
+
+            // 显示结果容器
+            resultContainer.style.display = 'block';
+
+            // 滚动到结果位置
+            resultContainer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+
+        // 填充测试注册数据
+        function fillTestRegisterData() {
+            document.getElementById('register_mobile').value = '138' + Math.floor(Math.random() * 100000000).toString().padStart(8, '0');
+            document.getElementById('register_email').value = 'test' + Math.floor(Math.random() * 1000) + '@example.com';
+            document.getElementById('register_password').value = 'Test123456';
+            document.getElementById('register_sms_code').value = '123456';
+        }
+
+        // 填充测试登录数据
+        function fillTestLoginData() {
+            document.getElementById('login_mobile').value = '13800138000';
+            document.getElementById('login_password').value = '12345678';
+        }
+
+        // 填充测试更新数据
+        function fillTestUpdateData() {
+            const names = ['张三', '李四', '王五', '赵六', '刘七'];
+            const majors = ['计算机科学', '软件工程', '人工智能', '数据科学', '网络安全'];
+            const bios = ['热爱编程，喜欢学习新技术', '正在寻找实习机会', '应届毕业生，求职中', '有丰富的项目经验', '对前端开发感兴趣'];
+
+            document.getElementById('update_real_name').value = names[Math.floor(Math.random() * names.length)];
+            document.getElementById('update_email').value = 'user' + Math.floor(Math.random() * 1000) + '@example.com';
+            document.getElementById('update_gender').value = Math.floor(Math.random() * 3);
+            document.getElementById('update_birth_date').value = '199' + Math.floor(Math.random() * 10) + '-' + (Math.floor(Math.random() * 12) + 1).toString().padStart(2, '0') + '-' + (Math.floor(Math.random() * 28) + 1).toString().padStart(2, '0');
+            document.getElementById('update_education_level').value = Math.floor(Math.random() * 5) + 1;
+            document.getElementById('update_major').value = majors[Math.floor(Math.random() * majors.length)];
+            document.getElementById('update_bio').value = bios[Math.floor(Math.random() * bios.length)];
+        }
+
+        // 填充测试密码数据
+        function fillTestPasswordData() {
+            document.getElementById('old_password').value = '12345678';
+            document.getElementById('new_password').value = 'NewPassword123';
+            document.getElementById('confirm_password').value = 'NewPassword123';
+        }
+
+        // 随机头像
+        function randomAvatar() {
+            const gender = Math.random() > 0.5 ? 'men' : 'women';
+            const id = Math.floor(Math.random() * 100);
+            const avatarUrl = `https://randomuser.me/api/portraits/${gender}/${id}.jpg`;
+            document.getElementById('avatar_url').value = avatarUrl;
+            document.getElementById('avatar-preview').src = avatarUrl;
+        }
+
+        // 测试注册接口
+        async function testRegister() {
+            const url = `${BASE_URL}/api/user/register`;
+            const mobile = document.getElementById('register_mobile').value.trim();
+            const email = document.getElementById('register_email').value.trim();
+            const password = document.getElementById('register_password').value.trim();
+            const smsCode = document.getElementById('register_sms_code').value.trim();
+
+            if (!mobile || !password || !smsCode) {
+                alert('请填写手机号、密码和短信验证码');
+                return;
+            }
+
+            const requestBody = {
+                mobile,
+                password,
+                sms_code: smsCode
+            };
+
+            if (email) {
+                requestBody.email = email;
+            }
+
+            try {
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(requestBody)
+                });
+
+                const data = await response.text();
+                showResult('register', response.status, data);
+            } catch (error) {
+                showResult('register', 0, `请求失败: ${error.message}`);
+            }
+        }
+
+        // 测试登录接口
+        async function testLogin() {
+            const url = `${BASE_URL}/api/user/login`;
+            const mobile = document.getElementById('login_mobile').value.trim();
+            const password = document.getElementById('login_password').value.trim();
+
+            if (!mobile || !password) {
+                alert('请填写手机号和密码');
+                return;
+            }
+
+            try {
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Device-Model': 'Test Device',
+                        'X-Device-Type': '1'
+                    },
+                    body: JSON.stringify({
+                        mobile,
+                        password
+                    })
+                });
+
+                const data = await response.text();
+                showResult('login', response.status, data);
+
+                // 如果登录成功，保存token
+                if (response.ok) {
+                    try {
+                        const parsedData = JSON.parse(data);
+                        if (parsedData.data && parsedData.data.token) {
+                            currentToken = parsedData.data.token;
+                            updateTokenDisplay();
+                            alert('登录成功，Token已保存');
+                        }
+                    } catch (e) {
+                        console.error('解析登录响应失败', e);
+                    }
+                }
+            } catch (error) {
+                showResult('login', 0, `请求失败: ${error.message}`);
+            }
+        }
+
+        // 测试获取个人信息
+        async function testGetProfile() {
+            const url = `${BASE_URL}/api/user/profile`;
+            const token = document.getElementById('profile_token').value.trim() || currentToken;
+
+            if (!token) {
+                alert('请先登录获取Token，或在输入框中输入Token');
+                return;
+            }
+
+            try {
+                const response = await fetch(url, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                const data = await response.text();
+                showResult('get-profile', response.status, data);
+
+                // 如果获取成功，显示格式化信息
+                if (response.ok) {
+                    try {
+                        const parsedData = JSON.parse(data);
+                        if (parsedData.data) {
+                            const profile = parsedData.data;
+                            let profileHtml = '<div class="user-info-display">';
+
+                            for (const [key, value] of Object.entries(profile)) {
+                                if (value !== null && value !== undefined && value !== '') {
+                                    profileHtml += `
+                                        <div class="info-item">
+                                            <div class="info-label">${key}</div>
+                                            <div class="info-value">${value}</div>
+                                        </div>
+                                    `;
+                                }
+                            }
+
+                            profileHtml += '</div>';
+                            document.getElementById('profile-display').innerHTML = profileHtml;
+                        }
+                    } catch (e) {
+                        console.error('解析个人信息失败', e);
+                    }
+                }
+            } catch (error) {
+                showResult('get-profile', 0, `请求失败: ${error.message}`);
+            }
+        }
+
+        // 测试更新个人信息
+        async function testUpdateProfile() {
+            const url = `${BASE_URL}/api/user/profile`;
+            const token = currentToken;
+
+            if (!token) {
+                alert('请先登录获取Token');
+                return;
+            }
+
+            const updateData = {};
+
+            const realName = document.getElementById('update_real_name').value.trim();
+            const email = document.getElementById('update_email').value.trim();
+            const gender = document.getElementById('update_gender').value;
+            const birthDate = document.getElementById('update_birth_date').value;
+            const educationLevel = document.getElementById('update_education_level').value;
+            const major = document.getElementById('update_major').value.trim();
+            const bio = document.getElementById('update_bio').value.trim();
+
+            if (realName) updateData.real_name = realName;
+            if (email) updateData.email = email;
+            if (gender) updateData.gender = parseInt(gender);
+            if (birthDate) updateData.birth_date = birthDate;
+            if (educationLevel) updateData.education_level = parseInt(educationLevel);
+            if (major) updateData.major = major;
+            if (bio) updateData.bio = bio;
+
+            // 如果没有填写任何数据
+            if (Object.keys(updateData).length === 0) {
+                alert('请至少填写一个要更新的字段');
+                return;
+            }
+
+            try {
+                const response = await fetch(url, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify(updateData)
+                });
+
+                const data = await response.text();
+                showResult('update-profile', response.status, data);
+
+                // 如果更新成功，重新获取个人信息
+                if (response.ok) {
+                    setTimeout(testGetProfile, 500);
+                }
+            } catch (error) {
+                showResult('update-profile', 0, `请求失败: ${error.message}`);
+            }
+        }
+
+        // 测试更新密码
+        async function testUpdatePassword() {
+            const url = `${BASE_URL}/api/user/password`;
+            const token = currentToken;
+
+            if (!token) {
+                alert('请先登录获取Token');
+                return;
+            }
+
+            const oldPassword = document.getElementById('old_password').value.trim();
+            const newPassword = document.getElementById('new_password').value.trim();
+            const confirmPassword = document.getElementById('confirm_password').value.trim();
+
+            if (!oldPassword || !newPassword || !confirmPassword) {
+                alert('请填写原密码、新密码和确认密码');
+                return;
+            }
+
+            if (newPassword !== confirmPassword) {
+                alert('新密码和确认密码不一致');
+                return;
+            }
+
+            if (newPassword.length < 8) {
+                alert('新密码长度至少8位');
+                return;
+            }
+
+            try {
+                const response = await fetch(url, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        old_password: oldPassword,
+                        new_password: newPassword
+                    })
+                });
+
+                const data = await response.text();
+                showResult('update-password', response.status, data);
+            } catch (error) {
+                showResult('update-password', 0, `请求失败: ${error.message}`);
+            }
+        }
+
+        // 测试更新头像
+        async function testUpdateAvatar() {
+            const url = `${BASE_URL}/api/user/avatar`;
+            const token = currentToken;
+
+            if (!token) {
+                alert('请先登录获取Token');
+                return;
+            }
+
+            const avatarUrl = document.getElementById('avatar_url').value.trim();
+
+            if (!avatarUrl) {
+                alert('请填写头像URL');
+                return;
+            }
+
+            try {
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        avatar_url: avatarUrl
+                    })
+                });
+
+                const data = await response.text();
+                showResult('update-avatar', response.status, data);
+            } catch (error) {
+                showResult('update-avatar', 0, `请求失败: ${error.message}`);
+            }
+        }
+
+        // 测试获取用户状态
+        async function testGetUserStatus() {
+            const url = `${BASE_URL}/api/user/status`;
+            const token = currentToken;
+
+            if (!token) {
+                alert('请先登录获取Token');
+                return;
+            }
+
+            try {
+                const response = await fetch(url, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                const data = await response.text();
+                showResult('user-status', response.status, data);
+
+                // 如果获取成功，显示格式化信息
+                if (response.ok) {
+                    try {
+                        const parsedData = JSON.parse(data);
+                        if (parsedData.data) {
+                            const statusInfo = parsedData.data;
+                            let statusHtml = '<div class="user-info-display">';
+
+                            for (const [key, value] of Object.entries(statusInfo)) {
+                                if (value !== null && value !== undefined && value !== '') {
+                                    statusHtml += `
+                                        <div class="info-item">
+                                            <div class="info-label">${key}</div>
+                                            <div class="info-value">${value}</div>
+                                        </div>
+                                    `;
+                                }
+                            }
+
+                            statusHtml += '</div>';
+                            document.getElementById('status-display').innerHTML = statusHtml;
+                        }
+                    } catch (e) {
+                        console.error('解析用户状态失败', e);
+                    }
+                }
+            } catch (error) {
+                showResult('user-status', 0, `请求失败: ${error.message}`);
+            }
+        }
+
+        // 测试搜索用户
+        async function testSearchUsers() {
+            const url = `${BASE_URL}/api/user/search`;
+            const keyword = document.getElementById('search_keyword').value.trim();
+            const page = document.getElementById('search_page').value;
+            const pageSize = document.getElementById('search_page_size').value;
+
+            let queryParams = new URLSearchParams({
+                page: page,
+                page_size: pageSize
+            });
+
+            if (keyword) {
+                queryParams.append('keyword', keyword);
+            }
+
+            try {
+                const response = await fetch(`${url}?${queryParams.toString()}`, {
+                    method: 'GET'
+                });
+
+                const data = await response.text();
+                showResult('search-users', response.status, data);
+
+                // 如果获取成功，显示格式化信息
+                if (response.ok) {
+                    try {
+                        const parsedData = JSON.parse(data);
+                        if (parsedData.data && parsedData.data.users) {
+                            const users = parsedData.data.users;
+                            let searchHtml = `
+                                <div style="margin-bottom: 15px; color: #7f8c8d;">
+                                    共找到 ${parsedData.data.total} 个用户，第 ${parsedData.data.page} 页，每页 ${parsedData.data.page_size} 条
+                                </div>
+                                <div class="user-info-display">
+                            `;
+
+                            users.forEach(user => {
+                                searchHtml += `
+                                    <div class="info-item" style="text-align: center;">
+                                        <div style="margin-bottom: 10px;">
+                                            <img src="${user.avatar_url || 'https://via.placeholder.com/80'}"
+                                                 style="width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 2px solid #3498db;">
+                                        </div>
+                                        <div class="info-label">用户ID</div>
+                                        <div class="info-value">${user.user_id}</div>
+                                        <div class="info-label">姓名</div>
+                                        <div class="info-value">${user.real_name || '未设置'}</div>
+                                        <div class="info-label">专业</div>
+                                        <div class="info-value">${user.major || '未设置'}</div>
+                                    </div>
+                                `;
+                            });
+
+                            searchHtml += '</div>';
+                            document.getElementById('search-results').innerHTML = searchHtml;
+                        }
+                    } catch (e) {
+                        console.error('解析搜索结果失败', e);
+                    }
+                }
+            } catch (error) {
+                showResult('search-users', 0, `请求失败: ${error.message}`);
+            }
+        }
+
+        // 测试用户统计
+        async function testUserStatistics() {
+            const url = `${BASE_URL}/api/user/statistics`;
+            const token = currentToken;
+
+            if (!token) {
+                alert('请先登录获取Token');
+                return;
+            }
+
+            try {
+                const response = await fetch(url, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                const data = await response.text();
+                showResult('user-statistics', response.status, data);
+
+                // 如果获取成功，显示格式化信息
+                if (response.ok) {
+                    try {
+                        const parsedData = JSON.parse(data);
+                        if (parsedData.data) {
+                            const stats = parsedData.data;
+                            let statsHtml = '<div class="user-info-display">';
+
+                            for (const [key, value] of Object.entries(stats)) {
+                                statsHtml += `
+                                    <div class="info-item">
+                                        <div class="info-label">${key}</div>
+                                        <div class="info-value">${value}</div>
+                                    </div>
+                                `;
+                            }
+
+                            statsHtml += '</div>';
+                            document.getElementById('statistics-display').innerHTML = statsHtml;
+                        }
+                    } catch (e) {
+                        console.error('解析统计信息失败', e);
+                    }
+                }
+            } catch (error) {
+                showResult('user-statistics', 0, `请求失败: ${error.message}`);
+            }
+        }
+
+        // 测试用户登出
+        async function testLogout() {
+            const url = `${BASE_URL}/api/user/logout`;
+            const token = currentToken;
+
+            if (!token) {
+                alert('请先登录获取Token');
+                return;
+            }
+
+            try {
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                const data = await response.text();
+                showResult('logout', response.status, data);
+
+                // 如果登出成功，清除token
+                if (response.ok) {
+                    currentToken = '';
+                    updateTokenDisplay();
+                    alert('登出成功，Token已清除');
+                }
+            } catch (error) {
+                showResult('logout', 0, `请求失败: ${error.message}`);
+            }
+        }
+
+        // 页面加载时初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            // 显示后端URL
+            document.getElementById('backend-url').textContent = BASE_URL;
+
+            // 为头像URL输入框添加实时预览
+            document.getElementById('avatar_url').addEventListener('input', function() {
+                document.getElementById('avatar-preview').src = this.value;
+            });
+
+            // 为所有输入框添加回车键支持
+            document.querySelectorAll('input').forEach(input => {
+                input.addEventListener('keypress', function(event) {
+                    if (event.key === 'Enter') {
+                        const section = this.closest('.test-section');
+                        const primaryButton = section.querySelector('.btn-primary');
+                        if (primaryButton) {
+                            primaryButton.click();
+                        }
+                    }
+                });
+            });
+
+            // 初始化填充测试数据
+            fillTestRegisterData();
+            fillTestLoginData();
+            fillTestUpdateData();
+            fillTestPasswordData();
+
+            // 从localStorage加载之前保存的token
+            const savedToken = localStorage.getItem('user_test_token');
+            if (savedToken) {
+                currentToken = savedToken;
+                updateTokenDisplay();
+            }
+
+            // 定期保存token到localStorage
+            setInterval(() => {
+                if (currentToken) {
+                    localStorage.setItem('user_test_token', currentToken);
+                }
+            }, 5000);
+        });
+    </script>
+</body>
+</html>

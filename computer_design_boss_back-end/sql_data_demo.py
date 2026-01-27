@@ -562,10 +562,15 @@ class Sys_user:
         '''
         try:
             # 基础查询
-            base_sql = """
-            from sys_user 
-            where is_deleted='0' and status='{status}'
-            """
+            # base_sql = f"""
+            # from sys_user
+            # where is_deleted='0' and status='{status}'
+            # """
+            print(status)
+            base_sql = f"""
+                        from sys_user 
+                        where is_deleted='0' and status='{status}'
+                        """
 
             # 关键词搜索条件
             if keyword:
