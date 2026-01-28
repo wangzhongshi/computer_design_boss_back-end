@@ -14,7 +14,7 @@ import os
 from X1_ws import think_speaker
 import logging
 from pathlib import Path
-from sql_data_demo import EndDemoDatabase, Job_prot, Job_category_simple, Forum_comments, Sys_user
+from sql_data_demo import EndDemoDatabase, Job_prot, Job_category_simple, Forum_comments, Sys_user, ResumeManager, ComplaintFeedbackManager
 from flask import jsonify, request, g
 from datetime import datetime
 from sqlalchemy import text
@@ -22,6 +22,11 @@ import hashlib
 # import jwt as pyjwt
 import re
 from functools import wraps
+from flask import Blueprint, request, jsonify, current_app
+from flask_jwt_extended import jwt_required, get_jwt_identity
+from typing import Dict, List, Optional, Any
+import json
+from datetime import datetime
 
 
 db = EndDemoDatabase(host='localhost', user='root', password='123456')
@@ -29,6 +34,8 @@ job_prot = Job_prot(db.connection)
 job_category_simple = Job_category_simple(db.connection)
 forum_comments = Forum_comments(db.connection)
 sys_user = Sys_user(db.connection)
+resume_manager = ResumeManager(db.connection)
+manager = ComplaintFeedbackManager(db.connection)
 
 think_speaker = think_speaker()
 
@@ -1375,6 +1382,1298 @@ def get_user_statistics():
             'message': f'获取统计信息异常: {str(e)}',
             'data': None
         }), 500
+
+# 简历基本信息路由
+@app.route('/api/resume/basic', methods=['POST'])
+@jwt_required()
+def create_or_update_resume():
+    """创建或更新简历基本信息"""
+    try:
+        user_id = get_jwt_identity()
+        data = request.get_json()
+
+        # 验证必填字段
+        required_fields = ['real_name', 'phone', 'email', 'education_level', 'school_name']
+        for field in required_fields:
+            if field not in data or not data[field]:
+                return jsonify({
+                    'code': 400,
+                    'message': f'{field}为必填字段',
+                    'data': None
+                }), 400
+
+        # 检查是否已有简历
+        existing_resume = resume_manager.resumes.get_resume_by_user(user_id)
+
+        if existing_resume:
+            # 更新简历
+            success = resume_manager.resumes.update_resume(user_id, data)
+            if success:
+                return jsonify({
+                    'code': 200,
+                    'message': '简历更新成功',
+                    'data': {'resume_id': existing_resume['id']}
+                })
+            else:
+                return jsonify({
+                    'code': 500,
+                    'message': '简历更新失败',
+                    'data': None
+                }), 500
+        else:
+            # 创建简历
+            resume_id = resume_manager.resumes.create_resume(user_id, data)
+            if resume_id:
+                return jsonify({
+                    'code': 200,
+                    'message': '简历创建成功',
+                    'data': {'resume_id': resume_id}
+                })
+            else:
+                return jsonify({
+                    'code': 500,
+                    'message': '简历创建失败，可能已存在简历',
+                    'data': None
+                }), 500
+
+    except Exception as e:
+        current_app.logger.error(f'创建或更新简历异常：{e}')
+        return jsonify({
+            'code': 500,
+            'message': f'服务器异常: {str(e)}',
+            'data': None
+        }), 500
+
+
+@app.route('/api/resume/basic', methods=['GET'])
+@jwt_required()
+def get_resume():
+    """获取简历基本信息"""
+    try:
+        user_id = get_jwt_identity()
+        
+
+        resume = resume_manager.resumes.get_resume_by_user(user_id)
+
+        if not resume:
+            return jsonify({
+                'code': 404,
+                'message': '未找到简历信息',
+                'data': None
+            }), 404
+
+        return jsonify({
+            'code': 200,
+            'message': '获取简历成功',
+            'data': resume
+        })
+
+    except Exception as e:
+        current_app.logger.error(f'获取简历异常：{e}')
+        return jsonify({
+            'code': 500,
+            'message': f'服务器异常: {str(e)}',
+            'data': None
+        }), 500
+
+
+@app.route('/api/resume/basic', methods=['DELETE'])
+@jwt_required()
+def delete_resume():
+    """删除简历"""
+    try:
+        user_id = get_jwt_identity()
+        
+
+        success = resume_manager.resumes.delete_resume(user_id)
+
+        if success:
+            return jsonify({
+                'code': 200,
+                'message': '简历删除成功',
+                'data': None
+            })
+        else:
+            return jsonify({
+                'code': 500,
+                'message': '简历删除失败',
+                'data': None
+            }), 500
+
+    except Exception as e:
+        current_app.logger.error(f'删除简历异常：{e}')
+        return jsonify({
+            'code': 500,
+            'message': f'服务器异常: {str(e)}',
+            'data': None
+        }), 500
+
+
+# 证书管理路由
+@app.route('/api/resume/certificates', methods=['POST'])
+@jwt_required()
+def add_certificate():
+    """添加证书"""
+    try:
+        user_id = get_jwt_identity()
+        data = request.get_json()
+
+        # 验证必填字段
+        required_fields = ['cert_name', 'cert_type']
+        for field in required_fields:
+            if field not in data or not data[field]:
+                return jsonify({
+                    'code': 400,
+                    'message': f'{field}为必填字段',
+                    'data': None
+                }), 400
+
+        
+        cert_id = resume_manager.certificates.add_certificate(user_id, data)
+
+        if cert_id:
+            return jsonify({
+                'code': 200,
+                'message': '证书添加成功',
+                'data': {'cert_id': cert_id}
+            })
+        else:
+            return jsonify({
+                'code': 500,
+                'message': '证书添加失败，请先创建简历',
+                'data': None
+            }), 500
+
+    except Exception as e:
+        current_app.logger.error(f'添加证书异常：{e}')
+        return jsonify({
+            'code': 500,
+            'message': f'服务器异常: {str(e)}',
+            'data': None
+        }), 500
+
+
+@app.route('/api/resume/certificates', methods=['GET'])
+@jwt_required()
+def get_certificates():
+    """获取用户证书列表"""
+    try:
+        user_id = get_jwt_identity()
+        cert_type = request.args.get('cert_type')
+
+        
+        certificates = resume_manager.certificates.get_user_certificates(user_id, cert_type)
+
+        return jsonify({
+            'code': 200,
+            'message': '获取证书列表成功',
+            'data': certificates
+        })
+
+    except Exception as e:
+        current_app.logger.error(f'获取证书列表异常：{e}')
+        return jsonify({
+            'code': 500,
+            'message': f'服务器异常: {str(e)}',
+            'data': None
+        }), 500
+
+
+@app.route('/api/resume/certificates/<int:cert_id>', methods=['PUT'])
+@jwt_required()
+def update_certificate(cert_id):
+    """更新证书信息"""
+    try:
+        user_id = get_jwt_identity()
+        data = request.get_json()
+
+        
+        success = resume_manager.certificates.update_certificate(cert_id, user_id, data)
+
+        if success:
+            return jsonify({
+                'code': 200,
+                'message': '证书更新成功',
+                'data': None
+            })
+        else:
+            return jsonify({
+                'code': 500,
+                'message': '证书更新失败',
+                'data': None
+            }), 500
+
+    except Exception as e:
+        current_app.logger.error(f'更新证书异常：{e}')
+        return jsonify({
+            'code': 500,
+            'message': f'服务器异常: {str(e)}',
+            'data': None
+        }), 500
+
+
+@app.route('/api/resume/api/resume/certificates/<int:cert_id>', methods=['DELETE'])
+@jwt_required()
+def delete_certificate(cert_id):
+    """删除证书"""
+    try:
+        user_id = get_jwt_identity()
+
+        
+        success = resume_manager.certificates.delete_certificate(cert_id, user_id)
+
+        if success:
+            return jsonify({
+                'code': 200,
+                'message': '证书删除成功',
+                'data': None
+            })
+        else:
+            return jsonify({
+                'code': 500,
+                'message': '证书删除失败',
+                'data': None
+            }), 500
+
+    except Exception as e:
+        current_app.logger.error(f'删除证书异常：{e}')
+        return jsonify({
+            'code': 500,
+            'message': f'服务器异常: {str(e)}',
+            'data': None
+        }), 500
+
+
+# 校园经历路由
+@app.route('/api/resume/campus-experience', methods=['POST'])
+@jwt_required()
+def upsert_campus_experience():
+    """更新或创建校园经历"""
+    try:
+        user_id = get_jwt_identity()
+        data = request.get_json()
+
+        
+        experience_id = resume_manager.campus_experiences.upsert_campus_experience(user_id, data)
+
+        if experience_id:
+            return jsonify({
+                'code': 200,
+                'message': '校园经历保存成功',
+                'data': {'experience_id': experience_id}
+            })
+        else:
+            return jsonify({
+                'code': 500,
+                'message': '校园经历保存失败',
+                'data': None
+            }), 500
+
+    except Exception as e:
+        current_app.logger.error(f'保存校园经历异常：{e}')
+        return jsonify({
+            'code': 500,
+            'message': f'服务器异常: {str(e)}',
+            'data': None
+        }), 500
+
+
+@app.route('/api/resume/campus-experience', methods=['GET'])
+@jwt_required()
+def get_campus_experience():
+    """获取校园经历"""
+    try:
+        user_id = get_jwt_identity()
+
+        
+        experience = resume_manager.campus_experiences.get_campus_experience(user_id)
+
+        if experience:
+            return jsonify({
+                'code': 200,
+                'message': '获取校园经历成功',
+                'data': experience
+            })
+        else:
+            return jsonify({
+                'code': 404,
+                'message': '未找到校园经历',
+                'data': None
+            }), 404
+
+    except Exception as e:
+        current_app.logger.error(f'获取校园经历异常：{e}')
+        return jsonify({
+            'code': 500,
+            'message': f'服务器异常: {str(e)}',
+            'data': None
+        }), 500
+
+
+# 实习经历路由
+@app.route('/api/resume/internships', methods=['POST'])
+@jwt_required()
+def add_internship():
+    """添加实习经历"""
+    try:
+        user_id = get_jwt_identity()
+        data = request.get_json()
+
+        # 验证必填字段
+        required_fields = ['company_name', 'position', 'start_date']
+        for field in required_fields:
+            if field not in data or not data[field]:
+                return jsonify({
+                    'code': 400,
+                    'message': f'{field}为必填字段',
+                    'data': None
+                }), 400
+
+        
+        internship_id = resume_manager.internships.add_internship(user_id, data)
+
+        if internship_id:
+            return jsonify({
+                'code': 200,
+                'message': '实习经历添加成功',
+                'data': {'internship_id': internship_id}
+            })
+        else:
+            return jsonify({
+                'code': 500,
+                'message': '实习经历添加失败',
+                'data': None
+            }), 500
+
+    except Exception as e:
+        current_app.logger.error(f'添加实习经历异常：{e}')
+        return jsonify({
+            'code': 500,
+            'message': f'服务器异常: {str(e)}',
+            'data': None
+        }), 500
+
+
+@app.route('/api/resume/internships', methods=['GET'])
+@jwt_required()
+def get_internships():
+    """获取实习经历列表"""
+    try:
+        user_id = get_jwt_identity()
+
+        
+        internships = resume_manager.internships.get_user_internships(user_id)
+
+        return jsonify({
+            'code': 200,
+            'message': '获取实习经历成功',
+            'data': internships
+        })
+
+    except Exception as e:
+        current_app.logger.error(f'获取实习经历异常：{e}')
+        return jsonify({
+            'code': 500,
+            'message': f'服务器异常: {str(e)}',
+            'data': None
+        }), 500
+
+
+@app.route('/api/resume/internships/<int:internship_id>', methods=['PUT'])
+@jwt_required()
+def update_internship(internship_id):
+    """更新实习经历"""
+    try:
+        user_id = get_jwt_identity()
+        data = request.get_json()
+
+        
+        success = resume_manager.internships.update_internship(internship_id, user_id, data)
+
+        if success:
+            return jsonify({
+                'code': 200,
+                'message': '实习经历更新成功',
+                'data': None
+            })
+        else:
+            return jsonify({
+                'code': 500,
+                'message': '实习经历更新失败',
+                'data': None
+            }), 500
+
+    except Exception as e:
+        current_app.logger.error(f'更新实习经历异常：{e}')
+        return jsonify({
+            'code': 500,
+            'message': f'服务器异常: {str(e)}',
+            'data': None
+        }), 500
+
+
+@app.route('/api/resume/internships/<int:internship_id>', methods=['DELETE'])
+@jwt_required()
+def delete_internship(internship_id):
+    """删除实习经历"""
+    try:
+        user_id = get_jwt_identity()
+
+        
+        success = resume_manager.internships.delete_internship(internship_id, user_id)
+
+        if success:
+            return jsonify({
+                'code': 200,
+                'message': '实习经历删除成功',
+                'data': None
+            })
+        else:
+            return jsonify({
+                'code': 500,
+                'message': '实习经历删除失败',
+                'data': None
+            }), 500
+
+    except Exception as e:
+        current_app.logger.error(f'删除实习经历异常：{e}')
+        return jsonify({
+            'code': 500,
+            'message': f'服务器异常: {str(e)}',
+            'data': None
+        }), 500
+
+
+# 求职意向路由
+@app.route('/api/resume/job-intention', methods=['POST'])
+@jwt_required()
+def upsert_job_intention():
+    """更新或创建求职意向"""
+    try:
+        user_id = get_jwt_identity()
+        data = request.get_json()
+
+        # 验证必填字段
+        required_fields = ['target_industries', 'target_positions', 'salary_min', 'salary_max']
+        for field in required_fields:
+            if field not in data or not data[field]:
+                return jsonify({
+                    'code': 400,
+                    'message': f'{field}为必填字段',
+                    'data': None
+                }), 400
+
+        
+        intention_id = resume_manager.job_intentions.upsert_job_intention(user_id, data)
+
+        if intention_id:
+            return jsonify({
+                'code': 200,
+                'message': '求职意向保存成功',
+                'data': {'intention_id': intention_id}
+            })
+        else:
+            return jsonify({
+                'code': 500,
+                'message': '求职意向保存失败',
+                'data': None
+            }), 500
+
+    except Exception as e:
+        current_app.logger.error(f'保存求职意向异常：{e}')
+        return jsonify({
+            'code': 500,
+            'message': f'服务器异常: {str(e)}',
+            'data': None
+        }), 500
+
+
+@app.route('/api/resume/job-intention', methods=['GET'])
+@jwt_required()
+def get_job_intention():
+    """获取求职意向"""
+    try:
+        user_id = get_jwt_identity()
+
+        
+        intention = resume_manager.job_intentions.get_job_intention(user_id)
+
+        if intention:
+            return jsonify({
+                'code': 200,
+                'message': '获取求职意向成功',
+                'data': intention
+            })
+        else:
+            return jsonify({
+                'code': 404,
+                'message': '未找到求职意向',
+                'data': None
+            }), 404
+
+    except Exception as e:
+        current_app.logger.error(f'获取求职意向异常：{e}')
+        return jsonify({
+            'code': 500,
+            'message': f'服务器异常: {str(e)}',
+            'data': None
+        }), 500
+
+
+# 求职偏好路由
+@app.route('/api/resume/job-preference', methods=['POST'])
+@jwt_required()
+def upsert_job_preference():
+    """更新或创建求职偏好"""
+    try:
+        user_id = get_jwt_identity()
+        data = request.get_json()
+
+        
+        preference_id = resume_manager.job_preferences.upsert_job_preference(user_id, data)
+
+        if preference_id:
+            return jsonify({
+                'code': 200,
+                'message': '求职偏好保存成功',
+                'data': {'preference_id': preference_id}
+            })
+        else:
+            return jsonify({
+                'code': 500,
+                'message': '求职偏好保存失败',
+                'data': None
+            }), 500
+
+    except Exception as e:
+        current_app.logger.error(f'保存求职偏好异常：{e}')
+        return jsonify({
+            'code': 500,
+            'message': f'服务器异常: {str(e)}',
+            'data': None
+        }), 500
+
+
+@app.route('/api/resume/job-preference', methods=['GET'])
+@jwt_required()
+def get_job_preference():
+    """获取求职偏好"""
+    try:
+        user_id = get_jwt_identity()
+
+        
+        preference = resume_manager.job_preferences.get_job_preference(user_id)
+
+        if preference:
+            return jsonify({
+                'code': 200,
+                'message': '获取求职偏好成功',
+                'data': preference
+            })
+        else:
+            return jsonify({
+                'code': 404,
+                'message': '未找到求职偏好',
+                'data': None
+            }), 404
+
+    except Exception as e:
+        current_app.logger.error(f'获取求职偏好异常：{e}')
+        return jsonify({
+            'code': 500,
+            'message': f'服务器异常: {str(e)}',
+            'data': None
+        }), 500
+
+
+# 完整简历获取
+@app.route('/api/resume/complete', methods=['GET'])
+@jwt_required()
+def get_complete_resume():
+    """获取用户完整的简历信息"""
+    try:
+        user_id = get_jwt_identity()
+
+        
+        complete_resume = resume_manager.get_complete_resume(user_id)
+
+        # 检查是否有基本信息
+        if not complete_resume.get('basic_info'):
+            return jsonify({
+                'code': 404,
+                'message': '请先创建简历基本信息',
+                'data': None
+            }), 404
+
+        return jsonify({
+            'code': 200,
+            'message': '获取完整简历成功',
+            'data': complete_resume
+        })
+
+    except Exception as e:
+        current_app.logger.error(f'获取完整简历异常：{e}')
+        return jsonify({
+            'code': 500,
+            'message': f'服务器异常: {str(e)}',
+            'data': None
+        }), 500
+
+
+# 简历搜索（需要管理员权限）
+@app.route('/api/resume/search', methods=['POST'])
+@jwt_required()
+def search_resumes():
+    """搜索简历（需要管理员权限）"""
+    try:
+        # 这里可以添加管理员权限验证
+        # 比如检查用户角色是否为管理员
+
+        data = request.get_json()
+
+        
+        resumes = resume_manager.search_resumes(data)
+
+        return jsonify({
+            'code': 200,
+            'message': '搜索简历成功',
+            'data': {
+                'resumes': resumes,
+                'total': len(resumes)
+            }
+        })
+
+    except Exception as e:
+        current_app.logger.error(f'搜索简历异常：{e}')
+        return jsonify({
+            'code': 500,
+            'message': f'服务器异常: {str(e)}',
+            'data': None
+        }), 500
+
+
+# 简历统计
+@app.route('/api/resume/stats', methods=['GET'])
+@jwt_required()
+def get_resume_stats():
+    """获取简历统计信息（需要管理员权限）"""
+    try:
+        # 这里可以添加管理员权限验证
+
+        
+        stats = resume_manager.get_resume_stats()
+
+        # 获取证书统计
+        cert_stats = resume_manager.certificates.get_certificate_stats(get_jwt_identity())
+
+        # 获取实习统计
+        internship_stats = resume_manager.internships.get_internship_stats(get_jwt_identity())
+
+        # 获取行业分布
+        industry_distribution = resume_manager.internships.get_industry_distribution()
+
+        # 获取期望城市分布
+        city_distribution = resume_manager.job_intentions.get_city_distribution()
+
+        # 获取薪资统计
+        salary_stats = resume_manager.job_intentions.get_salary_range_stats()
+
+        # 获取工作偏好统计
+        work_preference_stats = resume_manager.job_preferences.get_work_preference_stats()
+
+        complete_stats = {
+            **stats,
+            'cert_stats': cert_stats,
+            'internship_stats': internship_stats,
+            'industry_distribution': industry_distribution,
+            'city_distribution': city_distribution,
+            'salary_stats': salary_stats,
+            'work_preference_stats': work_preference_stats
+        }
+
+        return jsonify({
+            'code': 200,
+            'message': '获取统计信息成功',
+            'data': complete_stats
+        })
+
+    except Exception as e:
+        current_app.logger.error(f'获取简历统计异常：{e}')
+        return jsonify({
+            'code': 500,
+            'message': f'服务器异常: {str(e)}',
+            'data': None
+        }), 500
+
+
+# 批量操作（需要管理员权限）
+@app.route('/api/resume/batch-update', methods=['POST'])
+@jwt_required()
+def batch_update_resumes():
+    """批量更新简历（需要管理员权限）"""
+    try:
+        # 这里可以添加管理员权限验证
+
+        data = request.get_json()
+
+        if 'update_data' not in data or 'conditions' not in data:
+            return jsonify({
+                'code': 400,
+                'message': 'update_data和conditions为必填字段',
+                'data': None
+            }), 400
+
+        
+        count = resume_manager.batch_update_resumes(data['update_data'], data['conditions'])
+
+        return jsonify({
+            'code': 200,
+            'message': f'批量更新成功，共更新{count}条记录',
+            'data': {'affected_rows': count}
+        })
+
+    except Exception as e:
+        current_app.logger.error(f'批量更新简历异常：{e}')
+        return jsonify({
+            'code': 500,
+            'message': f'服务器异常: {str(e)}',
+            'data': None
+        }), 500
+
+
+
+@app.route('/api/complaint/types', methods=['GET'])
+def get_complaint_types():
+    """获取所有投诉类型"""
+    try:
+        
+        types = manager.get_all_complaint_types()
+
+        if types is None:
+            return jsonify({
+                'code': 500,
+                'message': '获取投诉类型失败'
+            }), 500
+
+        return jsonify({
+            'code': 200,
+            'message': 'success',
+            'data': types
+        }), 200
+    except Exception as e:
+        app.logger.error(f'获取投诉类型失败: {str(e)}')
+        return jsonify({
+            'code': 500,
+            'message': '服务器内部错误'
+        }), 500
+    finally:
+        if 'manager' in locals():
+            manager.connection.close()
+
+
+@app.route('/api/complaint/submit', methods=['POST'])
+def submit_complaint():
+    """用户提交投诉"""
+    try:
+        data = request.get_json()
+        if not data:
+            app.logger.error('未获取到投诉数据')
+            return jsonify({
+                'code': 400,
+                'message': '请求参数不能为空'
+            }), 400
+
+        user_id = data.get('user_id')
+        complaint_type = data.get('complaint_type')
+        description = data.get('description', '').strip()
+        image_urls = data.get('image_urls', [])
+        priority = data.get('priority', 1)
+
+        # 参数验证
+        if not user_id or not complaint_type or not description:
+            return jsonify({
+                'code': 400,
+                'message': 'user_id、complaint_type和description为必填项'
+            }), 400
+
+        if priority not in [1, 2, 3]:
+            return jsonify({
+                'code': 400,
+                'message': 'priority参数无效，应为1、2或3'
+            }), 400
+
+        
+        complaint_id = manager.submit_complaint(
+            user_id=user_id,
+            complaint_type=complaint_type,
+            description=description,
+            image_urls=image_urls,
+            priority=priority
+        )
+
+        if complaint_id is None:
+            return jsonify({
+                'code': 500,
+                'message': '提交投诉失败'
+            }), 500
+
+        return jsonify({
+            'code': 200,
+            'message': '投诉提交成功',
+            'data': {
+                'complaint_id': complaint_id
+            }
+        }), 200
+    except Exception as e:
+        app.logger.error(f'提交投诉失败: {str(e)}')
+        return jsonify({
+            'code': 500,
+            'message': '服务器内部错误'
+        }), 500
+    finally:
+        if 'manager' in locals():
+            manager.connection.close()
+
+
+@app.route('/api/complaint/user/<int:user_id>', methods=['GET'])
+def get_user_complaints(user_id: int):
+    """获取用户的所有投诉"""
+    try:
+        # 获取查询参数
+        is_resolved = request.args.get('is_resolved')
+        if is_resolved is not None:
+            try:
+                is_resolved = int(is_resolved)
+                if is_resolved not in [0, 1]:
+                    raise ValueError
+            except ValueError:
+                return jsonify({
+                    'code': 400,
+                    'message': 'is_resolved参数无效，应为0或1'
+                }), 400
+
+        
+        complaints = manager.get_user_complaints(user_id=user_id, is_resolved=is_resolved)
+
+        if complaints is None:
+            return jsonify({
+                'code': 500,
+                'message': '获取用户投诉失败'
+            }), 500
+
+        return jsonify({
+            'code': 200,
+            'message': 'success',
+            'data': complaints
+        }), 200
+    except Exception as e:
+        app.logger.error(f'获取用户(user_id={user_id})投诉失败: {str(e)}')
+        return jsonify({
+            'code': 500,
+            'message': '服务器内部错误'
+        }), 500
+    finally:
+        if 'manager' in locals():
+            manager.connection.close()
+
+
+@app.route('/api/complaint/<int:complaint_id>', methods=['GET'])
+def get_complaint_detail(complaint_id: int):
+    """根据投诉ID获取投诉详情"""
+    try:
+        
+        complaint = manager.get_complaint_by_id(complaint_id)
+
+        if complaint is None:
+            return jsonify({
+                'code': 404,
+                'message': '投诉不存在'
+            }), 404
+
+        return jsonify({
+            'code': 200,
+            'message': 'success',
+            'data': complaint
+        }), 200
+    except Exception as e:
+        app.logger.error(f'获取投诉(ID={complaint_id})详情失败: {str(e)}')
+        return jsonify({
+            'code': 500,
+            'message': '服务器内部错误'
+        }), 500
+    finally:
+        if 'manager' in locals():
+            manager.connection.close()
+
+
+@app.route('/api/complaint/reply', methods=['POST'])
+def reply_complaint():
+    """管理员回复投诉"""
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({
+                'code': 400,
+                'message': '请求参数不能为空'
+            }), 400
+
+        complaint_id = data.get('complaint_id')
+        feedback_content = data.get('feedback_content', '').strip()
+        resolved_by = data.get('resolved_by')
+        mark_resolved = data.get('mark_resolved', True)
+
+        # 参数验证
+        if not complaint_id or not feedback_content or not resolved_by:
+            return jsonify({
+                'code': 400,
+                'message': 'complaint_id、feedback_content和resolved_by为必填项'
+            }), 400
+
+        
+
+        # 检查投诉是否存在
+        if not manager.complaint_exists(complaint_id):
+            return jsonify({
+                'code': 404,
+                'message': '投诉不存在'
+            }), 404
+
+        success = manager.reply_complaint(
+            complaint_id=complaint_id,
+            feedback_content=feedback_content,
+            resolved_by=resolved_by,
+            mark_resolved=mark_resolved
+        )
+
+        if not success:
+            return jsonify({
+                'code': 500,
+                'message': '回复投诉失败'
+            }), 500
+
+        return jsonify({
+            'code': 200,
+            'message': '回复成功'
+        }), 200
+    except Exception as e:
+        app.logger.error(f'回复投诉失败: {str(e)}')
+        return jsonify({
+            'code': 500,
+            'message': '服务器内部错误'
+        }), 500
+    finally:
+        if 'manager' in locals():
+            manager.connection.close()
+
+
+@app.route('/api/complaint/list', methods=['POST'])
+def get_complaint_list():
+    """管理员获取投诉列表(支持筛选和分页)"""
+    try:
+        data = request.get_json()
+        if not data:
+            # 如果没有传参数，使用空字典
+            data = {}
+
+        filters = data.get('filters', {})
+        page = data.get('page', 1)
+        page_size = data.get('page_size', 20)
+
+        # 参数验证
+        if page < 1:
+            page = 1
+        if page_size < 1 or page_size > 100:
+            page_size = 20
+
+        
+        complaints, total = manager.get_complaint_list(
+            filters=filters,
+            page=page,
+            page_size=page_size
+        )
+
+        if complaints is None:
+            return jsonify({
+                'code': 500,
+                'message': '获取投诉列表失败'
+            }), 500
+
+        return jsonify({
+            'code': 200,
+            'message': 'success',
+            'data': {
+                'list': complaints,
+                'total': total,
+                'page': page,
+                'page_size': page_size,
+                'total_pages': (total + page_size - 1) // page_size
+            }
+        }), 200
+    except Exception as e:
+        app.logger.error(f'获取投诉列表失败: {str(e)}')
+        return jsonify({
+            'code': 500,
+            'message': '服务器内部错误'
+        }), 500
+    finally:
+        if 'manager' in locals():
+            manager.connection.close()
+
+
+@app.route('/api/complaint/statistics', methods=['GET'])
+def get_complaint_statistics():
+    """获取投诉统计信息"""
+    try:
+        
+        statistics = manager.get_complaint_statistics()
+
+        if statistics is None:
+            return jsonify({
+                'code': 500,
+                'message': '获取投诉统计失败'
+            }), 500
+
+        return jsonify({
+            'code': 200,
+            'message': 'success',
+            'data': statistics
+        }), 200
+    except Exception as e:
+        app.logger.error(f'获取投诉统计失败: {str(e)}')
+        return jsonify({
+            'code': 500,
+            'message': '服务器内部错误'
+        }), 500
+    finally:
+        if 'manager' in locals():
+            manager.connection.close()
+
+
+@app.route('/api/complaint/status', methods=['POST'])
+def update_complaint_status():
+    """更新投诉状态"""
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({
+                'code': 400,
+                'message': '请求参数不能为空'
+            }), 400
+
+        complaint_id = data.get('complaint_id')
+        is_resolved = data.get('is_resolved')
+        resolved_by = data.get('resolved_by')
+
+        # 参数验证
+        if not complaint_id or is_resolved is None:
+            return jsonify({
+                'code': 400,
+                'message': 'complaint_id和is_resolved为必填项'
+            }), 400
+
+        if is_resolved not in [0, 1]:
+            return jsonify({
+                'code': 400,
+                'message': 'is_resolved参数无效，应为0或1'
+            }), 400
+
+        
+
+        # 检查投诉是否存在
+        if not manager.complaint_exists(complaint_id):
+            return jsonify({
+                'code': 404,
+                'message': '投诉不存在'
+            }), 404
+
+        success = manager.update_complaint_status(
+            complaint_id=complaint_id,
+            is_resolved=is_resolved,
+            resolved_by=resolved_by
+        )
+
+        if not success:
+            return jsonify({
+                'code': 500,
+                'message': '更新投诉状态失败'
+            }), 500
+
+        return jsonify({
+            'code': 200,
+            'message': '更新成功'
+        }), 200
+    except Exception as e:
+        app.logger.error(f'更新投诉状态失败: {str(e)}')
+        return jsonify({
+            'code': 500,
+            'message': '服务器内部错误'
+        }), 500
+    finally:
+        if 'manager' in locals():
+            manager.connection.close()
+
+
+@app.route('/api/complaint/unresolved/count', methods=['GET'])
+def get_unresolved_count():
+    """获取未解决的投诉数量"""
+    try:
+        
+        count = manager.get_unresolved_count()
+
+        return jsonify({
+            'code': 200,
+            'message': 'success',
+            'data': {
+                'unresolved_count': count
+            }
+        }), 200
+    except Exception as e:
+        app.logger.error(f'获取未解决投诉数量失败: {str(e)}')
+        return jsonify({
+            'code': 500,
+            'message': '服务器内部错误'
+        }), 500
+    finally:
+        if 'manager' in locals():
+            manager.connection.close()
+
+
+@app.route('/api/complaint/recent', methods=['GET'])
+def get_recent_complaints():
+    """获取最近N天的投诉"""
+    try:
+        days = request.args.get('days', 7, type=int)
+
+        if days < 1 or days > 365:
+            return jsonify({
+                'code': 400,
+                'message': 'days参数应在1-365之间'
+            }), 400
+
+        
+        complaints = manager.get_recent_complaints(days=days)
+
+        if complaints is None:
+            return jsonify({
+                'code': 500,
+                'message': '获取最近投诉失败'
+            }), 500
+
+        return jsonify({
+            'code': 200,
+            'message': 'success',
+            'data': complaints
+        }), 200
+    except Exception as e:
+        app.logger.error(f'获取最近投诉失败: {str(e)}')
+        return jsonify({
+            'code': 500,
+            'message': '服务器内部错误'
+        }), 500
+    finally:
+        if 'manager' in locals():
+            manager.connection.close()
+
+
+@app.route('/api/complaint/high-priority', methods=['GET'])
+def get_high_priority_complaints():
+    """获取高优先级未解决投诉"""
+    try:
+        
+        complaints = manager.get_high_priority_unresolved()
+
+        if complaints is None:
+            return jsonify({
+                'code': 500,
+                'message': '获取高优先级投诉失败'
+            }), 500
+
+        return jsonify({
+            'code': 200,
+            'message': 'success',
+            'data': complaints
+        }), 200
+    except Exception as e:
+        app.logger.error(f'获取高优先级投诉失败: {str(e)}')
+        return jsonify({
+            'code': 500,
+            'message': '服务器内部错误'
+        }), 500
+    finally:
+        if 'manager' in locals():
+            manager.connection.close()
+
+
+@app.route('/api/complaint/type/add', methods=['POST'])
+def add_complaint_type():
+    """添加投诉类型"""
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({
+                'code': 400,
+                'message': '请求参数不能为空'
+            }), 400
+
+        type_name = data.get('type_name', '').strip()
+        sort_order = data.get('sort_order', 0)
+
+        if not type_name:
+            return jsonify({
+                'code': 400,
+                'message': 'type_name为必填项'
+            }), 400
+
+        
+        type_code = manager.add_complaint_type(
+            type_name=type_name,
+            sort_order=sort_order
+        )
+
+        if type_code is None:
+            return jsonify({
+                'code': 500,
+                'message': '添加投诉类型失败'
+            }), 500
+
+        return jsonify({
+            'code': 200,
+            'message': '添加成功',
+            'data': {
+                'type_code': type_code
+            }
+        }), 200
+    except Exception as e:
+        app.logger.error(f'添加投诉类型失败: {str(e)}')
+        return jsonify({
+            'code': 500,
+            'message': '服务器内部错误'
+        }), 500
+    finally:
+        if 'manager' in locals():
+            manager.connection.close()
+
+
+# 测试路由
+@app.route('/api/complaint/test', methods=['GET'])
+def test_complaint_api():
+    """测试接口是否正常工作"""
+    try:
+        return jsonify({
+            'code': 200,
+            'message': '投诉反馈API服务正常运行',
+            'timestamp': datetime.now().isoformat()
+        }), 200
+    except Exception as e:
+        app.logger.error(f'测试接口异常: {str(e)}')
+        return jsonify({
+            'code': 500,
+            'message': '服务器内部错误'
+        }), 500
+
+
+if __name__ == '__main__':
+    app.run(debug=True, host='0.0.0.0', port=5000)
 
 
 @app.route('/api/health', methods=['GET'])

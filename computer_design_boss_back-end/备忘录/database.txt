@@ -130,4 +130,299 @@ CREATE TABLE sys_user (
     KEY idx_job_status (job_status)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='用户基础信息表';
 
-简历表建表sql
+简历表建组合表：
+-- 2. 简历基础信息表（对应上传的简历文件内容）
+CREATE TABLE resumes (
+    id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '简历ID',
+    user_id BIGINT UNSIGNED NOT NULL COMMENT '用户ID',
+
+    -- 基本信息
+    real_name VARCHAR(50) COMMENT '真实姓名',
+    gender TINYINT COMMENT '性别：1-男，2-女，0-保密',
+    birth_date DATE COMMENT '出生日期',
+    phone VARCHAR(20) COMMENT '联系电话',
+    email VARCHAR(100) COMMENT '联系邮箱',
+    wechat VARCHAR(50) COMMENT '微信号',
+    city VARCHAR(50) COMMENT '所在城市',
+
+    -- 教育背景
+    education_level VARCHAR(20) COMMENT '最高学历：本科/硕士/博士等',
+    school_name VARCHAR(100) COMMENT '学校名称',
+    major VARCHAR(100) COMMENT '专业',
+    graduation_year YEAR COMMENT '毕业年份',
+    gpa DECIMAL(3,2) COMMENT 'GPA',
+
+    -- 简历文件
+    resume_file_url VARCHAR(500) COMMENT '简历文件URL',
+    resume_file_name VARCHAR(200) COMMENT '简历文件名',
+    resume_format VARCHAR(10) COMMENT '文件格式：pdf/doc/docx',
+
+    -- 个人简介
+    self_introduction TEXT COMMENT '个人简介/自我评价',
+
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+
+    PRIMARY KEY (id),
+    KEY idx_user_id (user_id),
+    CONSTRAINT fk_resume_user FOREIGN KEY (user_id) REFERENCES sys_user(user_id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='简历基础信息表';
+
+-- 3. 技能证书表
+CREATE TABLE certificates (
+    id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '证书ID',
+    user_id BIGINT UNSIGNED NOT NULL COMMENT '用户ID',
+
+    cert_type VARCHAR(30) NOT NULL COMMENT '证书类型：english/computer/professional',
+    cert_name VARCHAR(100) NOT NULL COMMENT '证书名称',
+    cert_level VARCHAR(50) COMMENT '等级/分数：如CET-6/550分，雅思/7.5',
+    issue_date DATE COMMENT '获取时间',
+    expiry_date DATE COMMENT '过期时间（如有）',
+    issuing_authority VARCHAR(100) COMMENT '发证机构',
+    certificate_no VARCHAR(100) COMMENT '证书编号',
+    attachment_url VARCHAR(500) COMMENT '证书附件URL',
+
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    PRIMARY KEY (id),
+    KEY idx_resume_id (user_id),
+    KEY idx_cert_type (cert_type),
+    CONSTRAINT fk_cert_resume FOREIGN KEY (user_id) REFERENCES resumes(user_id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='技能证书表';
+
+-- 4. 校园经历表
+CREATE TABLE campus_experiences (
+    id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '经历ID',
+    user_id BIGINT UNSIGNED NOT NULL COMMENT '用户ID',
+
+    -- 学生会/社团经历
+    has_student_union TINYINT(1) DEFAULT 0 COMMENT '是否有学生会经历：0-否，1-是',
+    student_union_details TEXT COMMENT '学生会经历详情：职位、时间段、工作内容',
+
+    has_club TINYINT(1) DEFAULT 0 COMMENT '是否有社团经历：0-否，1-是',
+    club_details TEXT COMMENT '社团经历详情',
+
+    -- 奖学金
+    has_scholarship TINYINT(1) DEFAULT 0 COMMENT '是否有奖学金：0-否，1-是',
+    scholarship_details TEXT COMMENT '奖学金详情：名称、金额、时间',
+
+    -- 其他荣誉
+    has_honor TINYINT(1) DEFAULT 0 COMMENT '是否有其他荣誉：0-否，1-是',
+    honor_details TEXT COMMENT '荣誉详情',
+
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+
+    PRIMARY KEY (id),
+    KEY idx_resume_id (user_id),
+    CONSTRAINT fk_campus_resume FOREIGN KEY (user_id) REFERENCES resumes(user_id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='校园经历表';
+
+-- 5. 实习实践表
+CREATE TABLE internships (
+    id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '实习ID',
+    user_id BIGINT UNSIGNED NOT NULL COMMENT '用户ID',
+
+    company_name VARCHAR(100) NOT NULL COMMENT '公司名称',
+    position VARCHAR(50) COMMENT '实习岗位',
+    industry VARCHAR(50) COMMENT '所属行业',
+    start_date DATE COMMENT '开始时间',
+    end_date DATE COMMENT '结束时间',
+    is_current TINYINT(1) DEFAULT 0 COMMENT '是否进行中：0-否，1-是',
+    is_related TINYINT(1) DEFAULT 0 COMMENT '是否是相关行业经历：0-否，1-是',
+    work_content TEXT COMMENT '工作内容描述',
+    achievements TEXT COMMENT '工作成果',
+
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    PRIMARY KEY (id),
+    KEY idx_resume_id (user_id),
+    KEY idx_industry (industry),
+    CONSTRAINT fk_intern_resume FOREIGN KEY (user_id) REFERENCES resumes(user_id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='实习实践表';
+
+-- 6. 实习统计表（用于快速查询实习次数）
+CREATE TABLE internship_stats (
+    id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+    user_id BIGINT UNSIGNED NOT NULL COMMENT '用户ID',
+    total_count INT DEFAULT 0 COMMENT '实习总次数',
+    related_count INT DEFAULT 0 COMMENT '相关行业实习次数',
+    last_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+
+    PRIMARY KEY (id),
+    UNIQUE KEY uk_resume_id (user_id),
+    CONSTRAINT fk_stats_resume FOREIGN KEY (user_id) REFERENCES resumes(user_id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='实习统计表';
+
+-- 7. 求职意向表
+CREATE TABLE job_intentions (
+    id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '主键ID',
+    user_id BIGINT UNSIGNED NOT NULL COMMENT '用户ID',
+
+    -- 目标行业（支持多选，用JSON）
+    target_industries JSON COMMENT '目标行业：["互联网","教育","国企"]',
+    industry_priority VARCHAR(20) COMMENT '首选行业',
+
+    -- 目标岗位（支持多选）
+    target_positions JSON COMMENT '目标岗位：["产品","运营","技术"]',
+    position_priority VARCHAR(20) COMMENT '首选岗位',
+
+    -- 期望城市（支持多选）
+    target_cities JSON COMMENT '期望城市：["北京","上海","深圳"]',
+    city_priority VARCHAR(50) COMMENT '首选城市',
+
+    -- 期望薪资
+    salary_min INT COMMENT '最低期望薪资（元/月）',
+    salary_max INT COMMENT '最高期望薪资（元/月）',
+    salary_type VARCHAR(20) DEFAULT 'monthly' COMMENT '薪资类型：monthly-月薪，annual-年薪',
+    salary_negotiable TINYINT(1) DEFAULT 1 COMMENT '薪资是否可面议：0-否，1-是',
+
+    -- 到岗时间
+    availability VARCHAR(50) COMMENT '到岗时间：随时/一周内/一个月内/具体时间',
+    available_date DATE COMMENT '可入职日期',
+
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+
+    PRIMARY KEY (id),
+    UNIQUE KEY uk_resume_id (user_id),
+    CONSTRAINT fk_intention_resume FOREIGN KEY (user_id) REFERENCES resumes(user_id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='求职意向表';
+
+-- 8. 求职偏好表
+CREATE TABLE job_preferences (
+    id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '偏好ID',
+    user_id BIGINT UNSIGNED NOT NULL COMMENT '用户ID',
+
+    accept_intern_to_full TINYINT(1) DEFAULT 1 COMMENT '是否接受实习转正：0-否，1-是',
+    accept_remote_city TINYINT(1) DEFAULT 0 COMMENT '是否考虑异地岗位：0-否，1-是',
+    need_campus_referral TINYINT(1) DEFAULT 1 COMMENT '是否需要校招内推：0-否，1-是',
+
+    -- 扩展偏好
+    accept_overtime TINYINT(1) COMMENT '是否接受加班',
+    accept_business_trip TINYINT(1) COMMENT '是否接受出差',
+    company_size_preference VARCHAR(20) COMMENT '公司规模偏好：startup-初创，medium-中型，large-大厂',
+    work_type_preference VARCHAR(20) COMMENT '工作类型偏好：fulltime-全职，intern-实习，both-均可',
+
+    other_preferences TEXT COMMENT '其他偏好说明',
+
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+
+    PRIMARY KEY (id),
+    UNIQUE KEY uk_resume_id (user_id),
+    CONSTRAINT fk_preference_resume FOREIGN KEY (user_id) REFERENCES resumes(user_id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='求职偏好表';
+
+-- ============================================
+-- 索引优化
+-- ============================================
+
+-- 为常用查询字段添加索引
+CREATE INDEX idx_resume_edu ON resumes(education_level, graduation_year);
+CREATE INDEX idx_resume_school ON resumes(school_name);
+CREATE INDEX idx_resume_city ON resumes(city);
+CREATE INDEX idx_cert_name ON certificates(cert_name);
+CREATE INDEX idx_intern_company ON internships(company_name);
+CREATE INDEX idx_intern_dates ON internships(start_date, end_date);
+
+-- ============================================
+-- 触发器：自动更新实习统计
+-- ============================================
+
+DELIMITER //
+
+CREATE TRIGGER trg_after_internship_insert
+AFTER INSERT ON internships
+FOR EACH ROW
+BEGIN
+    INSERT INTO internship_stats (user_id, total_count, related_count)
+    VALUES (NEW.user_id, 1, IF(NEW.is_related = 1, 1, 0))
+    ON DUPLICATE KEY UPDATE
+        total_count = total_count + 1,
+        related_count = related_count + IF(NEW.is_related = 1, 1, 0);
+END//
+
+CREATE TRIGGER trg_after_internship_delete
+AFTER DELETE ON internships
+FOR EACH ROW
+BEGIN
+    UPDATE internship_stats
+    SET total_count = total_count - 1,
+        related_count = related_count - IF(OLD.is_related = 1, 1, 0)
+    WHERE user_id = OLD.user_id;
+END//
+
+DELIMITER ;
+
+投诉类型表
+
+-- 投诉类型枚举表（使用数字代码）
+CREATE TABLE IF NOT EXISTS complaint_type (
+    id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '主键ID',
+    type_code TINYINT UNSIGNED PRIMARY KEY COMMENT '投诉类型代码：1-功能，2-BUG，3-建议，4-其他，5-隐私安全',
+    type_name VARCHAR(50) NOT NULL COMMENT '投诉类型名称',
+    sort_order INT DEFAULT 0 COMMENT '排序',
+    is_active TINYINT(1) DEFAULT 1 COMMENT '是否启用：1启用，0禁用'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='投诉类型字典表';
+
+投诉及反馈主表
+
+CREATE TABLE IF NOT EXISTS user_feedback (
+    -- 主键
+    id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '主键ID',
+
+    -- 关联用户
+    user_id BIGINT UNSIGNED NOT NULL COMMENT '用户ID，关联sys_user表的user_id',
+
+    -- 投诉类型（数字代码）
+    complaint_type TINYINT UNSIGNED NOT NULL COMMENT '投诉类型：1-功能，2-BUG，3-建议，4-其他，5-隐私安全',
+
+    -- 投诉描述
+    description TEXT NOT NULL COMMENT '用户投诉描述内容',
+
+    -- 图片URL（三个字段）
+    image_url_1 VARCHAR(500) DEFAULT NULL COMMENT '用户上传图片1的URL',
+    image_url_2 VARCHAR(500) DEFAULT NULL COMMENT '用户上传图片2的URL',
+    image_url_3 VARCHAR(500) DEFAULT NULL COMMENT '用户上传图片3的URL',
+
+    -- 反馈内容
+    feedback_content TEXT DEFAULT NULL COMMENT '管理员反馈回复内容',
+
+    -- 解决状态
+    is_resolved TINYINT(1) DEFAULT 0 COMMENT '是否已解决：0-未解决，1-已解决',
+
+    -- 时间戳字段
+    create_time DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    update_time DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    resolve_time DATETIME DEFAULT NULL COMMENT '解决时间',
+
+    -- 其他辅助字段
+    resolved_by BIGINT UNSIGNED DEFAULT NULL COMMENT '解决人ID（管理员）',
+    priority TINYINT(1) DEFAULT 1 COMMENT '优先级：1-低，2-中，3-高',
+
+    -- 主键约束
+    PRIMARY KEY (id),
+
+    -- 外键约束（假设sys_user表存在）
+    CONSTRAINT fk_feedback_user_id
+        FOREIGN KEY (user_id)
+        REFERENCES sys_user(user_id)
+        ON DELETE RESTRICT
+        ON UPDATE CASCADE,
+
+    -- 外键约束（投诉类型）
+    CONSTRAINT fk_feedback_type
+        FOREIGN KEY (complaint_type)
+        REFERENCES complaint_type(type_code)
+        ON DELETE RESTRICT
+        ON UPDATE CASCADE,
+
+    -- 索引优化
+    INDEX idx_user_id (user_id) COMMENT '用户ID索引，方便查询某用户的所有反馈',
+    INDEX idx_complaint_type (complaint_type) COMMENT '投诉类型索引',
+    INDEX idx_is_resolved (is_resolved) COMMENT '解决状态索引',
+    INDEX idx_create_time (create_time) COMMENT '创建时间索引',
+    INDEX idx_priority (priority, is_resolved) COMMENT '优先级和状态组合索引'
+
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='用户投诉及反馈表';
