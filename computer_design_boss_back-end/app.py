@@ -2671,11 +2671,6 @@ def test_complaint_api():
             'message': '服务器内部错误'
         }), 500
 
-
-if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=5000)
-
-
 @app.route('/api/health', methods=['GET'])
 def health_check():
     """健康检查"""
@@ -2695,10 +2690,6 @@ def health_check():
             'service': '运行正常'
         }
     })
-
-
-
-
 
 
 if __name__ == '__main__':
