@@ -1,0 +1,1396 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>简历接口测试工具</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #4361ee;
+            --secondary-color: #3a0ca3;
+            --success-color: #2ec4b6;
+            --danger-color: #e71d36;
+            --warning-color: #ff9f1c;
+            --light-color: #f8f9fa;
+            --dark-color: #212529;
+        }
+
+        body {
+            background-color: #f5f7fb;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: #333;
+            padding-bottom: 50px;
+        }
+
+        .navbar {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .card {
+            border-radius: 12px;
+            border: none;
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.08);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            margin-bottom: 20px;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 20px rgba(0, 0, 0, 0.12);
+        }
+
+        .card-header {
+            background-color: white;
+            border-bottom: 2px solid #eee;
+            font-weight: 600;
+            color: var(--primary-color);
+            border-radius: 12px 12px 0 0 !important;
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+            border-radius: 8px;
+            font-weight: 500;
+            padding: 8px 20px;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--secondary-color);
+            border-color: var(--secondary-color);
+        }
+
+        .btn-success {
+            background-color: var(--success-color);
+            border-color: var(--success-color);
+            border-radius: 8px;
+        }
+
+        .btn-danger {
+            background-color: var(--danger-color);
+            border-color: var(--danger-color);
+            border-radius: 8px;
+        }
+
+        .btn-warning {
+            background-color: var(--warning-color);
+            border-color: var(--warning-color);
+            border-radius: 8px;
+        }
+
+        .api-section {
+            margin-bottom: 30px;
+            border-left: 4px solid var(--primary-color);
+            padding-left: 15px;
+        }
+
+        .response-area {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 15px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+
+        .status-success {
+            background-color: var(--success-color);
+        }
+
+        .status-error {
+            background-color: var(--danger-color);
+        }
+
+        .status-warning {
+            background-color: var(--warning-color);
+        }
+
+        .token-display {
+            background-color: #e8f4fd;
+            border: 1px dashed #b6d4fe;
+            border-radius: 8px;
+            padding: 10px;
+            font-family: monospace;
+            font-size: 12px;
+            word-break: break-all;
+            margin-bottom: 15px;
+        }
+
+        .form-label {
+            font-weight: 500;
+            margin-bottom: 5px;
+        }
+
+        .form-control, .form-select {
+            border-radius: 8px;
+            border: 1px solid #ced4da;
+            padding: 10px;
+        }
+
+        .form-control:focus, .form-select:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 0.2rem rgba(67, 97, 238, 0.25);
+        }
+
+        h2 {
+            color: var(--primary-color);
+            border-bottom: 2px solid #eee;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+
+        .api-method {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+
+        .method-get { background-color: #61affe; color: white; }
+        .method-post { background-color: #49cc90; color: white; }
+        .method-put { background-color: #fca130; color: white; }
+        .method-delete { background-color: #f93e3e; color: white; }
+
+        .tab-pane {
+            padding-top: 20px;
+        }
+
+        .nav-tabs .nav-link {
+            color: #495057;
+            font-weight: 500;
+            border: none;
+            border-bottom: 2px solid transparent;
+        }
+
+        .nav-tabs .nav-link.active {
+            color: var(--primary-color);
+            background-color: transparent;
+            border-bottom: 2px solid var(--primary-color);
+        }
+
+        .login-section {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            padding: 30px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        }
+
+        .user-info {
+            background-color: #e8f5e9;
+            border-left: 4px solid #4caf50;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .badge {
+            font-size: 0.8em;
+            padding: 5px 10px;
+            border-radius: 20px;
+        }
+    </style>
+</head>
+<body>
+    <!-- 导航栏 -->
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container">
+            <a class="navbar-brand" href="#">
+                <i class="fas fa-file-alt me-2"></i>简历接口测试工具
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="#login-section">登录</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#resume-section">简历管理</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#certificates-section">证书管理</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#experience-section">经历管理</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#intention-section">求职意向</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <!-- 服务器状态 -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <span>服务器状态</span>
+                        <button class="btn btn-sm btn-outline-primary" id="checkHealthBtn">
+                            <i class="fas fa-sync-alt me-1"></i>检查状态
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="d-flex align-items-center mb-2">
+                                    <span class="status-indicator" id="serverStatus"></span>
+                                    <span>服务器状态: <span id="serverStatusText">未知</span></span>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="d-flex align-items-center mb-2">
+                                    <span class="status-indicator" id="dbStatus"></span>
+                                    <span>数据库状态: <span id="dbStatusText">未知</span></span>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div>当前时间: <span id="currentTime">--:--:--</span></div>
+                            </div>
+                        </div>
+                        <div class="response-area" id="healthResponse"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 登录部分 -->
+        <div id="login-section" class="login-section">
+            <h2><i class="fas fa-sign-in-alt me-2"></i>用户登录</h2>
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label for="mobile" class="form-label">手机号</label>
+                        <input type="text" class="form-control" id="mobile" placeholder="请输入手机号" value="13800138000">
+                    </div>
+                    <div class="mb-3">
+                        <label for="password" class="form-label">密码</label>
+                        <input type="password" class="form-control" id="password" placeholder="请输入密码" value="password123">
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-primary" id="loginBtn">
+                            <i class="fas fa-sign-in-alt me-1"></i>登录
+                        </button>
+                        <button class="btn btn-outline-secondary" id="registerBtn">
+                            <i class="fas fa-user-plus me-1"></i>注册
+                        </button>
+                        <button class="btn btn-outline-danger" id="logoutBtn">
+                            <i class="fas fa-sign-out-alt me-1"></i>登出
+                        </button>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div id="userInfoContainer" class="d-none">
+                        <div class="user-info">
+                            <h5><i class="fas fa-user-circle me-2"></i>用户信息</h5>
+                            <p><strong>用户ID:</strong> <span id="userId">--</span></p>
+                            <p><strong>手机号:</strong> <span id="userMobile">--</span></p>
+                            <p><strong>姓名:</strong> <span id="userName">--</span></p>
+                            <p><strong>状态:</strong> <span id="userStatus" class="badge bg-success">正常</span></p>
+                        </div>
+                        <div class="token-display">
+                            <strong>当前Token:</strong>
+                            <div id="currentToken" class="mt-1"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="response-area" id="loginResponse"></div>
+        </div>
+
+        <!-- 标签页导航 -->
+        <ul class="nav nav-tabs" id="apiTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="resume-tab" data-bs-toggle="tab" data-bs-target="#resume" type="button">简历基本信息</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="certificates-tab" data-bs-toggle="tab" data-bs-target="#certificates" type="button">证书管理</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="experience-tab" data-bs-toggle="tab" data-bs-target="#experience" type="button">经历管理</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="intention-tab" data-bs-toggle="tab" data-bs-target="#intention" type="button">求职意向</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="complete-tab" data-bs-toggle="tab" data-bs-target="#complete" type="button">完整简历</button>
+            </li>
+        </ul>
+
+        <!-- 标签页内容 -->
+        <div class="tab-content" id="apiTabsContent">
+            <!-- 简历基本信息 -->
+            <div class="tab-pane fade show active" id="resume" role="tabpanel">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="api-section">
+                            <h4><span class="api-method method-post">POST</span>创建/更新简历</h4>
+                            <form id="createResumeForm">
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label for="real_name" class="form-label">姓名 *</label>
+                                        <input type="text" class="form-control" id="real_name" required>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label for="phone" class="form-label">电话 *</label>
+                                        <input type="text" class="form-control" id="phone" required>
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="email" class="form-label">邮箱 *</label>
+                                    <input type="email" class="form-control" id="email" required>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label for="education_level" class="form-label">学历 *</label>
+                                        <select class="form-select" id="education_level" required>
+                                            <option value="">请选择</option>
+                                            <option value="大专">大专</option>
+                                            <option value="本科">本科</option>
+                                            <option value="硕士">硕士</option>
+                                            <option value="博士">博士</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label for="school_name" class="form-label">学校名称 *</label>
+                                        <input type="text" class="form-control" id="school_name" required>
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="major" class="form-label">专业</label>
+                                    <input type="text" class="form-control" id="major">
+                                </div>
+                                <div class="mb-3">
+                                    <label for="bio" class="form-label">个人简介</label>
+                                    <textarea class="form-control" id="bio" rows="3"></textarea>
+                                </div>
+                                <div class="d-flex gap-2">
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="fas fa-save me-1"></i>保存简历
+                                    </button>
+                                    <button type="button" class="btn btn-warning" id="fillSampleResumeBtn">
+                                        <i class="fas fa-magic me-1"></i>填充示例数据
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="api-section">
+                            <h4><span class="api-method method-get">GET</span>获取简历信息</h4>
+                            <button class="btn btn-success mb-3" id="getResumeBtn">
+                                <i class="fas fa-download me-1"></i>获取简历信息
+                            </button>
+                        </div>
+                        <div class="api-section">
+                            <h4><span class="api-method method-delete">DELETE</span>删除简历</h4>
+                            <button class="btn btn-danger" id="deleteResumeBtn">
+                                <i class="fas fa-trash me-1"></i>删除简历
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="response-area" id="resumeResponse"></div>
+            </div>
+
+            <!-- 证书管理 -->
+            <div class="tab-pane fade" id="certificates" role="tabpanel">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="api-section">
+                            <h4><span class="api-method method-post">POST</span>添加证书</h4>
+                            <form id="addCertificateForm">
+                                <div class="mb-3">
+                                    <label for="cert_name" class="form-label">证书名称 *</label>
+                                    <input type="text" class="form-control" id="cert_name" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="cert_type" class="form-label">证书类型 *</label>
+                                    <select class="form-select" id="cert_type" required>
+                                        <option value="">请选择</option>
+                                        <option value="语言">语言</option>
+                                        <option value="技术">技术</option>
+                                        <option value="职业资格">职业资格</option>
+                                        <option value="其他">其他</option>
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="issuing_authority" class="form-label">颁发机构</label>
+                                    <input type="text" class="form-control" id="issuing_authority">
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label for="issue_date" class="form-label">颁发日期</label>
+                                        <input type="date" class="form-control" id="issue_date">
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label for="expiry_date" class="form-label">到期日期</label>
+                                        <input type="date" class="form-control" id="expiry_date">
+                                    </div>
+                                </div>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-plus me-1"></i>添加证书
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="api-section">
+                            <h4><span class="api-method method-get">GET</span>获取证书列表</h4>
+                            <div class="mb-3">
+                                <label for="certTypeFilter" class="form-label">证书类型筛选</label>
+                                <select class="form-select" id="certTypeFilter">
+                                    <option value="">全部类型</option>
+                                    <option value="语言">语言</option>
+                                    <option value="技术">技术</option>
+                                    <option value="职业资格">职业资格</option>
+                                </select>
+                            </div>
+                            <button class="btn btn-success" id="getCertificatesBtn">
+                                <i class="fas fa-list me-1"></i>获取证书列表
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="response-area" id="certificatesResponse"></div>
+                <div class="mt-3" id="certificatesList"></div>
+            </div>
+
+            <!-- 经历管理 -->
+            <div class="tab-pane fade" id="experience" role="tabpanel">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="api-section">
+                            <h4><span class="api-method method-post">POST</span>添加实习经历</h4>
+                            <form id="addInternshipForm">
+                                <div class="mb-3">
+                                    <label for="company_name" class="form-label">公司名称 *</label>
+                                    <input type="text" class="form-control" id="company_name" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="position" class="form-label">职位 *</label>
+                                    <input type="text" class="form-control" id="position" required>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label for="start_date" class="form-label">开始日期 *</label>
+                                        <input type="date" class="form-control" id="start_date" required>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label for="end_date" class="form-label">结束日期</label>
+                                        <input type="date" class="form-control" id="end_date">
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="description" class="form-label">工作描述</label>
+                                    <textarea class="form-control" id="description" rows="3"></textarea>
+                                </div>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-plus me-1"></i>添加实习经历
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="api-section">
+                            <h4><span class="api-method method-post">POST</span>更新校园经历</h4>
+                            <form id="updateCampusExperienceForm">
+                                <div class="mb-3">
+                                    <label for="campus_role" class="form-label">角色/职务</label>
+                                    <input type="text" class="form-control" id="campus_role">
+                                </div>
+                                <div class="mb-3">
+                                    <label for="campus_organization" class="form-label">组织/社团</label>
+                                    <input type="text" class="form-control" id="campus_organization">
+                                </div>
+                                <div class="mb-3">
+                                    <label for="campus_description" class="form-label">经历描述</label>
+                                    <textarea class="form-control" id="campus_description" rows="3"></textarea>
+                                </div>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-save me-1"></i>保存校园经历
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                <div class="row mt-3">
+                    <div class="col-md-6">
+                        <div class="api-section">
+                            <h4><span class="api-method method-get">GET</span>获取实习经历</h4>
+                            <button class="btn btn-success" id="getInternshipsBtn">
+                                <i class="fas fa-list me-1"></i>获取实习经历
+                            </button>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="api-section">
+                            <h4><span class="api-method method-get">GET</span>获取校园经历</h4>
+                            <button class="btn btn-success" id="getCampusExperienceBtn">
+                                <i class="fas fa-school me-1"></i>获取校园经历
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="response-area" id="experienceResponse"></div>
+                <div class="mt-3" id="internshipsList"></div>
+            </div>
+
+            <!-- 求职意向 -->
+            <div class="tab-pane fade" id="intention" role="tabpanel">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="api-section">
+                            <h4><span class="api-method method-post">POST</span>更新求职意向</h4>
+                            <form id="updateJobIntentionForm">
+                                <div class="mb-3">
+                                    <label for="target_industries" class="form-label">目标行业 *</label>
+                                    <input type="text" class="form-control" id="target_industries"
+                                           placeholder="例如：互联网,金融,教育" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="target_positions" class="form-label">目标职位 *</label>
+                                    <input type="text" class="form-control" id="target_positions"
+                                           placeholder="例如：软件工程师,产品经理" required>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label for="salary_min" class="form-label">最低薪资(元) *</label>
+                                        <input type="number" class="form-control" id="salary_min" required>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label for="salary_max" class="form-label">最高薪资(元) *</label>
+                                        <input type="number" class="form-control" id="salary_max" required>
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="target_cities" class="form-label">目标城市</label>
+                                    <input type="text" class="form-control" id="target_cities"
+                                           placeholder="例如：北京,上海,深圳">
+                                </div>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-bullseye me-1"></i>保存求职意向
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="api-section">
+                            <h4><span class="api-method method-post">POST</span>更新求职偏好</h4>
+                            <form id="updateJobPreferenceForm">
+                                <div class="mb-3">
+                                    <label for="work_type" class="form-label">工作类型</label>
+                                    <select class="form-select" id="work_type">
+                                        <option value="">请选择</option>
+                                        <option value="全职">全职</option>
+                                        <option value="兼职">兼职</option>
+                                        <option value="实习">实习</option>
+                                        <option value="远程">远程</option>
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="work_city_preference" class="form-label">城市偏好</label>
+                                    <input type="text" class="form-control" id="work_city_preference">
+                                </div>
+                                <div class="mb-3">
+                                    <label for="company_size" class="form-label">公司规模偏好</label>
+                                    <select class="form-select" id="company_size">
+                                        <option value="">请选择</option>
+                                        <option value="初创公司">初创公司</option>
+                                        <option value="中小型企业">中小型企业</option>
+                                        <option value="大型企业">大型企业</option>
+                                        <option value="跨国公司">跨国公司</option>
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="other_preferences" class="form-label">其他偏好</label>
+                                    <textarea class="form-control" id="other_preferences" rows="3"></textarea>
+                                </div>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-cog me-1"></i>保存求职偏好
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                <div class="row mt-3">
+                    <div class="col-md-6">
+                        <div class="api-section">
+                            <h4><span class="api-method method-get">GET</span>获取求职意向</h4>
+                            <button class="btn btn-success" id="getJobIntentionBtn">
+                                <i class="fas fa-download me-1"></i>获取求职意向
+                            </button>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="api-section">
+                            <h4><span class="api-method method-get">GET</span>获取求职偏好</h4>
+                            <button class="btn btn-success" id="getJobPreferenceBtn">
+                                <i class="fas fa-download me-1"></i>获取求职偏好
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="response-area" id="intentionResponse"></div>
+            </div>
+
+            <!-- 完整简历 -->
+            <div class="tab-pane fade" id="complete" role="tabpanel">
+                <div class="api-section">
+                    <h4><span class="api-method method-get">GET</span>获取完整简历</h4>
+                    <p class="text-muted">获取用户所有简历信息的完整集合，包括基本信息、证书、经历和求职意向等。</p>
+                    <button class="btn btn-primary" id="getCompleteResumeBtn">
+                        <i class="fas fa-file-alt me-1"></i>获取完整简历
+                    </button>
+                    <button class="btn btn-outline-success ms-2" id="exportResumeBtn">
+                        <i class="fas fa-file-export me-1"></i>导出为JSON
+                    </button>
+                </div>
+                <div class="response-area" id="completeResumeResponse"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 页脚 -->
+    <footer class="mt-5 py-3 text-center text-muted border-top">
+        <div class="container">
+            <p>简历接口测试工具 &copy; 2023 | 后端API: http://localhost:5000</p>
+        </div>
+    </footer>
+
+    <!-- 脚本 -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // 全局变量
+        let currentToken = localStorage.getItem('jwt_token') || '';
+        let currentUser = JSON.parse(localStorage.getItem('user_info') || '{}');
+        const API_BASE_URL = 'http://localhost:5000';
+
+        // DOM元素
+        const serverStatus = document.getElementById('serverStatus');
+        const serverStatusText = document.getElementById('serverStatusText');
+        const dbStatus = document.getElementById('dbStatus');
+        const dbStatusText = document.getElementById('dbStatusText');
+        const currentTime = document.getElementById('currentTime');
+        const healthResponse = document.getElementById('healthResponse');
+        const loginResponse = document.getElementById('loginResponse');
+        const resumeResponse = document.getElementById('resumeResponse');
+        const certificatesResponse = document.getElementById('certificatesResponse');
+        const experienceResponse = document.getElementById('experienceResponse');
+        const intentionResponse = document.getElementById('intentionResponse');
+        const completeResumeResponse = document.getElementById('completeResumeResponse');
+
+        // 用户信息元素
+        const userInfoContainer = document.getElementById('userInfoContainer');
+        const userId = document.getElementById('userId');
+        const userMobile = document.getElementById('userMobile');
+        const userName = document.getElementById('userName');
+        const userStatus = document.getElementById('userStatus');
+        const currentTokenElement = document.getElementById('currentToken');
+
+        // 初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            updateTime();
+            setInterval(updateTime, 1000);
+
+            // 检查服务器状态
+            checkHealth();
+
+            // 如果已有token，更新用户信息
+            if (currentToken) {
+                updateUserInfoDisplay();
+                loadUserProfile();
+            }
+
+            // 设置事件监听器
+            setupEventListeners();
+
+            // 填充示例数据
+            fillSampleData();
+        });
+
+        // 更新当前时间
+        function updateTime() {
+            const now = new Date();
+            currentTime.textContent = now.toLocaleTimeString();
+        }
+
+        // 检查服务器健康状态
+        async function checkHealth() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/health`);
+                const data = await response.json();
+
+                // 更新状态指示器
+                if (response.ok) {
+                    serverStatus.className = 'status-indicator status-success';
+                    serverStatusText.textContent = '正常';
+                    dbStatus.className = 'status-indicator status-success';
+                    dbStatusText.textContent = data.data.database || '正常';
+                } else {
+                    serverStatus.className = 'status-indicator status-error';
+                    serverStatusText.textContent = '异常';
+                    dbStatus.className = 'status-indicator status-error';
+                    dbStatusText.textContent = '异常';
+                }
+
+                // 显示响应
+                healthResponse.textContent = JSON.stringify(data, null, 2);
+            } catch (error) {
+                serverStatus.className = 'status-indicator status-error';
+                serverStatusText.textContent = '异常';
+                dbStatus.className = 'status-indicator status-error';
+                dbStatusText.textContent = '异常';
+                healthResponse.textContent = `错误: ${error.message}`;
+            }
+        }
+
+        // 设置事件监听器
+        function setupEventListeners() {
+            // 服务器状态检查
+            document.getElementById('checkHealthBtn').addEventListener('click', checkHealth);
+
+            // 登录相关按钮
+            document.getElementById('loginBtn').addEventListener('click', login);
+            document.getElementById('registerBtn').addEventListener('click', register);
+            document.getElementById('logoutBtn').addEventListener('click', logout);
+
+            // 简历相关按钮
+            document.getElementById('createResumeForm').addEventListener('submit', createOrUpdateResume);
+            document.getElementById('getResumeBtn').addEventListener('click', getResume);
+            document.getElementById('deleteResumeBtn').addEventListener('click', deleteResume);
+            document.getElementById('fillSampleResumeBtn').addEventListener('click', fillSampleData);
+
+            // 证书相关按钮
+            document.getElementById('addCertificateForm').addEventListener('submit', addCertificate);
+            document.getElementById('getCertificatesBtn').addEventListener('click', getCertificates);
+
+            // 经历相关按钮
+            document.getElementById('addInternshipForm').addEventListener('submit', addInternship);
+            document.getElementById('updateCampusExperienceForm').addEventListener('submit', updateCampusExperience);
+            document.getElementById('getInternshipsBtn').addEventListener('click', getInternships);
+            document.getElementById('getCampusExperienceBtn').addEventListener('click', getCampusExperience);
+
+            // 求职意向相关按钮
+            document.getElementById('updateJobIntentionForm').addEventListener('submit', updateJobIntention);
+            document.getElementById('updateJobPreferenceForm').addEventListener('submit', updateJobPreference);
+            document.getElementById('getJobIntentionBtn').addEventListener('click', getJobIntention);
+            document.getElementById('getJobPreferenceBtn').addEventListener('click', getJobPreference);
+
+            // 完整简历相关按钮
+            document.getElementById('getCompleteResumeBtn').addEventListener('click', getCompleteResume);
+            document.getElementById('exportResumeBtn').addEventListener('click', exportResume);
+        }
+
+        // 通用API请求函数
+        async function apiRequest(endpoint, method = 'GET', data = null, requiresAuth = true) {
+            const headers = {
+                'Content-Type': 'application/json'
+            };
+
+            if (requiresAuth && currentToken) {
+                headers['Authorization'] = `Bearer ${currentToken}`;
+            }
+
+            const options = {
+                method,
+                headers
+            };
+
+            if (data && (method === 'POST' || method === 'PUT')) {
+                options.body = JSON.stringify(data);
+            }
+
+            try {
+                const response = await fetch(`${API_BASE_URL}${endpoint}`, options);
+                const result = await response.json();
+
+                return {
+                    success: response.ok,
+                    status: response.status,
+                    data: result
+                };
+            } catch (error) {
+                return {
+                    success: false,
+                    status: 0,
+                    data: { message: `请求失败: ${error.message}` }
+                };
+            }
+        }
+
+        // 显示响应结果
+        function showResponse(element, result) {
+            element.textContent = JSON.stringify(result.data, null, 2);
+
+            // 滚动到响应区域
+            element.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+
+        // 登录函数
+        async function login() {
+            const mobile = document.getElementById('mobile').value;
+            const password = document.getElementById('password').value;
+
+            if (!mobile || !password) {
+                alert('请输入手机号和密码');
+                return;
+            }
+
+            const result = await apiRequest('/api/user/login', 'POST', {
+                mobile,
+                password
+            }, false);
+
+            showResponse(loginResponse, result);
+
+            if (result.success) {
+                // 保存token和用户信息
+                currentToken = result.data.data.token;
+                currentUser = result.data.data.user_info;
+
+                localStorage.setItem('jwt_token', currentToken);
+                localStorage.setItem('user_info', JSON.stringify(currentUser));
+
+                // 更新显示
+                updateUserInfoDisplay();
+
+                // 显示成功消息
+                alert('登录成功！');
+            }
+        }
+
+        // 注册函数
+        async function register() {
+            const mobile = document.getElementById('mobile').value;
+            const password = document.getElementById('password').value;
+
+            if (!mobile || !password) {
+                alert('请输入手机号和密码');
+                return;
+            }
+
+            const result = await apiRequest('/api/user/register', 'POST', {
+                mobile,
+                password,
+                sms_code: '123456' // 示例验证码
+            }, false);
+
+            showResponse(loginResponse, result);
+
+            if (result.success) {
+                alert('注册成功！请登录。');
+            }
+        }
+
+        // 登出函数
+        function logout() {
+            currentToken = '';
+            currentUser = {};
+            localStorage.removeItem('jwt_token');
+            localStorage.removeItem('user_info');
+
+            updateUserInfoDisplay();
+            alert('已登出');
+        }
+
+        // 更新用户信息显示
+        function updateUserInfoDisplay() {
+            if (currentToken && currentUser.user_id) {
+                userInfoContainer.classList.remove('d-none');
+                userId.textContent = currentUser.user_id;
+                userMobile.textContent = currentUser.mobile;
+                userName.textContent = currentUser.real_name || '未设置';
+
+                // 更新状态标签
+                const statusMap = {
+                    0: { text: '禁用', class: 'bg-danger' },
+                    1: { text: '正常', class: 'bg-success' },
+                    2: { text: '未激活', class: 'bg-warning' },
+                    3: { text: '锁定', class: 'bg-danger' }
+                };
+
+                const statusInfo = statusMap[currentUser.status] || { text: '未知', class: 'bg-secondary' };
+                userStatus.textContent = statusInfo.text;
+                userStatus.className = `badge ${statusInfo.class}`;
+
+                // 显示token的前后部分
+                const tokenPreview = currentToken.length > 50
+                    ? `${currentToken.substring(0, 30)}...${currentToken.substring(currentToken.length - 20)}`
+                    : currentToken;
+                currentTokenElement.textContent = tokenPreview;
+            } else {
+                userInfoContainer.classList.add('d-none');
+            }
+        }
+
+        // 加载用户个人资料
+        async function loadUserProfile() {
+            const result = await apiRequest('/api/user/profile', 'GET');
+
+            if (result.success && result.data.data) {
+                currentUser = { ...currentUser, ...result.data.data };
+                localStorage.setItem('user_info', JSON.stringify(currentUser));
+                updateUserInfoDisplay();
+            }
+        }
+
+        // 创建或更新简历
+        async function createOrUpdateResume(e) {
+            e.preventDefault();
+
+            if (!currentToken) {
+                alert('请先登录');
+                return;
+            }
+
+            const formData = {
+                real_name: document.getElementById('real_name').value,
+                phone: document.getElementById('phone').value,
+                email: document.getElementById('email').value,
+                education_level: document.getElementById('education_level').value,
+                school_name: document.getElementById('school_name').value,
+                major: document.getElementById('major').value,
+                bio: document.getElementById('bio').value
+            };
+
+            const result = await apiRequest('/api/resume/basic', 'POST', formData);
+            showResponse(resumeResponse, result);
+
+            if (result.success) {
+                alert('简历保存成功！');
+            }
+        }
+
+        // 获取简历信息
+        async function getResume() {
+            if (!currentToken) {
+                alert('请先登录');
+                return;
+            }
+
+            const result = await apiRequest('/api/resume/basic', 'GET');
+            showResponse(resumeResponse, result);
+
+            // 如果获取成功，填充表单
+            if (result.success && result.data.data) {
+                const resume = result.data.data;
+                document.getElementById('real_name').value = resume.real_name || '';
+                document.getElementById('phone').value = resume.phone || '';
+                document.getElementById('email').value = resume.email || '';
+                document.getElementById('education_level').value = resume.education_level || '';
+                document.getElementById('school_name').value = resume.school_name || '';
+                document.getElementById('major').value = resume.major || '';
+                document.getElementById('bio').value = resume.bio || '';
+            }
+        }
+
+        // 删除简历
+        async function deleteResume() {
+            if (!currentToken) {
+                alert('请先登录');
+                return;
+            }
+
+            if (!confirm('确定要删除简历吗？此操作不可恢复。')) {
+                return;
+            }
+
+            const result = await apiRequest('/api/resume/basic', 'DELETE');
+            showResponse(resumeResponse, result);
+
+            if (result.success) {
+                alert('简历已删除');
+                // 清空表单
+                document.getElementById('createResumeForm').reset();
+            }
+        }
+
+        // 添加证书
+        async function addCertificate(e) {
+            e.preventDefault();
+
+            if (!currentToken) {
+                alert('请先登录');
+                return;
+            }
+
+            const formData = {
+                cert_name: document.getElementById('cert_name').value,
+                cert_type: document.getElementById('cert_type').value,
+                issuing_authority: document.getElementById('issuing_authority').value,
+                issue_date: document.getElementById('issue_date').value,
+                expiry_date: document.getElementById('expiry_date').value
+            };
+
+            const result = await apiRequest('/api/resume/certificates', 'POST', formData);
+            showResponse(certificatesResponse, result);
+
+            if (result.success) {
+                alert('证书添加成功！');
+                document.getElementById('addCertificateForm').reset();
+                // 刷新证书列表
+                getCertificates();
+            }
+        }
+
+        // 获取证书列表
+        async function getCertificates() {
+            if (!currentToken) {
+                alert('请先登录');
+                return;
+            }
+
+            const certType = document.getElementById('certTypeFilter').value;
+            let endpoint = '/api/resume/certificates';
+
+            const result = await apiRequest(endpoint, 'GET');
+            showResponse(certificatesResponse, result);
+
+            // 显示证书列表
+            if (result.success && result.data.data) {
+                const certificates = result.data.data;
+                const listContainer = document.getElementById('certificatesList');
+
+                if (certificates.length === 0) {
+                    listContainer.innerHTML = '<div class="alert alert-info">暂无证书</div>';
+                    return;
+                }
+
+                let html = '<h5>证书列表</h5><div class="row">';
+
+                certificates.forEach(cert => {
+                    // 过滤证书类型
+                    if (certType && cert.cert_type !== certType) {
+                        return;
+                    }
+
+                    html += `
+                        <div class="col-md-6 mb-3">
+                            <div class="card">
+                                <div class="card-body">
+                                    <h6 class="card-title">${cert.cert_name}</h6>
+                                    <p class="card-text">
+                                        <small class="text-muted">类型: ${cert.cert_type}</small><br>
+                                        ${cert.issuing_authority ? `<small class="text-muted">颁发机构: ${cert.issuing_authority}</small><br>` : ''}
+                                        ${cert.issue_date ? `<small class="text-muted">颁发日期: ${cert.issue_date}</small>` : ''}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+
+                html += '</div>';
+                listContainer.innerHTML = html;
+            }
+        }
+
+        // 添加实习经历
+        async function addInternship(e) {
+            e.preventDefault();
+
+            if (!currentToken) {
+                alert('请先登录');
+                return;
+            }
+
+            const formData = {
+                company_name: document.getElementById('company_name').value,
+                position: document.getElementById('position').value,
+                start_date: document.getElementById('start_date').value,
+                end_date: document.getElementById('end_date').value,
+                description: document.getElementById('description').value
+            };
+
+            const result = await apiRequest('/api/resume/internships', 'POST', formData);
+            showResponse(experienceResponse, result);
+
+            if (result.success) {
+                alert('实习经历添加成功！');
+                document.getElementById('addInternshipForm').reset();
+                // 刷新实习经历列表
+                getInternships();
+            }
+        }
+
+        // 更新校园经历
+        async function updateCampusExperience(e) {
+            e.preventDefault();
+
+            if (!currentToken) {
+                alert('请先登录');
+                return;
+            }
+
+            const formData = {
+                role: document.getElementById('campus_role').value,
+                organization: document.getElementById('campus_organization').value,
+                description: document.getElementById('campus_description').value
+            };
+
+            const result = await apiRequest('/api/resume/campus-experience', 'POST', formData);
+            showResponse(experienceResponse, result);
+
+            if (result.success) {
+                alert('校园经历保存成功！');
+            }
+        }
+
+        // 获取实习经历列表
+        async function getInternships() {
+            if (!currentToken) {
+                alert('请先登录');
+                return;
+            }
+
+            const result = await apiRequest('/api/resume/internships', 'GET');
+            showResponse(experienceResponse, result);
+
+            // 显示实习经历列表
+            if (result.success && result.data.data) {
+                const internships = result.data.data;
+                const listContainer = document.getElementById('internshipsList');
+
+                if (internships.length === 0) {
+                    listContainer.innerHTML = '<div class="alert alert-info">暂无实习经历</div>';
+                    return;
+                }
+
+                let html = '<h5>实习经历列表</h5><div class="row">';
+
+                internships.forEach(internship => {
+                    html += `
+                        <div class="col-md-6 mb-3">
+                            <div class="card">
+                                <div class="card-body">
+                                    <h6 class="card-title">${internship.position} @ ${internship.company_name}</h6>
+                                    <p class="card-text">
+                                        <small class="text-muted">
+                                            时间: ${internship.start_date} ~ ${internship.end_date || '至今'}
+                                        </small>
+                                        ${internship.description ? `<br>${internship.description.substring(0, 100)}${internship.description.length > 100 ? '...' : ''}` : ''}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+
+                html += '</div>';
+                listContainer.innerHTML = html;
+            }
+        }
+
+        // 获取校园经历
+        async function getCampusExperience() {
+            if (!currentToken) {
+                alert('请先登录');
+                return;
+            }
+
+            const result = await apiRequest('/api/resume/campus-experience', 'GET');
+            showResponse(experienceResponse, result);
+
+            // 如果获取成功，填充表单
+            if (result.success && result.data.data) {
+                const experience = result.data.data;
+                document.getElementById('campus_role').value = experience.role || '';
+                document.getElementById('campus_organization').value = experience.organization || '';
+                document.getElementById('campus_description').value = experience.description || '';
+            }
+        }
+
+        // 更新求职意向
+        async function updateJobIntention(e) {
+            e.preventDefault();
+
+            if (!currentToken) {
+                alert('请先登录');
+                return;
+            }
+
+            const formData = {
+                target_industries: document.getElementById('target_industries').value,
+                target_positions: document.getElementById('target_positions').value,
+                salary_min: parseInt(document.getElementById('salary_min').value),
+                salary_max: parseInt(document.getElementById('salary_max').value),
+                target_cities: document.getElementById('target_cities').value
+            };
+
+            const result = await apiRequest('/api/resume/job-intention', 'POST', formData);
+            showResponse(intentionResponse, result);
+
+            if (result.success) {
+                alert('求职意向保存成功！');
+            }
+        }
+
+        // 更新求职偏好
+        async function updateJobPreference(e) {
+            e.preventDefault();
+
+            if (!currentToken) {
+                alert('请先登录');
+                return;
+            }
+
+            const formData = {
+                work_type: document.getElementById('work_type').value,
+                work_city_preference: document.getElementById('work_city_preference').value,
+                company_size: document.getElementById('company_size').value,
+                other_preferences: document.getElementById('other_preferences').value
+            };
+
+            const result = await apiRequest('/api/resume/job-preference', 'POST', formData);
+            showResponse(intentionResponse, result);
+
+            if (result.success) {
+                alert('求职偏好保存成功！');
+            }
+        }
+
+        // 获取求职意向
+        async function getJobIntention() {
+            if (!currentToken) {
+                alert('请先登录');
+                return;
+            }
+
+            const result = await apiRequest('/api/resume/job-intention', 'GET');
+            showResponse(intentionResponse, result);
+
+            // 如果获取成功，填充表单
+            if (result.success && result.data.data) {
+                const intention = result.data.data;
+                document.getElementById('target_industries').value = intention.target_industries || '';
+                document.getElementById('target_positions').value = intention.target_positions || '';
+                document.getElementById('salary_min').value = intention.salary_min || '';
+                document.getElementById('salary_max').value = intention.salary_max || '';
+                document.getElementById('target_cities').value = intention.target_cities || '';
+            }
+        }
+
+        // 获取求职偏好
+        async function getJobPreference() {
+            if (!currentToken) {
+                alert('请先登录');
+                return;
+            }
+
+            const result = await apiRequest('/api/resume/job-preference', 'GET');
+            showResponse(intentionResponse, result);
+
+            // 如果获取成功，填充表单
+            if (result.success && result.data.data) {
+                const preference = result.data.data;
+                document.getElementById('work_type').value = preference.work_type || '';
+                document.getElementById('work_city_preference').value = preference.work_city_preference || '';
+                document.getElementById('company_size').value = preference.company_size || '';
+                document.getElementById('other_preferences').value = preference.other_preferences || '';
+            }
+        }
+
+        // 获取完整简历
+        async function getCompleteResume() {
+            if (!currentToken) {
+                alert('请先登录');
+                return;
+            }
+
+            const result = await apiRequest('/api/resume/complete', 'GET');
+            showResponse(completeResumeResponse, result);
+        }
+
+        // 导出简历为JSON
+        function exportResume() {
+            const responseText = completeResumeResponse.textContent;
+
+            if (!responseText || responseText.trim() === '') {
+                alert('请先获取完整简历');
+                return;
+            }
+
+            try {
+                const resumeData = JSON.parse(responseText);
+                const dataStr = JSON.stringify(resumeData, null, 2);
+                const dataUri = 'data:application/json;charset=utf-8,' + encodeURIComponent(dataStr);
+
+                const exportFileDefaultName = `resume_${currentUser.user_id || 'unknown'}_${new Date().toISOString().slice(0, 10)}.json`;
+
+                const linkElement = document.createElement('a');
+                linkElement.setAttribute('href', dataUri);
+                linkElement.setAttribute('download', exportFileDefaultName);
+                linkElement.click();
+            } catch (error) {
+                alert('导出失败: ' + error.message);
+            }
+        }
+
+        // 填充示例数据
+        function fillSampleData() {
+            // 简历基本信息示例
+            document.getElementById('real_name').value = '张三';
+            document.getElementById('phone').value = '13800138000';
+            document.getElementById('email').value = 'zhangsan@example.com';
+            document.getElementById('education_level').value = '本科';
+            document.getElementById('school_name').value = '清华大学';
+            document.getElementById('major').value = '计算机科学与技术';
+            document.getElementById('bio').value = '热爱编程，有丰富的项目开发经验，熟悉Python、Java、JavaScript等编程语言。';
+
+            // 证书示例
+            document.getElementById('cert_name').value = 'Python编程证书';
+            document.getElementById('cert_type').value = '技术';
+            document.getElementById('issuing_authority').value = 'Python官方认证';
+            document.getElementById('issue_date').value = '2023-06-01';
+
+            // 实习经历示例
+            document.getElementById('company_name').value = '阿里巴巴集团';
+            document.getElementById('position').value = '后端开发实习生';
+            document.getElementById('start_date').value = '2023-07-01';
+            document.getElementById('end_date').value = '2023-09-30';
+            document.getElementById('description').value = '参与电商平台后端开发，负责用户模块和订单模块的接口开发与维护。';
+
+            // 校园经历示例
+            document.getElementById('campus_role').value = '学生会主席';
+            document.getElementById('campus_organization').value = '学生会';
+            document.getElementById('campus_description').value = '组织校园活动，协调各部门工作，代表学生与学校沟通。';
+
+            // 求职意向示例
+            document.getElementById('target_industries').value = '互联网,人工智能';
+            document.getElementById('target_positions').value = '软件工程师,算法工程师';
+            document.getElementById('salary_min').value = '15000';
+            document.getElementById('salary_max').value = '25000';
+            document.getElementById('target_cities').value = '北京,上海,杭州';
+
+            // 求职偏好示例
+            document.getElementById('work_type').value = '全职';
+            document.getElementById('work_city_preference').value = '一线城市';
+            document.getElementById('company_size').value = '大型企业';
+            document.getElementById('other_preferences').value = '希望有良好的团队氛围和职业发展机会。';
+
+            alert('示例数据已填充！');
+        }
+    </script>
+</body>
+</html>
