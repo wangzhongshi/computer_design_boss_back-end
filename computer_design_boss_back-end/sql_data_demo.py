@@ -6,6 +6,10 @@ from pymysql.cursors import DictCursor
 from pymysql.cursors import DictCursor
 from datetime import datetime
 from typing import Optional, List, Dict, Any
+from pydantic import BaseModel, Field
+from decimal import Decimal
+from typing import Optional
+
 
 class EndDemoDatabase:
     """end_demo数据库操作类"""
@@ -1874,9 +1878,6 @@ class UserFeedbackManager:
             return False
 
 
-from pydantic import BaseModel, Field
-from decimal import Decimal
-from typing import Optional
 
 
 class JobSchema(BaseModel):
