@@ -426,3 +426,64 @@ CREATE TABLE IF NOT EXISTS user_feedback (
     INDEX idx_priority (priority, is_resolved) COMMENT '优先级和状态组合索引'
 
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='用户投诉及反馈表';
+
+用户岗位收藏表
+CREATE TABLE user_favorite_jobs (
+    -- 主键
+    id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '主键ID',
+    
+    -- 关联字段
+    user_id BIGINT UNSIGNED NOT NULL COMMENT '用户ID',
+    boss_job_id VARCHAR(64)  NOT NULL COMMENT '岗位ID',
+    
+    -- 状态字段
+    is_canceled TINYINT(1) NOT NULL DEFAULT 0 COMMENT '是否取消收藏：0-收藏中，1-已取消',
+    
+    -- 补充字段
+    job_snapshot JSON COMMENT '岗位快照（存储收藏时的岗位标题、薪资、公司名等）',
+    remarks VARCHAR(255) DEFAULT NULL COMMENT '用户备注',
+    
+    -- 时间字段（自动维护）
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间（首次收藏时间）',
+    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间（状态变更时间）',
+    
+    -- 索引优化
+    PRIMARY KEY (id),
+    UNIQUE KEY uk_user_job (user_id, boss_job_id),
+    KEY idx_user_id (user_id),
+    KEY idx_boss_job_id (boss_job_id),
+    KEY idx_is_canceled (is_canceled),
+    KEY idx_created_at (created_at)
+    
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='用户收藏岗位表';
+
+用户岗位投递表
+CREATE TABLE user_deliver_jobs (
+    -- 主键
+    id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '主键ID',
+
+    -- 关联字段
+    user_id BIGINT UNSIGNED NOT NULL COMMENT '用户ID',
+    boss_job_id VARCHAR(64)  NOT NULL COMMENT '岗位ID',
+
+    -- 状态字段
+    is_canceled TINYINT(1) NOT NULL DEFAULT 0 COMMENT '是否取消收藏：0-已投递，1-已结束',
+
+    -- 补充字段
+    job_snapshot JSON COMMENT '岗位快照（存储收藏时的岗位标题、薪资、公司名等）',
+    remarks VARCHAR(255) DEFAULT NULL COMMENT '用户备注',
+
+    -- 时间字段（自动维护）
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间（首次收藏时间）',
+    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间（状态变更时间）',
+
+    -- 索引优化
+    PRIMARY KEY (id),
+    UNIQUE KEY uk_user_job (user_id, boss_job_id),
+    KEY idx_user_id (user_id),
+    KEY idx_boss_job_id (boss_job_id),
+    KEY idx_is_canceled (is_canceled),
+    KEY idx_created_at (created_at)
+
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='用户收藏岗位表';
+

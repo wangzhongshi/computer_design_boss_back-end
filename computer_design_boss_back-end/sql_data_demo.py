@@ -1624,594 +1624,673 @@ class ResumeManager:
             return 0
 
 
-import pymysql
-from pymysql.cursors import DictCursor
-from typing import List, Dict, Any, Optional
-from datetime import datetime
+class ComplaintTypeManager:
+    """投诉类型字典表管理类"""
 
-
-class ComplaintFeedbackManager:
     def __init__(self, db_connection):
-        """
-        初始化投诉反馈管理器
-        Args:
-            db_connection: pymysql 数据库连接对象
-        """
         self.connection = db_connection
 
-    def _execute_query(self, sql: str, params: tuple = None, fetch_all: bool = False, fetch_one: bool = False):
-        """
-        通用查询执行方法
-        Args:
-            sql: SQL语句
-            params: 参数元组
-            fetch_all: 是否获取所有结果
-            fetch_one: 是否获取单个结果
-        Returns:
-            查询结果
-        """
-        try:
-            with self.connection.cursor(DictCursor) as cursor:
-                cursor.execute(sql, params or ())
-                if fetch_all:
-                    return cursor.fetchall()
-                elif fetch_one:
-                    return cursor.fetchone()
-                else:
-                    return cursor.rowcount
-        except pymysql.Error as e:
-            print(f'数据库查询失败: {e}')
-            return None
-
-    def _execute_update(self, sql: str, params: tuple = None):
-        """
-        通用更新执行方法
-        Args:
-            sql: SQL语句
-            params: 参数元组
-        Returns:
-            是否成功
-        """
-        try:
-            with self.connection.cursor() as cursor:
-                cursor.execute(sql, params or ())
-                self.connection.commit()
-                return cursor.rowcount > 0
-        except pymysql.Error as e:
-            print(f'数据库更新失败: {e}')
-            self.connection.rollback()
-            return False
-
-    # 1. 获取所有投诉类型
-    def get_all_complaint_types(self):
-        """
-        获取所有投诉类型
-        Returns: 投诉类型列表
-        """
+    def get_all_types(self):
+        """获取所有投诉类型（启用的）"""
         try:
             with self.connection.cursor(DictCursor) as cursor:
                 sql = """
-                SELECT type_code, type_name, sort_order, is_active
-                FROM complaint_type
-                WHERE is_active = 1
-                ORDER BY sort_order, type_code;
+                    SELECT type_code, type_name, sort_order 
+                    FROM complaint_type 
+                    WHERE is_active = 1 
+                    ORDER BY sort_order ASC, type_code ASC
                 """
                 cursor.execute(sql)
                 result = cursor.fetchall()
                 return result
-        except pymysql.Error as e:
-            print(f'获取投诉类型失败: {e}')
+        except Exception as e:
+            print('获取投诉类型列表失败:', e)
             return None
 
-    # 2. 根据类型代码获取类型信息
-    def get_complaint_type_by_code(self, type_code: int):
-        """
-        根据类型代码获取投诉类型信息
-        Args:
-            type_code: 投诉类型代码
-        Returns: 投诉类型信息
-        """
-        sql = """
-        SELECT type_code, type_name 
-        FROM complaint_type 
-        WHERE type_code = %s AND is_active = 1
-        """
-        return self._execute_query(sql, (type_code,), fetch_one=True)
-
-    # 3. 用户提交投诉
-    def submit_complaint(self, user_id: int, complaint_type: int,
-                         description: str, image_urls: List[str] = None,
-                         priority: int = 1):
-        """
-        用户提交投诉
-        Args:
-            user_id: 用户ID
-            complaint_type: 投诉类型代码
-            description: 投诉描述
-            image_urls: 图片URL列表(最多3个)
-            priority: 优先级(1-低, 2-中, 3-高)
-        Returns: 插入的投诉ID
-        """
+    def get_type_by_code(self, type_code):
+        """根据类型代码获取投诉类型"""
         try:
-            # 处理图片URL
-            image_url_1 = image_urls[0] if image_urls and len(image_urls) > 0 else None
-            image_url_2 = image_urls[1] if image_urls and len(image_urls) > 1 else None
-            image_url_3 = image_urls[2] if image_urls and len(image_urls) > 2 else None
+            with self.connection.cursor(DictCursor) as cursor:
+                sql = """
+                    SELECT type_code, type_name, sort_order, is_active 
+                    FROM complaint_type 
+                    WHERE type_code = %s
+                """
+                cursor.execute(sql, (type_code,))
+                result = cursor.fetchone()
+                return result
+        except Exception as e:
+            print(f'获取投诉类型(type_code={type_code})失败:', e)
+            return None
 
-            sql = """
-            INSERT INTO user_feedback 
-            (user_id, complaint_type, description, image_url_1, image_url_2, image_url_3, priority)
-            VALUES (%s, %s, %s, %s, %s, %s, %s)
-            """
-
+    def add_type(self, type_code, type_name, sort_order=0):
+        """添加新的投诉类型"""
+        try:
             with self.connection.cursor() as cursor:
+                sql = """
+                    INSERT INTO complaint_type (type_code, type_name, sort_order) 
+                    VALUES (%s, %s, %s)
+                """
+                cursor.execute(sql, (type_code, type_name, sort_order))
+                self.connection.commit()
+                return True
+        except Exception as e:
+            print('添加投诉类型失败:', e)
+            self.connection.rollback()
+            return False
+
+    def update_type(self, type_code, type_name=None, sort_order=None, is_active=None):
+        """更新投诉类型"""
+        try:
+            with self.connection.cursor() as cursor:
+                fields = []
+                values = []
+
+                if type_name is not None:
+                    fields.append("type_name = %s")
+                    values.append(type_name)
+                if sort_order is not None:
+                    fields.append("sort_order = %s")
+                    values.append(sort_order)
+                if is_active is not None:
+                    fields.append("is_active = %s")
+                    values.append(is_active)
+
+                if not fields:
+                    return True
+
+                sql = f"UPDATE complaint_type SET {', '.join(fields)} WHERE type_code = %s"
+                values.append(type_code)
+                cursor.execute(sql, tuple(values))
+                self.connection.commit()
+                return True
+        except Exception as e:
+            print('更新投诉类型失败:', e)
+            self.connection.rollback()
+            return False
+
+
+class UserFeedbackManager:
+    """用户投诉及反馈表管理类"""
+
+    def __init__(self, db_connection):
+        self.connection = db_connection
+
+    def get_feedback_list(self, user_id=None, complaint_type=None, is_resolved=None, limit=20, offset=0):
+        """获取反馈列表，支持条件筛选"""
+        try:
+            with self.connection.cursor(DictCursor) as cursor:
+                conditions = []
+                values = []
+
+                if user_id is not None:
+                    conditions.append("f.user_id = %s")
+                    values.append(user_id)
+                if complaint_type is not None:
+                    conditions.append("f.complaint_type = %s")
+                    values.append(complaint_type)
+                if is_resolved is not None:
+                    conditions.append("f.is_resolved = %s")
+                    values.append(is_resolved)
+
+                where_clause = "WHERE " + " AND ".join(conditions) if conditions else ""
+
+                sql = f"""
+                    SELECT 
+                        f.id, f.user_id, f.complaint_type, 
+                        ct.type_name as complaint_type_name,
+                        f.description, f.image_url_1, f.image_url_2, f.image_url_3,
+                        f.feedback_content, f.is_resolved, f.priority,
+                        f.create_time, f.update_time, f.resolve_time, f.resolved_by
+                    FROM user_feedback f
+                    LEFT JOIN complaint_type ct ON f.complaint_type = ct.type_code
+                    {where_clause}
+                    ORDER BY f.create_time DESC
+                    LIMIT %s OFFSET %s
+                """
+                values.extend([limit, offset])
+                cursor.execute(sql, tuple(values))
+                result = cursor.fetchall()
+                return result
+        except Exception as e:
+            print('获取反馈列表失败:', e)
+            return None
+
+    def get_feedback_by_id(self, feedback_id):
+        """根据ID获取单个反馈详情"""
+        try:
+            with self.connection.cursor(DictCursor) as cursor:
+                sql = """
+                    SELECT 
+                        f.*, ct.type_name as complaint_type_name
+                    FROM user_feedback f
+                    LEFT JOIN complaint_type ct ON f.complaint_type = ct.type_code
+                    WHERE f.id = %s
+                """
+                cursor.execute(sql, (feedback_id,))
+                result = cursor.fetchone()
+                return result
+        except Exception as e:
+            print(f'获取反馈详情(id={feedback_id})失败:', e)
+            return None
+
+    def add_feedback(self, user_id, complaint_type, description,
+                     image_url_1=None, image_url_2=None, image_url_3=None, priority=1):
+        """添加用户反馈"""
+        try:
+            with self.connection.cursor() as cursor:
+                sql = """
+                    INSERT INTO user_feedback 
+                    (user_id, complaint_type, description, image_url_1, image_url_2, image_url_3, priority)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s)
+                """
                 cursor.execute(sql, (user_id, complaint_type, description,
                                      image_url_1, image_url_2, image_url_3, priority))
                 self.connection.commit()
                 return cursor.lastrowid
-        except pymysql.Error as e:
-            print(f'提交投诉失败: {e}')
+        except Exception as e:
+            print('添加用户反馈失败:', e)
             self.connection.rollback()
             return None
 
-    # 4. 获取用户的所有投诉
-    def get_user_complaints(self, user_id: int, is_resolved: Optional[int] = None):
-        """
-        获取指定用户的所有投诉
-        Args:
-            user_id: 用户ID
-            is_resolved: 解决状态(0-未解决, 1-已解决, None-全部)
-        Returns: 投诉列表
-        """
+    def update_feedback(self, feedback_id, description=None, priority=None):
+        """更新反馈信息（仅限未解决前）"""
+        try:
+            with self.connection.cursor() as cursor:
+                fields = []
+                values = []
+
+                if description is not None:
+                    fields.append("description = %s")
+                    values.append(description)
+                if priority is not None:
+                    fields.append("priority = %s")
+                    values.append(priority)
+
+                if not fields:
+                    return True
+
+                sql = f"UPDATE user_feedback SET {', '.join(fields)} WHERE id = %s AND is_resolved = 0"
+                values.append(feedback_id)
+
+                cursor.execute(sql, tuple(values))
+                self.connection.commit()
+                return cursor.rowcount > 0
+        except Exception as e:
+            print('更新反馈失败:', e)
+            self.connection.rollback()
+            return False
+
+    def resolve_feedback(self, feedback_id, resolved_by, feedback_content):
+        """解决反馈（管理员操作）"""
+        try:
+            with self.connection.cursor() as cursor:
+                sql = """
+                    UPDATE user_feedback 
+                    SET is_resolved = 1, 
+                        resolved_by = %s, 
+                        feedback_content = %s,
+                        resolve_time = NOW()
+                    WHERE id = %s AND is_resolved = 0
+                """
+                cursor.execute(sql, (resolved_by, feedback_content, feedback_id))
+                self.connection.commit()
+                return cursor.rowcount > 0
+        except Exception as e:
+            print('解决反馈失败:', e)
+            self.connection.rollback()
+            return False
+
+    def get_user_feedback_stats(self, user_id):
+        """获取用户的反馈统计"""
         try:
             with self.connection.cursor(DictCursor) as cursor:
-                base_sql = """
-                SELECT uf.*, ct.type_name 
-                FROM user_feedback uf
-                LEFT JOIN complaint_type ct ON uf.complaint_type = ct.type_code
-                WHERE uf.user_id = %s
+                sql = """
+                    SELECT 
+                        COUNT(*) as total,
+                        SUM(CASE WHEN is_resolved = 1 THEN 1 ELSE 0 END) as resolved,
+                        SUM(CASE WHEN is_resolved = 0 THEN 1 ELSE 0 END) as unresolved
+                    FROM user_feedback 
+                    WHERE user_id = %s
                 """
-                params = [user_id]
-
-                if is_resolved is not None:
-                    base_sql += " AND uf.is_resolved = %s"
-                    params.append(is_resolved)
-
-                base_sql += " ORDER BY uf.create_time DESC"
-
-                cursor.execute(base_sql, tuple(params))
-                return cursor.fetchall()
-        except pymysql.Error as e:
-            print(f'获取用户(user_id={user_id})投诉失败: {e}')
+                cursor.execute(sql, (user_id,))
+                result = cursor.fetchone()
+                return result
+        except Exception as e:
+            print(f'获取用户反馈统计失败:', e)
             return None
 
-    # 5. 根据投诉ID获取投诉详情
-    def get_complaint_by_id(self, complaint_id: int):
-        """
-        根据ID获取投诉详情
-        Args:
-            complaint_id: 投诉ID
-        Returns: 投诉详情
-        """
-        sql = """
-        SELECT uf.*, ct.type_name,
-               su.username as resolved_by_name
-        FROM user_feedback uf
-        LEFT JOIN complaint_type ct ON uf.complaint_type = ct.type_code
-        LEFT JOIN sys_user su ON uf.resolved_by = su.user_id
-        WHERE uf.id = %s
-        """
-        return self._execute_query(sql, (complaint_id,), fetch_one=True)
-
-    # 6. 管理员回复投诉
-    def reply_complaint(self, complaint_id: int, feedback_content: str,
-                        resolved_by: int, mark_resolved: bool = True):
-        """
-        管理员回复投诉
-        Args:
-            complaint_id: 投诉ID
-            feedback_content: 回复内容
-            resolved_by: 解决人ID
-            mark_resolved: 是否标记为已解决
-        Returns: 是否成功
-        """
+    def delete_feedback(self, feedback_id):
+        """删除反馈（谨慎使用）"""
         try:
-            # 如果标记为已解决，需要设置解决时间
-            if mark_resolved:
-                sql = """
-                UPDATE user_feedback 
-                SET feedback_content = %s, 
-                    resolved_by = %s, 
-                    is_resolved = 1, 
-                    resolve_time = NOW(),
-                    update_time = NOW()
-                WHERE id = %s
-                """
-            else:
-                sql = """
-                UPDATE user_feedback 
-                SET feedback_content = %s, 
-                    resolved_by = %s,
-                    update_time = NOW()
-                WHERE id = %s
-                """
-
-            return self._execute_update(sql, (feedback_content, resolved_by, complaint_id))
-        except pymysql.Error as e:
-            print(f'回复投诉(ID={complaint_id})失败: {e}')
+            with self.connection.cursor() as cursor:
+                sql = "DELETE FROM user_feedback WHERE id = %s"
+                cursor.execute(sql, (feedback_id,))
+                self.connection.commit()
+                return cursor.rowcount > 0
+        except Exception as e:
+            print('删除反馈失败:', e)
+            self.connection.rollback()
             return False
 
-    # 7. 更新投诉状态
-    def update_complaint_status(self, complaint_id: int, is_resolved: int,
-                                resolved_by: Optional[int] = None):
-        """
-        更新投诉解决状态
-        Args:
-            complaint_id: 投诉ID
-            is_resolved: 解决状态(0-未解决, 1-已解决)
-            resolved_by: 解决人ID(可选)
-        Returns: 是否成功
-        """
-        try:
-            if is_resolved == 1:
-                # 标记为已解决，设置解决时间和解决人
-                sql = """
-                UPDATE user_feedback 
-                SET is_resolved = %s, 
-                    resolve_time = NOW(),
-                    resolved_by = %s,
-                    update_time = NOW()
-                WHERE id = %s
-                """
-                params = (is_resolved, resolved_by, complaint_id)
-            else:
-                # 标记为未解决，清空解决时间和解决人
-                sql = """
-                UPDATE user_feedback 
-                SET is_resolved = %s, 
-                    resolve_time = NULL,
-                    resolved_by = NULL,
-                    update_time = NOW()
-                WHERE id = %s
-                """
-                params = (is_resolved, complaint_id)
 
-            return self._execute_update(sql, params)
-        except pymysql.Error as e:
-            print(f'更新投诉(ID={complaint_id})状态失败: {e}')
-            return False
+from pydantic import BaseModel, Field
+from decimal import Decimal
+from typing import Optional
 
-    # 8. 更新投诉优先级
-    def update_complaint_priority(self, complaint_id: int, priority: int):
-        """
-        更新投诉优先级
-        Args:
-            complaint_id: 投诉ID
-            priority: 优先级(1-低, 2-中, 3-高)
-        Returns: 是否成功
-        """
-        sql = """
-        UPDATE user_feedback 
-        SET priority = %s, update_time = NOW()
-        WHERE id = %s
-        """
-        return self._execute_update(sql, (priority, complaint_id))
 
-    # 9. 管理员获取投诉列表(支持多种筛选条件)
-    def get_complaint_list(self, filters: Dict[str, Any] = None,
-                           page: int = 1, page_size: int = 20):
+class JobSchema(BaseModel):
+    id: int
+    title: str
+    salary_min: float  # 自动转换
+    salary_max: float
+    salary_desc: str
+
+    class Config:
+        from_attributes = True
+        # 或者使用 json_encoders 自定义
+        json_encoders = {
+            Decimal: lambda v: float(v)
+        }
+
+
+class UserFavoriteJobs:
+    def __init__(self, db_connection):
+        self.connection = db_connection
+        self.db = EndDemoDatabase(host='localhost', user='root', password='123456')
+        self.job_prot = Job_prot(self.db.connection)
+
+    def add_favorite(self, user_id, job_id, remarks=None):
         """
-        管理员获取投诉列表(支持筛选和分页)
-        Args:
-            filters: 筛选条件字典
-                    {
-                        'user_id': 用户ID,
-                        'complaint_type': 投诉类型,
-                        'is_resolved': 解决状态,
-                        'priority': 优先级,
-                        'start_date': 开始日期,
-                        'end_date': 结束日期
-                    }
-            page: 页码
-            page_size: 每页数量
-        Returns: (投诉列表, 总数量)
+        添加岗位收藏（支持软删除后的重新收藏）
         """
         try:
             with self.connection.cursor(DictCursor) as cursor:
-                # 基础查询SQL
-                base_sql = """
-                SELECT SQL_CALC_FOUND_ROWS 
-                       uf.*, ct.type_name,
-                       su.username as user_name
-                FROM user_feedback uf
-                LEFT JOIN complaint_type ct ON uf.complaint_type = ct.type_code
-                LEFT JOIN sys_user su ON uf.user_id = su.user_id
-                WHERE 1=1
+                # 先查询是否已有记录
+                check_sql = """
+                    SELECT id, is_canceled FROM user_favorite_jobs 
+                    WHERE user_id = %s AND boss_job_id = %s
                 """
-                params = []
+                cursor.execute(check_sql, (user_id, job_id))
+                existing = cursor.fetchone()
 
-                # 动态添加筛选条件
-                if filters:
-                    if filters.get('user_id'):
-                        base_sql += " AND uf.user_id = %s"
-                        params.append(filters['user_id'])
+                job_snapshot = self.job_prot.fetch_one_job_all_data_posts(job_id)[0]
+                job_snapshot = JobSchema.model_validate(job_snapshot).model_dump()
 
-                    if filters.get('complaint_type'):
-                        base_sql += " AND uf.complaint_type = %s"
-                        params.append(filters['complaint_type'])
+                # ✅ 关键修复：将字典转为 JSON 字符串
+                job_snapshot_json = json.dumps(job_snapshot, ensure_ascii=False)
 
-                    if filters.get('is_resolved') is not None:
-                        base_sql += " AND uf.is_resolved = %s"
-                        params.append(filters['is_resolved'])
+                if existing:
+                    if existing['is_canceled'] == 1:
+                        update_sql = """
+                            UPDATE user_favorite_jobs 
+                            SET is_canceled = 0, 
+                                job_snapshot = %s,
+                                remarks = %s,
+                                updated_at = CURRENT_TIMESTAMP
+                            WHERE id = %s
+                        """
+                        cursor.execute(update_sql, (job_snapshot_json, remarks, existing['id']))
+                        self.connection.commit()
+                        return {'success': True, 'message': '重新收藏成功', 'id': existing['id']}
+                    else:
+                        return {'success': False, 'message': '该岗位已在收藏列表中'}
+                else:
+                    insert_sql = """
+                        INSERT INTO user_favorite_jobs 
+                        (user_id, boss_job_id, job_snapshot, remarks) 
+                        VALUES (%s, %s, %s, %s)
+                    """
+                    cursor.execute(insert_sql, (user_id, job_id, job_snapshot_json, remarks))
+                    self.connection.commit()
+                    return {'success': True, 'message': '收藏成功', 'id': cursor.lastrowid}
 
-                    if filters.get('priority'):
-                        base_sql += " AND uf.priority = %s"
-                        params.append(filters['priority'])
+        except Exception as e:
+            self.connection.rollback()
+            print('添加收藏失败:', e)
+            return {'success': False, 'message': f'添加收藏失败: {str(e)}'}
 
-                    if filters.get('start_date'):
-                        base_sql += " AND uf.create_time >= %s"
-                        params.append(filters['start_date'])
+    def cancel_favorite(self, user_id, boss_job_id):
+        """
+        取消收藏（软删除）
+        """
+        try:
+            with self.connection.cursor(DictCursor) as cursor:
+                sql = """
+                    UPDATE user_favorite_jobs 
+                    SET is_canceled = 1, updated_at = CURRENT_TIMESTAMP
+                    WHERE user_id = %s AND boss_job_id = %s AND is_canceled = 0
+                """
+                cursor.execute(sql, (user_id, boss_job_id))
+                self.connection.commit()
 
-                    if filters.get('end_date'):
-                        base_sql += " AND uf.create_time <= %s"
-                        params.append(filters['end_date'])
+                if cursor.rowcount > 0:
+                    return {'success': True, 'message': '取消收藏成功'}
+                else:
+                    return {'success': False, 'message': '未找到有效的收藏记录'}
 
-                # 排序和分页
-                base_sql += " ORDER BY uf.priority DESC, uf.create_time DESC"
-                base_sql += " LIMIT %s OFFSET %s"
+        except Exception as e:
+            self.connection.rollback()
+            print('取消收藏失败:', e)
+            return {'success': False, 'message': f'取消收藏失败: {str(e)}'}
 
-                offset = (page - 1) * page_size
-                params.extend([page_size, offset])
+    def get_user_favorites(self, user_id, include_canceled=False):
+        """
+        获取用户的收藏列表
+        """
+        try:
+            with self.connection.cursor(DictCursor) as cursor:
+                if include_canceled:
+                    sql = """
+                        SELECT id, user_id, boss_job_id, is_canceled, 
+                               job_snapshot, remarks, created_at, updated_at
+                        FROM user_favorite_jobs 
+                        WHERE user_id = %s
+                        ORDER BY created_at DESC
+                    """
+                    cursor.execute(sql, (user_id,))
+                else:
+                    sql = """
+                        SELECT id, user_id, boss_job_id, 
+                               job_snapshot, remarks, created_at, updated_at
+                        FROM user_favorite_jobs 
+                        WHERE user_id = %s AND is_canceled = 0
+                        ORDER BY created_at DESC
+                    """
+                    cursor.execute(sql, (user_id,))
 
-                cursor.execute(base_sql, tuple(params))
                 result = cursor.fetchall()
+                return result
 
-                # 获取总记录数
-                cursor.execute("SELECT FOUND_ROWS() as total")
-                total = cursor.fetchone()['total']
+        except Exception as e:
+            print('查询用户收藏列表失败:', e)
+            return None
 
-                return result, total
-        except pymysql.Error as e:
-            print(f'获取投诉列表失败: {e}')
-            return None, 0
-
-    # 10. 获取投诉统计信息
-    def get_complaint_statistics(self):
+    def check_is_favorite(self, user_id, boss_job_id):
         """
-        获取投诉统计信息
-        Returns: 统计信息字典
+        检查用户是否已收藏某岗位
         """
         try:
             with self.connection.cursor(DictCursor) as cursor:
-                # 按类型统计
-                sql_type = """
-                SELECT ct.type_name, COUNT(uf.id) as count
-                FROM complaint_type ct
-                LEFT JOIN user_feedback uf ON ct.type_code = uf.complaint_type
-                WHERE ct.is_active = 1
-                GROUP BY ct.type_code, ct.type_name
-                ORDER BY ct.sort_order
+                sql = """
+                    SELECT id FROM user_favorite_jobs 
+                    WHERE user_id = %s AND boss_job_id = %s AND is_canceled = 0
                 """
-                cursor.execute(sql_type)
-                type_stats = cursor.fetchall()
+                cursor.execute(sql, (user_id, boss_job_id))
+                result = cursor.fetchone()
+                return result is not None
 
-                # 按状态统计
-                sql_status = """
-                SELECT 
-                    SUM(CASE WHEN is_resolved = 0 THEN 1 ELSE 0 END) as unresolved_count,
-                    SUM(CASE WHEN is_resolved = 1 THEN 1 ELSE 0 END) as resolved_count,
-                    COUNT(*) as total_count
-                FROM user_feedback
-                """
-                cursor.execute(sql_status)
-                status_stats = cursor.fetchone()
+        except Exception as e:
+            print('检查收藏状态失败:', e)
+            return False
 
-                # 按优先级统计
-                sql_priority = """
-                SELECT 
-                    priority,
-                    COUNT(*) as count
-                FROM user_feedback
-                GROUP BY priority
-                ORDER BY priority DESC
+    def update_remarks(self, user_id, boss_job_id, remarks):
+        """
+        更新收藏备注
+        """
+        try:
+            with self.connection.cursor(DictCursor) as cursor:
+                sql = """
+                    UPDATE user_favorite_jobs 
+                    SET remarks = %s, updated_at = CURRENT_TIMESTAMP
+                    WHERE user_id = %s AND boss_job_id = %s AND is_canceled = 0
                 """
-                cursor.execute(sql_priority)
-                priority_stats = cursor.fetchall()
+                cursor.execute(sql, (remarks, user_id, boss_job_id))
+                self.connection.commit()
 
-                # 最近一周投诉趋势
-                sql_trend = """
-                SELECT 
-                    DATE(create_time) as date,
-                    COUNT(*) as count
-                FROM user_feedback
-                WHERE create_time >= DATE_SUB(NOW(), INTERVAL 7 DAY)
-                GROUP BY DATE(create_time)
-                ORDER BY date
+                if cursor.rowcount > 0:
+                    return {'success': True, 'message': '备注更新成功'}
+                else:
+                    return {'success': False, 'message': '未找到有效的收藏记录'}
+
+        except Exception as e:
+            self.connection.rollback()
+            print('更新备注失败:', e)
+            return {'success': False, 'message': f'更新备注失败: {str(e)}'}
+
+    def get_favorite_detail(self, user_id, boss_job_id):
+        """
+        获取单条收藏详情
+        """
+        try:
+            with self.connection.cursor(DictCursor) as cursor:
+                sql = """
+                    SELECT id, user_id, boss_job_id, is_canceled,
+                           job_snapshot, remarks, created_at, updated_at
+                    FROM user_favorite_jobs 
+                    WHERE user_id = %s AND boss_job_id = %s
                 """
-                cursor.execute(sql_trend)
-                trend_stats = cursor.fetchall()
+                cursor.execute(sql, (user_id, boss_job_id))
+                result = cursor.fetchone()
+                return result
+
+        except Exception as e:
+            print('查询收藏详情失败:', e)
+            return None
+
+    def batch_cancel_favorites(self, user_id, boss_job_id_list):
+        """
+        批量取消收藏
+        """
+        try:
+            with self.connection.cursor(DictCursor) as cursor:
+                format_strings = ','.join(['%s'] * len(boss_job_id_list))
+                sql = f"""
+                    UPDATE user_favorite_jobs 
+                    SET is_canceled = 1, updated_at = CURRENT_TIMESTAMP
+                    WHERE user_id = %s AND boss_job_id IN ({format_strings}) AND is_canceled = 0
+                """
+                cursor.execute(sql, (user_id,) + tuple(boss_job_id_list))
+                self.connection.commit()
 
                 return {
-                    'type_stats': type_stats,
-                    'status_stats': status_stats,
-                    'priority_stats': priority_stats,
-                    'trend_stats': trend_stats
+                    'success': True,
+                    'message': f'成功取消 {cursor.rowcount} 条收藏',
+                    'affected_rows': cursor.rowcount
                 }
-        except pymysql.Error as e:
-            print(f'获取投诉统计失败: {e}')
-            return None
 
-    # 11. 删除投诉
-    def delete_complaint(self, complaint_id: int):
-        """
-        删除投诉
-        Args:
-            complaint_id: 投诉ID
-        Returns: 是否成功
-        """
-        sql = "DELETE FROM user_feedback WHERE id = %s"
-        return self._execute_update(sql, (complaint_id,))
+        except Exception as e:
+            self.connection.rollback()
+            print('批量取消收藏失败:', e)
+            return {'success': False, 'message': f'批量取消收藏失败: {str(e)}'}
 
-    # 12. 批量更新投诉状态
-    def batch_update_status(self, complaint_ids: List[int], is_resolved: int,
-                            resolved_by: Optional[int] = None):
-        """
-        批量更新投诉状态
-        Args:
-            complaint_ids: 投诉ID列表
-            is_resolved: 解决状态
-            resolved_by: 解决人ID
-        Returns: 成功更新的数量
-        """
-        if not complaint_ids:
-            return 0
+class UserDeliverJobs:
+    def __init__(self, db_connection):
+        self.connection = db_connection
+        self.db = EndDemoDatabase(host='localhost', user='root', password='123456')
+        self.job_prot = Job_prot(self.db.connection)
 
+    def add_deliver(self, user_id, job_id, remarks=None):
+        """
+        添加岗位收藏（支持软删除后的重新收藏）
+        """
         try:
-            with self.connection.cursor() as cursor:
-                placeholders = ','.join(['%s'] * len(complaint_ids))
+            with self.connection.cursor(DictCursor) as cursor:
+                # 先查询是否已有记录
+                check_sql = """
+                    SELECT id, is_canceled FROM user_deliver_jobs 
+                    WHERE user_id = %s AND boss_job_id = %s
+                """
+                cursor.execute(check_sql, (user_id, job_id))
+                existing = cursor.fetchone()
 
-                if is_resolved == 1:
-                    sql = f"""
-                    UPDATE user_feedback 
-                    SET is_resolved = %s, 
-                        resolve_time = NOW(),
-                        resolved_by = %s,
-                        update_time = NOW()
-                    WHERE id IN ({placeholders})
-                    """
-                    params = [is_resolved, resolved_by] + complaint_ids
+                job_snapshot = self.job_prot.fetch_one_job_all_data_posts(job_id)[0]
+                job_snapshot = JobSchema.model_validate(job_snapshot).model_dump()
+
+                # ✅ 关键修复：将字典转为 JSON 字符串
+                job_snapshot_json = json.dumps(job_snapshot, ensure_ascii=False)
+
+                if existing:
+                    if existing['is_canceled'] == 1:
+                        update_sql = """
+                            UPDATE user_deliver_jobs 
+                            SET is_canceled = 0, 
+                                job_snapshot = %s,
+                                remarks = %s,
+                                updated_at = CURRENT_TIMESTAMP
+                            WHERE id = %s
+                        """
+                        cursor.execute(update_sql, (job_snapshot_json, remarks, existing['id']))
+                        self.connection.commit()
+                        return {'success': True, 'message': '重新收藏成功', 'id': existing['id']}
+                    else:
+                        return {'success': False, 'message': '该岗位已在收藏列表中'}
                 else:
-                    sql = f"""
-                    UPDATE user_feedback 
-                    SET is_resolved = %s, 
-                        resolve_time = NULL,
-                        resolved_by = NULL,
-                        update_time = NOW()
-                    WHERE id IN ({placeholders})
+                    insert_sql = """
+                        INSERT INTO user_deliver_jobs 
+                        (user_id, boss_job_id, job_snapshot, remarks) 
+                        VALUES (%s, %s, %s, %s)
                     """
-                    params = [is_resolved] + complaint_ids
+                    cursor.execute(insert_sql, (user_id, job_id, job_snapshot_json, remarks))
+                    self.connection.commit()
+                    return {'success': True, 'message': '收藏成功', 'id': cursor.lastrowid}
 
-                cursor.execute(sql, tuple(params))
-                self.connection.commit()
-                return cursor.rowcount
-        except pymysql.Error as e:
-            print(f'批量更新投诉状态失败: {e}')
+        except Exception as e:
             self.connection.rollback()
-            return 0
+            print('添加收藏失败:', e)
+            return {'success': False, 'message': f'添加收藏失败: {str(e)}'}
 
-    # 13. 获取未解决的投诉数量
-    def get_unresolved_count(self):
+    def cancel_deliver(self, user_id, boss_job_id):
         """
-        获取未解决的投诉数量
-        Returns: 未解决投诉数量
-        """
-        sql = "SELECT COUNT(*) as count FROM user_feedback WHERE is_resolved = 0"
-        result = self._execute_query(sql, fetch_one=True)
-        return result['count'] if result else 0
-
-    # 14. 获取最近N天的投诉
-    def get_recent_complaints(self, days: int = 7):
-        """
-        获取最近N天的投诉
-        Args:
-            days: 天数
-        Returns: 投诉列表
-        """
-        sql = """
-        SELECT uf.*, ct.type_name, su.username as user_name
-        FROM user_feedback uf
-        LEFT JOIN complaint_type ct ON uf.complaint_type = ct.type_code
-        LEFT JOIN sys_user su ON uf.user_id = su.user_id
-        WHERE uf.create_time >= DATE_SUB(NOW(), INTERVAL %s DAY)
-        ORDER BY uf.create_time DESC
-        """
-        return self._execute_query(sql, (days,), fetch_all=True)
-
-    # 15. 获取高优先级未解决投诉
-    def get_high_priority_unresolved(self):
-        """
-        获取高优先级未解决投诉
-        Returns: 高优先级未解决投诉列表
-        """
-        sql = """
-        SELECT uf.*, ct.type_name, su.username as user_name
-        FROM user_feedback uf
-        LEFT JOIN complaint_type ct ON uf.complaint_type = ct.type_code
-        LEFT JOIN sys_user su ON uf.user_id = su.user_id
-        WHERE uf.is_resolved = 0 AND uf.priority >= 2
-        ORDER BY uf.priority DESC, uf.create_time ASC
-        """
-        return self._execute_query(sql, fetch_all=True)
-
-    # 16. 检查投诉是否存在
-    def complaint_exists(self, complaint_id: int):
-        """
-        检查投诉是否存在
-        Args:
-            complaint_id: 投诉ID
-        Returns: 是否存在
-        """
-        sql = "SELECT 1 FROM user_feedback WHERE id = %s"
-        result = self._execute_query(sql, (complaint_id,), fetch_one=True)
-        return result is not None
-
-    # 17. 获取用户未解决投诉数量
-    def get_user_unresolved_count(self, user_id: int):
-        """
-        获取用户未解决投诉数量
-        Args:
-            user_id: 用户ID
-        Returns: 未解决投诉数量
-        """
-        sql = "SELECT COUNT(*) as count FROM user_feedback WHERE user_id = %s AND is_resolved = 0"
-        result = self._execute_query(sql, (user_id,), fetch_one=True)
-        return result['count'] if result else 0
-
-    # 18. 添加投诉类型
-    def add_complaint_type(self, type_name: str, sort_order: int = 0):
-        """
-        添加投诉类型
-        Args:
-            type_name: 类型名称
-            sort_order: 排序顺序
-        Returns: 插入的类型代码
+        取消投递（软删除）
         """
         try:
-            # 获取当前最大的type_code
-            sql_max = "SELECT MAX(type_code) as max_code FROM complaint_type"
-            result = self._execute_query(sql_max, fetch_one=True)
-            max_code = result['max_code'] if result else 0
-            new_code = max_code + 1
-
-            sql = """
-            INSERT INTO complaint_type (type_code, type_name, sort_order, is_active)
-            VALUES (%s, %s, %s, 1)
-            """
-
-            with self.connection.cursor() as cursor:
-                cursor.execute(sql, (new_code, type_name, sort_order))
+            with self.connection.cursor(DictCursor) as cursor:
+                sql = """
+                    UPDATE user_deliver_jobs 
+                    SET is_canceled = 1, updated_at = CURRENT_TIMESTAMP
+                    WHERE user_id = %s AND boss_job_id = %s AND is_canceled = 0
+                """
+                cursor.execute(sql, (user_id, boss_job_id))
                 self.connection.commit()
-                return new_code
-        except pymysql.Error as e:
-            print(f'添加投诉类型失败: {e}')
+
+                if cursor.rowcount > 0:
+                    return {'success': True, 'message': '取消投递成功'}
+                else:
+                    return {'success': False, 'message': '未找到有效的投递记录'}
+
+        except Exception as e:
             self.connection.rollback()
+            print('取消投递失败:', e)
+            return {'success': False, 'message': f'取消投递失败: {str(e)}'}
+
+    def get_user_delivers(self, user_id, include_canceled=False):
+        """
+        获取用户的投递列表
+        """
+        try:
+            with self.connection.cursor(DictCursor) as cursor:
+                if include_canceled:
+                    sql = """
+                        SELECT id, user_id, boss_job_id, is_canceled, 
+                               job_snapshot, remarks, created_at, updated_at
+                        FROM user_deliver_jobs 
+                        WHERE user_id = %s
+                        ORDER BY created_at DESC
+                    """
+                    cursor.execute(sql, (user_id,))
+                else:
+                    sql = """
+                        SELECT id, user_id, boss_job_id, 
+                               job_snapshot, remarks, created_at, updated_at
+                        FROM user_deliver_jobs 
+                        WHERE user_id = %s AND is_canceled = 0
+                        ORDER BY created_at DESC
+                    """
+                    cursor.execute(sql, (user_id,))
+
+                result = cursor.fetchall()
+                return result
+
+        except Exception as e:
+            print('查询用户投递列表失败:', e)
             return None
 
-    # 19. 更新投诉类型状态
-    def update_complaint_type_status(self, type_code: int, is_active: int):
+    def check_is_deliver(self, user_id, boss_job_id):
         """
-        更新投诉类型状态
-        Args:
-            type_code: 类型代码
-            is_active: 是否激活(0-否, 1-是)
-        Returns: 是否成功
+        检查用户是否已投递某岗位
         """
-        sql = """
-        UPDATE complaint_type 
-        SET is_active = %s
-        WHERE type_code = %s
-        """
-        return self._execute_update(sql, (is_active, type_code))
+        try:
+            with self.connection.cursor(DictCursor) as cursor:
+                sql = """
+                    SELECT id FROM user_deliver_jobs 
+                    WHERE user_id = %s AND boss_job_id = %s AND is_canceled = 0
+                """
+                cursor.execute(sql, (user_id, boss_job_id))
+                result = cursor.fetchone()
+                return result is not None
 
+        except Exception as e:
+            print('检查投递状态失败:', e)
+            return False
 
+    def update_remarks(self, user_id, boss_job_id, remarks):
+        """
+        更新投递备注
+        """
+        try:
+            with self.connection.cursor(DictCursor) as cursor:
+                sql = """
+                    UPDATE user_deliver_jobs 
+                    SET remarks = %s, updated_at = CURRENT_TIMESTAMP
+                    WHERE user_id = %s AND boss_job_id = %s AND is_canceled = 0
+                """
+                cursor.execute(sql, (remarks, user_id, boss_job_id))
+                self.connection.commit()
+
+                if cursor.rowcount > 0:
+                    return {'success': True, 'message': '备注更新成功'}
+                else:
+                    return {'success': False, 'message': '未找到有效的投递记录'}
+
+        except Exception as e:
+            self.connection.rollback()
+            print('更新备注失败:', e)
+            return {'success': False, 'message': f'更新备注失败: {str(e)}'}
+
+    def get_deliver_detail(self, user_id, boss_job_id):
+        """
+        获取单条投递详情
+        """
+        try:
+            with self.connection.cursor(DictCursor) as cursor:
+                sql = """
+                    SELECT id, user_id, boss_job_id, is_canceled,
+                           job_snapshot, remarks, created_at, updated_at
+                    FROM user_deliver_jobs 
+                    WHERE user_id = %s AND boss_job_id = %s
+                """
+                cursor.execute(sql, (user_id, boss_job_id))
+                result = cursor.fetchone()
+                return result
+
+        except Exception as e:
+            print('查询投递详情失败:', e)
+            return None
+
+    def batch_cancel_delivers(self, user_id, boss_job_id_list):
+        """
+        批量取消投递
+        """
+        try:
+            with self.connection.cursor(DictCursor) as cursor:
+                format_strings = ','.join(['%s'] * len(boss_job_id_list))
+                sql = f"""
+                    UPDATE user_deliver_jobs 
+                    SET is_canceled = 1, updated_at = CURRENT_TIMESTAMP
+                    WHERE user_id = %s AND boss_job_id IN ({format_strings}) AND is_canceled = 0
+                """
+                cursor.execute(sql, (user_id,) + tuple(boss_job_id_list))
+                self.connection.commit()
+
+                return {
+                    'success': True,
+                    'message': f'成功取消 {cursor.rowcount} 条投递',
+                    'affected_rows': cursor.rowcount
+                }
+
+        except Exception as e:
+            self.connection.rollback()
+            print('批量取消投递失败:', e)
+            return {'success': False, 'message': f'批量取消投递失败: {str(e)}'}
 

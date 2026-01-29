@@ -14,7 +14,7 @@ import os
 from X1_ws import think_speaker
 import logging
 from pathlib import Path
-from sql_data_demo import EndDemoDatabase, Job_prot, Job_category_simple, Forum_comments, Sys_user, ResumeManager, ComplaintFeedbackManager
+from sql_data_demo import EndDemoDatabase, Job_prot, Job_category_simple, Forum_comments, Sys_user, ResumeManager, ComplaintTypeManager,UserFeedbackManager,UserDeliverJobs,UserFavoriteJobs
 from flask import jsonify, request, g
 from datetime import datetime
 from sqlalchemy import text
@@ -28,6 +28,9 @@ from typing import Dict, List, Optional, Any
 import json
 from datetime import datetime
 
+from flask import request, jsonify, g
+from functools import wraps
+
 
 db = EndDemoDatabase(host='localhost', user='root', password='123456')
 job_prot = Job_prot(db.connection)
@@ -35,7 +38,10 @@ job_category_simple = Job_category_simple(db.connection)
 forum_comments = Forum_comments(db.connection)
 sys_user = Sys_user(db.connection)
 resume_manager = ResumeManager(db.connection)
-manager = ComplaintFeedbackManager(db.connection)
+type_manager = ComplaintTypeManager(db.connection)
+feedback_manager = UserFeedbackManager(db.connection)
+deliver_jobs = UserDeliverJobs(db.connection)
+favorite_jobs = UserFavoriteJobs(db.connection)
 
 think_speaker = think_speaker()
 
@@ -2140,16 +2146,33 @@ def batch_update_resumes():
             'data': None
         }), 500
 
+def admin_required(f):
+    """管理员权限装饰器"""
 
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        # 验证管理员身份
+        is_admin = request.headers.get('X-Admin-Token') or g.get('is_admin')
+        if not is_admin:
+            return jsonify({'code': 403, 'message': '无权限操作'}), 403
+        return f(*args, **kwargs)
+
+    return decorated_function
+
+
+# ==================== 投诉类型相关接口 ====================
 
 @app.route('/api/complaint/types', methods=['GET'])
 def get_complaint_types():
-    """获取所有投诉类型"""
+    '''
+    :input: none
+    :return: [{type_code: 1, type_name: "功能", sort_order: 0}]
+    获取所有启用的投诉类型列表
+    '''
     try:
-        
-        types = manager.get_all_complaint_types()
+        types_data = type_manager.get_all_types()
 
-        if types is None:
+        if types_data is None:
             return jsonify({
                 'code': 500,
                 'message': '获取投诉类型失败'
@@ -2157,519 +2180,920 @@ def get_complaint_types():
 
         return jsonify({
             'code': 200,
-            'message': 'success',
-            'data': types
+            'data': types_data,
+            'message': 'success'
         }), 200
+
     except Exception as e:
-        app.logger.error(f'获取投诉类型失败: {str(e)}')
+        print(f'获取投诉类型列表失败: {e}')
+        app.logger.error(f'获取投诉类型列表失败: {e}')
         return jsonify({
             'code': 500,
             'message': '服务器内部错误'
         }), 500
-    finally:
-        if 'manager' in locals():
-            manager.connection.close()
 
 
-@app.route('/api/complaint/submit', methods=['POST'])
-def submit_complaint():
-    """用户提交投诉"""
+# ==================== 用户反馈相关接口（用户端） ====================
+
+@app.route('/api/feedback/list', methods=['GET'])
+@login_required
+def get_user_feedback_list():
+    '''
+    :input:
+        - query参数: is_resolved(可选,0/1), page(默认1), limit(默认20)
+    :return: [{id: 1, complaint_type: 2, description: "...", create_time: "..."}]
+    获取当前登录用户的反馈列表
+    '''
+    try:
+        # 获取查询参数
+        is_resolved = request.args.get('is_resolved', type=int)
+        page = request.args.get('page', 1, type=int)
+        limit = request.args.get('limit', 20, type=int)
+        offset = (page - 1) * limit
+
+        ##  feedback_manager = UserFeedbackManager(db.connection)
+        list_data = feedback_manager.get_feedback_list(
+            user_id=g.user_id,
+            is_resolved=is_resolved,
+            limit=limit,
+            offset=offset
+        )
+
+        if list_data is None:
+            return jsonify({
+                'code': 500,
+                'message': '获取反馈列表失败'
+            }), 500
+
+        return jsonify({
+            'code': 200,
+            'data': list_data,
+            'message': 'success'
+        }), 200
+
+    except Exception as e:
+        app.logger.error(f'获取用户反馈列表失败: {str(e)}')
+        return jsonify({
+            'code': 500,
+            'message': '服务器内部错误'
+        }), 500
+
+
+@app.route('/api/feedback/detail/<int:feedback_id>', methods=['GET'])
+@login_required
+def get_feedback_detail(feedback_id):
+    '''
+    :input: feedback_id (路径参数)
+    :return: {id: 1, complaint_type: 2, description: "...", feedback_content: "..."}
+    获取单条反馈详情（只能查看自己的）
+    '''
+    try:
+        ##  feedback_manager = UserFeedbackManager(db.connection)
+        detail_data = feedback_manager.get_feedback_by_id(feedback_id)
+
+        if detail_data is None:
+            return jsonify({
+                'code': 404,
+                'message': '反馈不存在'
+            }), 404
+
+        # 权限校验：只能查看自己的反馈
+        if detail_data['user_id'] != g.user_id:
+            return jsonify({
+                'code': 403,
+                'message': '无权查看该反馈'
+            }), 403
+
+        return jsonify({
+            'code': 200,
+            'data': detail_data,
+            'message': 'success'
+        }), 200
+
+    except Exception as e:
+        app.logger.error(f'获取反馈详情失败: {str(e)}')
+        return jsonify({
+            'code': 500,
+            'message': '服务器内部错误'
+        }), 500
+
+
+@app.route('/api/feedback/submit', methods=['POST'])
+@login_required
+def submit_feedback():
+    '''
+    :input: {
+        "complaint_type": 2,        # 必填，投诉类型代码
+        "description": "BUG描述",    # 必填，投诉内容
+        "image_url_1": "...",       # 可选，图片1
+        "image_url_2": "...",       # 可选，图片2
+        "image_url_3": "...",       # 可选，图片3
+        "priority": 1               # 可选，优先级1-3，默认1
+    }
+    :return: {feedback_id: 123}
+    提交用户反馈/投诉
+    '''
     try:
         data = request.get_json()
+
+        # 参数校验
         if not data:
-            app.logger.error('未获取到投诉数据')
             return jsonify({
                 'code': 400,
                 'message': '请求参数不能为空'
             }), 400
 
-        user_id = data.get('user_id')
         complaint_type = data.get('complaint_type')
         description = data.get('description', '').strip()
-        image_urls = data.get('image_urls', [])
-        priority = data.get('priority', 1)
 
-        # 参数验证
-        if not user_id or not complaint_type or not description:
+        if not complaint_type:
             return jsonify({
                 'code': 400,
-                'message': 'user_id、complaint_type和description为必填项'
+                'message': '投诉类型不能为空'
             }), 400
 
-        if priority not in [1, 2, 3]:
+        if not description or len(description) < 10:
             return jsonify({
                 'code': 400,
-                'message': 'priority参数无效，应为1、2或3'
+                'message': '投诉描述不能少于10个字符'
             }), 400
 
-        
-        complaint_id = manager.submit_complaint(
-            user_id=user_id,
+        if len(description) > 2000:
+            return jsonify({
+                'code': 400,
+                'message': '投诉描述不能超过2000个字符'
+            }), 400
+
+        # 验证投诉类型是否有效
+        # type_manager = ComplaintTypeManager(db.connection)
+        type_info = type_manager.get_type_by_code(complaint_type)
+        if not type_info or type_info['is_active'] != 1:
+            return jsonify({
+                'code': 400,
+                'message': '无效的投诉类型'
+            }), 400
+
+        # 提交反馈
+        ##  feedback_manager = UserFeedbackManager(db.connection)
+        feedback_id = feedback_manager.add_feedback(
+            user_id=g.user_id,
             complaint_type=complaint_type,
             description=description,
-            image_urls=image_urls,
+            image_url_1=data.get('image_url_1'),
+            image_url_2=data.get('image_url_2'),
+            image_url_3=data.get('image_url_3'),
+            priority=data.get('priority', 1)
+        )
+
+        if feedback_id is None:
+            return jsonify({
+                'code': 500,
+                'message': '提交反馈失败'
+            }), 500
+
+        return jsonify({
+            'code': 200,
+            'data': {'feedback_id': feedback_id},
+            'message': '反馈提交成功'
+        }), 200
+
+    except Exception as e:
+        app.logger.error(f'提交用户反馈失败: {str(e)}')
+        return jsonify({
+            'code': 500,
+            'message': '服务器内部错误'
+        }), 500
+
+
+@app.route('/api/feedback/update/<int:feedback_id>', methods=['PUT'])
+@login_required
+def update_user_feedback(feedback_id):
+    '''
+    :input: {
+        "description": "更新后的描述",   # 可选
+        "priority": 2                    # 可选
+    }
+    :return: {success: true}
+    更新未解决的反馈（只能修改自己的未解决反馈）
+    '''
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({
+                'code': 400,
+                'message': '请求参数不能为空'
+            }), 400
+
+        # 先查询确认权限和状态
+        ##  feedback_manager = UserFeedbackManager(db.connection)
+        detail = feedback_manager.get_feedback_by_id(feedback_id)
+
+        if not detail:
+            return jsonify({
+                'code': 404,
+                'message': '反馈不存在'
+            }), 404
+
+        if detail['user_id'] != g.user_id:
+            return jsonify({
+                'code': 403,
+                'message': '无权修改该反馈'
+            }), 403
+
+        if detail['is_resolved'] == 1:
+            return jsonify({
+                'code': 400,
+                'message': '已解决的反馈不能修改'
+            }), 400
+
+        # 执行更新
+        description = data.get('description', '').strip() if data.get('description') else None
+        priority = data.get('priority')
+
+        success = feedback_manager.update_feedback(
+            feedback_id=feedback_id,
+            description=description,
             priority=priority
         )
 
-        if complaint_id is None:
-            return jsonify({
-                'code': 500,
-                'message': '提交投诉失败'
-            }), 500
-
-        return jsonify({
-            'code': 200,
-            'message': '投诉提交成功',
-            'data': {
-                'complaint_id': complaint_id
-            }
-        }), 200
-    except Exception as e:
-        app.logger.error(f'提交投诉失败: {str(e)}')
-        return jsonify({
-            'code': 500,
-            'message': '服务器内部错误'
-        }), 500
-    finally:
-        if 'manager' in locals():
-            manager.connection.close()
-
-
-@app.route('/api/complaint/user/<int:user_id>', methods=['GET'])
-def get_user_complaints(user_id: int):
-    """获取用户的所有投诉"""
-    try:
-        # 获取查询参数
-        is_resolved = request.args.get('is_resolved')
-        if is_resolved is not None:
-            try:
-                is_resolved = int(is_resolved)
-                if is_resolved not in [0, 1]:
-                    raise ValueError
-            except ValueError:
-                return jsonify({
-                    'code': 400,
-                    'message': 'is_resolved参数无效，应为0或1'
-                }), 400
-
-        
-        complaints = manager.get_user_complaints(user_id=user_id, is_resolved=is_resolved)
-
-        if complaints is None:
-            return jsonify({
-                'code': 500,
-                'message': '获取用户投诉失败'
-            }), 500
-
-        return jsonify({
-            'code': 200,
-            'message': 'success',
-            'data': complaints
-        }), 200
-    except Exception as e:
-        app.logger.error(f'获取用户(user_id={user_id})投诉失败: {str(e)}')
-        return jsonify({
-            'code': 500,
-            'message': '服务器内部错误'
-        }), 500
-    finally:
-        if 'manager' in locals():
-            manager.connection.close()
-
-
-@app.route('/api/complaint/<int:complaint_id>', methods=['GET'])
-def get_complaint_detail(complaint_id: int):
-    """根据投诉ID获取投诉详情"""
-    try:
-        
-        complaint = manager.get_complaint_by_id(complaint_id)
-
-        if complaint is None:
-            return jsonify({
-                'code': 404,
-                'message': '投诉不存在'
-            }), 404
-
-        return jsonify({
-            'code': 200,
-            'message': 'success',
-            'data': complaint
-        }), 200
-    except Exception as e:
-        app.logger.error(f'获取投诉(ID={complaint_id})详情失败: {str(e)}')
-        return jsonify({
-            'code': 500,
-            'message': '服务器内部错误'
-        }), 500
-    finally:
-        if 'manager' in locals():
-            manager.connection.close()
-
-
-@app.route('/api/complaint/reply', methods=['POST'])
-def reply_complaint():
-    """管理员回复投诉"""
-    try:
-        data = request.get_json()
-        if not data:
-            return jsonify({
-                'code': 400,
-                'message': '请求参数不能为空'
-            }), 400
-
-        complaint_id = data.get('complaint_id')
-        feedback_content = data.get('feedback_content', '').strip()
-        resolved_by = data.get('resolved_by')
-        mark_resolved = data.get('mark_resolved', True)
-
-        # 参数验证
-        if not complaint_id or not feedback_content or not resolved_by:
-            return jsonify({
-                'code': 400,
-                'message': 'complaint_id、feedback_content和resolved_by为必填项'
-            }), 400
-
-        
-
-        # 检查投诉是否存在
-        if not manager.complaint_exists(complaint_id):
-            return jsonify({
-                'code': 404,
-                'message': '投诉不存在'
-            }), 404
-
-        success = manager.reply_complaint(
-            complaint_id=complaint_id,
-            feedback_content=feedback_content,
-            resolved_by=resolved_by,
-            mark_resolved=mark_resolved
-        )
-
         if not success:
             return jsonify({
                 'code': 500,
-                'message': '回复投诉失败'
+                'message': '更新失败'
             }), 500
 
         return jsonify({
             'code': 200,
-            'message': '回复成功'
-        }), 200
-    except Exception as e:
-        app.logger.error(f'回复投诉失败: {str(e)}')
-        return jsonify({
-            'code': 500,
-            'message': '服务器内部错误'
-        }), 500
-    finally:
-        if 'manager' in locals():
-            manager.connection.close()
-
-
-@app.route('/api/complaint/list', methods=['POST'])
-def get_complaint_list():
-    """管理员获取投诉列表(支持筛选和分页)"""
-    try:
-        data = request.get_json()
-        if not data:
-            # 如果没有传参数，使用空字典
-            data = {}
-
-        filters = data.get('filters', {})
-        page = data.get('page', 1)
-        page_size = data.get('page_size', 20)
-
-        # 参数验证
-        if page < 1:
-            page = 1
-        if page_size < 1 or page_size > 100:
-            page_size = 20
-
-        
-        complaints, total = manager.get_complaint_list(
-            filters=filters,
-            page=page,
-            page_size=page_size
-        )
-
-        if complaints is None:
-            return jsonify({
-                'code': 500,
-                'message': '获取投诉列表失败'
-            }), 500
-
-        return jsonify({
-            'code': 200,
-            'message': 'success',
-            'data': {
-                'list': complaints,
-                'total': total,
-                'page': page,
-                'page_size': page_size,
-                'total_pages': (total + page_size - 1) // page_size
-            }
-        }), 200
-    except Exception as e:
-        app.logger.error(f'获取投诉列表失败: {str(e)}')
-        return jsonify({
-            'code': 500,
-            'message': '服务器内部错误'
-        }), 500
-    finally:
-        if 'manager' in locals():
-            manager.connection.close()
-
-
-@app.route('/api/complaint/statistics', methods=['GET'])
-def get_complaint_statistics():
-    """获取投诉统计信息"""
-    try:
-        
-        statistics = manager.get_complaint_statistics()
-
-        if statistics is None:
-            return jsonify({
-                'code': 500,
-                'message': '获取投诉统计失败'
-            }), 500
-
-        return jsonify({
-            'code': 200,
-            'message': 'success',
-            'data': statistics
-        }), 200
-    except Exception as e:
-        app.logger.error(f'获取投诉统计失败: {str(e)}')
-        return jsonify({
-            'code': 500,
-            'message': '服务器内部错误'
-        }), 500
-    finally:
-        if 'manager' in locals():
-            manager.connection.close()
-
-
-@app.route('/api/complaint/status', methods=['POST'])
-def update_complaint_status():
-    """更新投诉状态"""
-    try:
-        data = request.get_json()
-        if not data:
-            return jsonify({
-                'code': 400,
-                'message': '请求参数不能为空'
-            }), 400
-
-        complaint_id = data.get('complaint_id')
-        is_resolved = data.get('is_resolved')
-        resolved_by = data.get('resolved_by')
-
-        # 参数验证
-        if not complaint_id or is_resolved is None:
-            return jsonify({
-                'code': 400,
-                'message': 'complaint_id和is_resolved为必填项'
-            }), 400
-
-        if is_resolved not in [0, 1]:
-            return jsonify({
-                'code': 400,
-                'message': 'is_resolved参数无效，应为0或1'
-            }), 400
-
-        
-
-        # 检查投诉是否存在
-        if not manager.complaint_exists(complaint_id):
-            return jsonify({
-                'code': 404,
-                'message': '投诉不存在'
-            }), 404
-
-        success = manager.update_complaint_status(
-            complaint_id=complaint_id,
-            is_resolved=is_resolved,
-            resolved_by=resolved_by
-        )
-
-        if not success:
-            return jsonify({
-                'code': 500,
-                'message': '更新投诉状态失败'
-            }), 500
-
-        return jsonify({
-            'code': 200,
+            'data': {'success': True},
             'message': '更新成功'
         }), 200
+
     except Exception as e:
-        app.logger.error(f'更新投诉状态失败: {str(e)}')
+        app.logger.error(f'更新用户反馈失败: {str(e)}')
         return jsonify({
             'code': 500,
             'message': '服务器内部错误'
         }), 500
-    finally:
-        if 'manager' in locals():
-            manager.connection.close()
 
 
-@app.route('/api/complaint/unresolved/count', methods=['GET'])
-def get_unresolved_count():
-    """获取未解决的投诉数量"""
+# ==================== 管理后台接口（管理员端） ====================
+
+@app.route('/api/admin/feedback/list', methods=['GET'])
+@admin_required
+def admin_get_feedback_list():
+    '''
+    :input:
+        - query参数:
+            user_id(可选),
+            complaint_type(可选),
+            is_resolved(可选,0/1),
+            page(默认1),
+            limit(默认20)
+    :return: [{id: 1, user_id: 100, complaint_type_name: "BUG", ...}]
+    管理员获取全部反馈列表（带筛选）
+    '''
     try:
-        
-        count = manager.get_unresolved_count()
+        # 获取查询参数
+        user_id = request.args.get('user_id', type=int)
+        complaint_type = request.args.get('complaint_type', type=int)
+        is_resolved = request.args.get('is_resolved', type=int)
+        page = request.args.get('page', 1, type=int)
+        limit = request.args.get('limit', 20, type=int)
+        offset = (page - 1) * limit
+
+       #  feedback_manager = UserFeedbackManager(db.connection)
+        list_data = feedback_manager.get_feedback_list(
+            user_id=user_id,
+            complaint_type=complaint_type,
+            is_resolved=is_resolved,
+            limit=limit,
+            offset=offset
+        )
+
+        if list_data is None:
+            return jsonify({
+                'code': 500,
+                'message': '获取反馈列表失败'
+            }), 500
 
         return jsonify({
             'code': 200,
-            'message': 'success',
-            'data': {
-                'unresolved_count': count
-            }
+            'data': list_data,
+            'message': 'success'
         }), 200
+
     except Exception as e:
-        app.logger.error(f'获取未解决投诉数量失败: {str(e)}')
+        app.logger.error(f'管理员获取反馈列表失败: {str(e)}')
         return jsonify({
             'code': 500,
             'message': '服务器内部错误'
         }), 500
-    finally:
-        if 'manager' in locals():
-            manager.connection.close()
 
 
-@app.route('/api/complaint/recent', methods=['GET'])
-def get_recent_complaints():
-    """获取最近N天的投诉"""
+@app.route('/api/admin/feedback/resolve/<int:feedback_id>', methods=['POST'])
+@admin_required
+def admin_resolve_feedback(feedback_id):
+    '''
+    :input: {
+        "feedback_content": "问题已修复，请更新APP"   # 必填，回复内容
+    }
+    :return: {success: true}
+    管理员解决反馈并回复
+    '''
     try:
-        days = request.args.get('days', 7, type=int)
+        data = request.get_json()
 
-        if days < 1 or days > 365:
+        if not data or not data.get('feedback_content', '').strip():
             return jsonify({
                 'code': 400,
-                'message': 'days参数应在1-365之间'
+                'message': '回复内容不能为空'
             }), 400
 
-        
-        complaints = manager.get_recent_complaints(days=days)
+        feedback_content = data.get('feedback_content', '').strip()
 
-        if complaints is None:
+        if len(feedback_content) > 1000:
             return jsonify({
-                'code': 500,
-                'message': '获取最近投诉失败'
-            }), 500
+                'code': 400,
+                'message': '回复内容不能超过1000个字符'
+            }), 400
+
+        # 获取管理员ID（从g或token中解析）
+        resolved_by = g.get('admin_id', 1)  # 默认值，实际应从登录信息获取
+
+       #  feedback_manager = UserFeedbackManager(db.connection)
+        success = feedback_manager.resolve_feedback(
+            feedback_id=feedback_id,
+            resolved_by=resolved_by,
+            feedback_content=feedback_content
+        )
+
+        if not success:
+            return jsonify({
+                'code': 400,
+                'message': '解决反馈失败，可能反馈不存在或已解决'
+            }), 400
 
         return jsonify({
             'code': 200,
-            'message': 'success',
-            'data': complaints
+            'data': {'success': True},
+            'message': '反馈已解决'
         }), 200
+
     except Exception as e:
-        app.logger.error(f'获取最近投诉失败: {str(e)}')
+        app.logger.error(f'管理员解决反馈失败: {str(e)}')
         return jsonify({
             'code': 500,
             'message': '服务器内部错误'
         }), 500
-    finally:
-        if 'manager' in locals():
-            manager.connection.close()
 
 
-@app.route('/api/complaint/high-priority', methods=['GET'])
-def get_high_priority_complaints():
-    """获取高优先级未解决投诉"""
+@app.route('/api/admin/feedback/detail/<int:feedback_id>', methods=['GET'])
+@admin_required
+def admin_get_feedback_detail(feedback_id):
+    '''
+    :input: feedback_id (路径参数)
+    :return: 反馈详情（包含用户信息）
+    管理员查看反馈详情
+    '''
     try:
-        
-        complaints = manager.get_high_priority_unresolved()
+       #  feedback_manager = UserFeedbackManager(db.connection)
+        detail_data = feedback_manager.get_feedback_by_id(feedback_id)
 
-        if complaints is None:
+        if detail_data is None:
             return jsonify({
-                'code': 500,
-                'message': '获取高优先级投诉失败'
-            }), 500
+                'code': 404,
+                'message': '反馈不存在'
+            }), 404
 
         return jsonify({
             'code': 200,
-            'message': 'success',
-            'data': complaints
+            'data': detail_data,
+            'message': 'success'
         }), 200
+
     except Exception as e:
-        app.logger.error(f'获取高优先级投诉失败: {str(e)}')
+        app.logger.error(f'管理员获取反馈详情失败: {str(e)}')
         return jsonify({
             'code': 500,
             'message': '服务器内部错误'
         }), 500
-    finally:
-        if 'manager' in locals():
-            manager.connection.close()
 
-
-@app.route('/api/complaint/type/add', methods=['POST'])
-def add_complaint_type():
-    """添加投诉类型"""
+@app.route('/api/job/favorite/add', methods=['POST'])
+def add_favorite():
+    """
+    添加岗位收藏
+    input: {
+        "user_id": 1,
+        "job_id": 1001,
+        "remarks": "备注信息（可选）"
+    }
+    """
     try:
         data = request.get_json()
         if not data:
+            return jsonify({'code': 400, 'message': '请求参数不能为空'}), 400
+
+        user_id = data.get('user_id')
+        job_id = data.get('job_id')
+        remarks = data.get('remarks', None)
+
+        if not user_id or not job_id:
+            return jsonify({'code': 400, 'message': 'user_id 和 job_id 不能为空'}), 400
+
+        # 调用收藏类方法
+        result = favorite_jobs.add_favorite(user_id, job_id, remarks)
+
+        if result['success']:
+            return jsonify({
+                'code': 200,
+                'message': result['message'],
+                'data': {'id': result.get('id')}
+            }), 200
+        else:
             return jsonify({
                 'code': 400,
-                'message': '请求参数不能为空'
+                'message': result['message']
             }), 400
 
-        type_name = data.get('type_name', '').strip()
-        sort_order = data.get('sort_order', 0)
+    except Exception as e:
+        app.logger.error(f'添加收藏失败: {str(e)}')
+        return jsonify({'code': 500, 'message': '服务器内部错误'}), 500
 
-        if not type_name:
+
+@app.route('/api/job/favorite/cancel', methods=['POST'])
+def cancel_favorite():
+    """
+    取消岗位收藏（软删除）
+    input: {
+        "user_id": 1,
+        "boss_job_id": 1001
+    }
+    """
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({'code': 400, 'message': '请求参数不能为空'}), 400
+
+        user_id = data.get('user_id')
+        boss_job_id = data.get('boss_job_id')
+
+        if not user_id or not boss_job_id:
+            return jsonify({'code': 400, 'message': 'user_id 和 boss_job_id 不能为空'}), 400
+
+        result = favorite_jobs.cancel_favorite(user_id, boss_job_id)
+
+        if result['success']:
             return jsonify({
-                'code': 400,
-                'message': 'type_name为必填项'
-            }), 400
+                'code': 200,
+                'message': result['message']
+            }), 200
+        else:
+            return jsonify({
+                'code': 404,
+                'message': result['message']
+            }), 404
 
-        
-        type_code = manager.add_complaint_type(
-            type_name=type_name,
-            sort_order=sort_order
-        )
+    except Exception as e:
+        app.logger.error(f'取消收藏失败: {str(e)}')
+        return jsonify({'code': 500, 'message': '服务器内部错误'}), 500
 
-        if type_code is None:
+
+@app.route('/api/job/favorite/list', methods=['GET'])
+def get_user_favorites():
+    """
+    获取用户收藏列表
+    query params:
+        user_id: 用户ID（必填）
+        include_canceled: 是否包含已取消的（可选，默认false）0或1
+    """
+    try:
+        user_id = request.args.get('user_id', type=int)
+        include_canceled = request.args.get('include_canceled', '0') == '1'
+
+        if not user_id:
+            return jsonify({'code': 400, 'message': 'user_id 不能为空'}), 400
+
+        result = favorite_jobs.get_user_favorites(user_id, include_canceled)
+
+        if result is not None:
+            return jsonify({
+                'code': 200,
+                'message': '获取成功',
+                'data': result
+            }), 200
+        else:
             return jsonify({
                 'code': 500,
-                'message': '添加投诉类型失败'
+                'message': '获取收藏列表失败'
             }), 500
 
-        return jsonify({
-            'code': 200,
-            'message': '添加成功',
-            'data': {
-                'type_code': type_code
-            }
-        }), 200
     except Exception as e:
-        app.logger.error(f'添加投诉类型失败: {str(e)}')
-        return jsonify({
-            'code': 500,
-            'message': '服务器内部错误'
-        }), 500
-    finally:
-        if 'manager' in locals():
-            manager.connection.close()
+        app.logger.error(f'获取收藏列表失败: {str(e)}')
+        return jsonify({'code': 500, 'message': '服务器内部错误'}), 500
 
 
-# 测试路由
-@app.route('/api/complaint/test', methods=['GET'])
-def test_complaint_api():
-    """测试接口是否正常工作"""
+@app.route('/api/job/favorite/check', methods=['GET'])
+def check_is_favorite():
+    """
+    检查用户是否已收藏某岗位
+    query params:
+        user_id: 用户ID
+        boss_job_id: 岗位ID
+    """
     try:
+        user_id = request.args.get('user_id', type=int)
+        boss_job_id = request.args.get('boss_job_id', type=int)
+
+        if not user_id or not boss_job_id:
+            return jsonify({'code': 400, 'message': 'user_id 和 boss_job_id 不能为空'}), 400
+
+        is_favorite = favorite_jobs.check_is_favorite(user_id, boss_job_id)
+
         return jsonify({
             'code': 200,
-            'message': '投诉反馈API服务正常运行',
-            'timestamp': datetime.now().isoformat()
+            'message': '查询成功',
+            'data': {'is_favorite': is_favorite}
         }), 200
+
     except Exception as e:
-        app.logger.error(f'测试接口异常: {str(e)}')
+        app.logger.error(f'检查收藏状态失败: {str(e)}')
+        return jsonify({'code': 500, 'message': '服务器内部错误'}), 500
+
+
+@app.route('/api/job/favorite/update_remarks', methods=['POST'])
+def update_favorite_remarks():
+    """
+    更新收藏备注
+    input: {
+        "user_id": 1,
+        "boss_job_id": 1001,
+        "remarks": "新的备注内容"
+    }
+    """
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({'code': 400, 'message': '请求参数不能为空'}), 400
+
+        user_id = data.get('user_id')
+        boss_job_id = data.get('boss_job_id')
+        remarks = data.get('remarks', '')
+
+        if not user_id or not boss_job_id:
+            return jsonify({'code': 400, 'message': 'user_id 和 boss_job_id 不能为空'}), 400
+
+        result = favorite_jobs.update_remarks(user_id, boss_job_id, remarks)
+
+        if result['success']:
+            return jsonify({
+                'code': 200,
+                'message': result['message']
+            }), 200
+        else:
+            return jsonify({
+                'code': 404,
+                'message': result['message']
+            }), 404
+
+    except Exception as e:
+        app.logger.error(f'更新收藏备注失败: {str(e)}')
+        return jsonify({'code': 500, 'message': '服务器内部错误'}), 500
+
+
+@app.route('/api/job/favorite/detail', methods=['GET'])
+def get_favorite_detail():
+    """
+    获取单条收藏详情
+    query params:
+        user_id: 用户ID
+        boss_job_id: 岗位ID
+    """
+    try:
+        user_id = request.args.get('user_id', type=int)
+        boss_job_id = request.args.get('boss_job_id', type=int)
+
+        if not user_id or not boss_job_id:
+            return jsonify({'code': 400, 'message': 'user_id 和 boss_job_id 不能为空'}), 400
+
+        result = favorite_jobs.get_favorite_detail(user_id, boss_job_id)
+
+        if result:
+            return jsonify({
+                'code': 200,
+                'message': '获取成功',
+                'data': result
+            }), 200
+        else:
+            return jsonify({
+                'code': 404,
+                'message': '未找到收藏记录'
+            }), 404
+
+    except Exception as e:
+        app.logger.error(f'获取收藏详情失败: {str(e)}')
+        return jsonify({'code': 500, 'message': '服务器内部错误'}), 500
+
+
+@app.route('/api/job/favorite/batch_cancel', methods=['POST'])
+def batch_cancel_favorites():
+    """
+    批量取消收藏
+    input: {
+        "user_id": 1,
+        "boss_job_id_list": [1001, 1002, 1003]
+    }
+    """
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({'code': 400, 'message': '请求参数不能为空'}), 400
+
+        user_id = data.get('user_id')
+        boss_job_id_list = data.get('boss_job_id_list', [])
+
+        if not user_id:
+            return jsonify({'code': 400, 'message': 'user_id 不能为空'}), 400
+
+        if not boss_job_id_list or not isinstance(boss_job_id_list, list):
+            return jsonify({'code': 400, 'message': 'boss_job_id_list 必须是数组且不能为空'}), 400
+
+        result = favorite_jobs.batch_cancel_favorites(user_id, boss_job_id_list)
+
+        if result['success']:
+            return jsonify({
+                'code': 200,
+                'message': result['message'],
+                'data': {'affected_rows': result.get('affected_rows', 0)}
+            }), 200
+        else:
+            return jsonify({
+                'code': 400,
+                'message': result['message']
+            }), 400
+
+    except Exception as e:
+        app.logger.error(f'批量取消收藏失败: {str(e)}')
+        return jsonify({'code': 500, 'message': '服务器内部错误'}), 500
+
+
+# ==================== 投递功能路由 ====================
+
+@app.route('/api/job/deliver/add', methods=['POST'])
+def add_deliver():
+    """
+    添加岗位投递
+    input: {
+        "user_id": 1,
+        "job_id": 1001,
+        "remarks": "备注信息（可选）"
+    }
+    """
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({'code': 400, 'message': '请求参数不能为空'}), 400
+
+        user_id = data.get('user_id')
+        job_id = data.get('job_id')
+        remarks = data.get('remarks', None)
+
+        if not user_id or not job_id:
+            return jsonify({'code': 400, 'message': 'user_id 和 job_id 不能为空'}), 400
+
+        result = deliver_jobs.add_deliver(user_id, job_id, remarks)
+
+        if result['success']:
+            return jsonify({
+                'code': 200,
+                'message': result['message'],
+                'data': {'id': result.get('id')}
+            }), 200
+        else:
+            return jsonify({
+                'code': 400,
+                'message': result['message']
+            }), 400
+
+    except Exception as e:
+        app.logger.error(f'添加投递失败: {str(e)}')
+        return jsonify({'code': 500, 'message': '服务器内部错误'}), 500
+
+
+@app.route('/api/job/deliver/cancel', methods=['POST'])
+def cancel_deliver():
+    """
+    取消岗位投递（软删除）
+    input: {
+        "user_id": 1,
+        "boss_job_id": 1001
+    }
+    """
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({'code': 400, 'message': '请求参数不能为空'}), 400
+
+        user_id = data.get('user_id')
+        boss_job_id = data.get('boss_job_id')
+
+        if not user_id or not boss_job_id:
+            return jsonify({'code': 400, 'message': 'user_id 和 boss_job_id 不能为空'}), 400
+
+        result = deliver_jobs.cancel_deliver(user_id, boss_job_id)
+
+        if result['success']:
+            return jsonify({
+                'code': 200,
+                'message': result['message']
+            }), 200
+        else:
+            return jsonify({
+                'code': 404,
+                'message': result['message']
+            }), 404
+
+    except Exception as e:
+        app.logger.error(f'取消投递失败: {str(e)}')
+        return jsonify({'code': 500, 'message': '服务器内部错误'}), 500
+
+
+@app.route('/api/job/deliver/list', methods=['GET'])
+def get_user_delivers():
+    """
+    获取用户投递列表
+    query params:
+        user_id: 用户ID（必填）
+        include_canceled: 是否包含已取消的（可选，默认false）0或1
+    """
+    try:
+        user_id = request.args.get('user_id', type=int)
+        include_canceled = request.args.get('include_canceled', '0') == '1'
+
+        if not user_id:
+            return jsonify({'code': 400, 'message': 'user_id 不能为空'}), 400
+
+        result = deliver_jobs.get_user_delivers(user_id, include_canceled)
+
+        if result is not None:
+            return jsonify({
+                'code': 200,
+                'message': '获取成功',
+                'data': result
+            }), 200
+        else:
+            return jsonify({
+                'code': 500,
+                'message': '获取投递列表失败'
+            }), 500
+
+    except Exception as e:
+        app.logger.error(f'获取投递列表失败: {str(e)}')
+        return jsonify({'code': 500, 'message': '服务器内部错误'}), 500
+
+
+@app.route('/api/job/deliver/check', methods=['GET'])
+def check_is_deliver():
+    """
+    检查用户是否已投递某岗位
+    query params:
+        user_id: 用户ID
+        boss_job_id: 岗位ID
+    """
+    try:
+        user_id = request.args.get('user_id', type=int)
+        boss_job_id = request.args.get('boss_job_id', type=int)
+
+        if not user_id or not boss_job_id:
+            return jsonify({'code': 400, 'message': 'user_id 和 boss_job_id 不能为空'}), 400
+
+        is_deliver = deliver_jobs.check_is_deliver(user_id, boss_job_id)
+
         return jsonify({
-            'code': 500,
-            'message': '服务器内部错误'
-        }), 500
+            'code': 200,
+            'message': '查询成功',
+            'data': {'is_deliver': is_deliver}
+        }), 200
+
+    except Exception as e:
+        app.logger.error(f'检查投递状态失败: {str(e)}')
+        return jsonify({'code': 500, 'message': '服务器内部错误'}), 500
+
+
+@app.route('/api/job/deliver/update_remarks', methods=['POST'])
+def update_deliver_remarks():
+    """
+    更新投递备注
+    input: {
+        "user_id": 1,
+        "boss_job_id": 1001,
+        "remarks": "新的备注内容"
+    }
+    """
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({'code': 400, 'message': '请求参数不能为空'}), 400
+
+        user_id = data.get('user_id')
+        boss_job_id = data.get('boss_job_id')
+        remarks = data.get('remarks', '')
+
+        if not user_id or not boss_job_id:
+            return jsonify({'code': 400, 'message': 'user_id 和 boss_job_id 不能为空'}), 400
+
+        result = deliver_jobs.update_remarks(user_id, boss_job_id, remarks)
+
+        if result['success']:
+            return jsonify({
+                'code': 200,
+                'message': result['message']
+            }), 200
+        else:
+            return jsonify({
+                'code': 404,
+                'message': result['message']
+            }), 404
+
+    except Exception as e:
+        app.logger.error(f'更新投递备注失败: {str(e)}')
+        return jsonify({'code': 500, 'message': '服务器内部错误'}), 500
+
+
+@app.route('/api/job/deliver/detail', methods=['GET'])
+def get_deliver_detail():
+    """
+    获取单条投递详情
+    query params:
+        user_id: 用户ID
+        boss_job_id: 岗位ID
+    """
+    try:
+        user_id = request.args.get('user_id', type=int)
+        boss_job_id = request.args.get('boss_job_id', type=int)
+
+        if not user_id or not boss_job_id:
+            return jsonify({'code': 400, 'message': 'user_id 和 boss_job_id 不能为空'}), 400
+
+        result = deliver_jobs.get_deliver_detail(user_id, boss_job_id)
+
+        if result:
+            return jsonify({
+                'code': 200,
+                'message': '获取成功',
+                'data': result
+            }), 200
+        else:
+            return jsonify({
+                'code': 404,
+                'message': '未找到投递记录'
+            }), 404
+
+    except Exception as e:
+        app.logger.error(f'获取投递详情失败: {str(e)}')
+        return jsonify({'code': 500, 'message': '服务器内部错误'}), 500
+
+
+@app.route('/api/job/deliver/batch_cancel', methods=['POST'])
+def batch_cancel_delivers():
+    """
+    批量取消投递
+    input: {
+        "user_id": 1,
+        "boss_job_id_list": [1001, 1002, 1003]
+    }
+    """
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({'code': 400, 'message': '请求参数不能为空'}), 400
+
+        user_id = data.get('user_id')
+        boss_job_id_list = data.get('boss_job_id_list', [])
+
+        if not user_id:
+            return jsonify({'code': 400, 'message': 'user_id 不能为空'}), 400
+
+        if not boss_job_id_list or not isinstance(boss_job_id_list, list):
+            return jsonify({'code': 400, 'message': 'boss_job_id_list 必须是数组且不能为空'}), 400
+
+        result = deliver_jobs.batch_cancel_delivers(user_id, boss_job_id_list)
+
+        if result['success']:
+            return jsonify({
+                'code': 200,
+                'message': result['message'],
+                'data': {'affected_rows': result.get('affected_rows', 0)}
+            }), 200
+        else:
+            return jsonify({
+                'code': 400,
+                'message': result['message']
+            }), 400
+
+    except Exception as e:
+        app.logger.error(f'批量取消投递失败: {str(e)}')
+        return jsonify({'code': 500, 'message': '服务器内部错误'}), 500
+
 
 @app.route('/api/health', methods=['GET'])
 def health_check():
