@@ -1,0 +1,1027 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>收藏与投递接口测试工具</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .header p {
+            opacity: 0.9;
+            font-size: 1.1em;
+        }
+
+        .content {
+            padding: 30px;
+        }
+
+        .section {
+            margin-bottom: 30px;
+            border: 2px solid #e0e0e0;
+            border-radius: 15px;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .section:hover {
+            border-color: #667eea;
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.1);
+        }
+
+        .section-header {
+            background: #f8f9fa;
+            padding: 15px 20px;
+            border-bottom: 2px solid #e0e0e0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .section-header h2 {
+            color: #333;
+            font-size: 1.3em;
+        }
+
+        .badge {
+            background: #667eea;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8em;
+            font-weight: bold;
+        }
+
+        .section-body {
+            padding: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #555;
+            font-weight: 600;
+        }
+
+        input[type="text"],
+        input[type="number"],
+        input[type="password"],
+        textarea,
+        select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+
+        input:focus,
+        textarea:focus,
+        select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            color: white;
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #eb3349 0%, #f45c43 100%);
+            color: white;
+        }
+
+        .btn-warning {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+        }
+
+        .btn-info {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 15px;
+        }
+
+        .result-box {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 8px;
+            background: #f8f9fa;
+            border-left: 4px solid #667eea;
+            display: none;
+        }
+
+        .result-box.show {
+            display: block;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .result-box.success {
+            border-left-color: #38ef7d;
+            background: #e8f5e9;
+        }
+
+        .result-box.error {
+            border-left-color: #f45c43;
+            background: #ffebee;
+        }
+
+        .result-box pre {
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            color: #333;
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .grid-2 {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .status-bar {
+            background: #333;
+            color: #fff;
+            padding: 10px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 14px;
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 5px;
+        }
+
+        .status-online {
+            background: #38ef7d;
+            box-shadow: 0 0 10px #38ef7d;
+        }
+
+        .status-offline {
+            background: #f45c43;
+        }
+
+        .token-display {
+            background: #2d2d2d;
+            color: #38ef7d;
+            padding: 10px;
+            border-radius: 5px;
+            font-family: monospace;
+            font-size: 12px;
+            word-break: break-all;
+            margin-top: 10px;
+            display: none;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .tabs {
+            display: flex;
+            border-bottom: 2px solid #e0e0e0;
+            margin-bottom: 20px;
+        }
+
+        .tab {
+            padding: 12px 24px;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s;
+            font-weight: 600;
+            color: #666;
+        }
+
+        .tab.active {
+            color: #667eea;
+            border-bottom-color: #667eea;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .info-card {
+            background: #e3f2fd;
+            border-left: 4px solid #2196f3;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 0 8px 8px 0;
+        }
+
+        .info-card h4 {
+            color: #1976d2;
+            margin-bottom: 5px;
+        }
+
+        .info-card p {
+            color: #555;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔧 接口测试工具</h1>
+            <p>收藏与投递功能接口验证 | 服务器: http://localhost:5000</p>
+        </div>
+
+        <div class="status-bar">
+            <div>
+                <span id="connectionStatus" class="status-indicator status-offline"></span>
+                <span id="statusText">未连接</span>
+            </div>
+            <div>
+                <span id="userStatus">未登录</span>
+            </div>
+        </div>
+
+        <div class="content">
+            <!-- 登录区域 -->
+            <div id="loginSection" class="section">
+                <div class="section-header">
+                    <h2>🔐 用户登录</h2>
+                    <span class="badge">必需</span>
+                </div>
+                <div class="section-body">
+                    <div class="grid-2">
+                        <div class="form-group">
+                            <label>手机号</label>
+                            <input type="text" id="mobile" placeholder="请输入手机号" value="">
+                        </div>
+                        <div class="form-group">
+                            <label>密码</label>
+                            <input type="password" id="password" placeholder="请输入密码" value="">
+                        </div>
+                    </div>
+                    <div class="btn-group">
+                        <button class="btn btn-primary" onclick="login()">
+                            <span id="loginBtnText">登录</span>
+                        </button>
+                        <button class="btn btn-warning" onclick="testConnection()">测试连接</button>
+                    </div>
+                    <div id="tokenBox" class="token-display"></div>
+                    <div id="loginResult" class="result-box"></div>
+                </div>
+            </div>
+
+            <!-- 功能测试区域（登录后显示） -->
+            <div id="testSection" class="hidden">
+                <div class="tabs">
+                    <div class="tab active" onclick="switchTab('favorite')">⭐ 收藏功能</div>
+                    <div class="tab" onclick="switchTab('deliver')">📤 投递功能</div>
+                </div>
+
+                <!-- 收藏功能 -->
+                <div id="favoriteTab" class="tab-content active">
+                    <div class="info-card">
+                        <h4>收藏接口说明</h4>
+                        <p>测试用户收藏岗位的相关接口，包括添加、取消、查询、批量操作等功能。</p>
+                    </div>
+
+                    <div class="section">
+                        <div class="section-header">
+                            <h2>添加/重新收藏</h2>
+                            <span class="badge">POST</span>
+                        </div>
+                        <div class="section-body">
+                            <div class="grid-2">
+                                <div class="form-group">
+                                    <label>岗位ID (job_id)</label>
+                                    <input type="number" id="favJobId" placeholder="例如: 1001" value="1001">
+                                </div>
+                                <div class="form-group">
+                                    <label>备注 (可选)</label>
+                                    <input type="text" id="favRemarks" placeholder="收藏备注" value="测试收藏">
+                                </div>
+                            </div>
+                            <div class="btn-group">
+                                <button class="btn btn-success" onclick="addFavorite()">添加收藏</button>
+                            </div>
+                            <div id="addFavResult" class="result-box"></div>
+                        </div>
+                    </div>
+
+                    <div class="section">
+                        <div class="section-header">
+                            <h2>取消收藏</h2>
+                            <span class="badge">POST</span>
+                        </div>
+                        <div class="section-body">
+                            <div class="form-group">
+                                <label>岗位ID (boss_job_id)</label>
+                                <input type="number" id="cancelFavJobId" placeholder="例如: 1001" value="1001">
+                            </div>
+                            <div class="btn-group">
+                                <button class="btn btn-danger" onclick="cancelFavorite()">取消收藏</button>
+                                <button class="btn btn-warning" onclick="batchCancelFavorites()">批量取消</button>
+                            </div>
+                            <div id="cancelFavResult" class="result-box"></div>
+                        </div>
+                    </div>
+
+                    <div class="section">
+                        <div class="section-header">
+                            <h2>查询功能</h2>
+                            <span class="badge">GET</span>
+                        </div>
+                        <div class="section-body">
+                            <div class="btn-group">
+                                <button class="btn btn-info" onclick="getFavorites()">获取收藏列表</button>
+                                <button class="btn btn-primary" onclick="getFavorites(true)">包含已取消</button>
+                                <button class="btn btn-success" onclick="checkFavorite()">检查收藏状态</button>
+                                <button class="btn btn-warning" onclick="getFavoriteDetail()">获取详情</button>
+                            </div>
+                            <div class="form-group" style="margin-top: 15px;">
+                                <label>查询岗位ID（用于检查状态/详情）</label>
+                                <input type="number" id="checkFavJobId" placeholder="例如: 1001" value="1001">
+                            </div>
+                            <div id="queryFavResult" class="result-box"></div>
+                        </div>
+                    </div>
+
+                    <div class="section">
+                        <div class="section-header">
+                            <h2>更新备注</h2>
+                            <span class="badge">POST</span>
+                        </div>
+                        <div class="section-body">
+                            <div class="grid-2">
+                                <div class="form-group">
+                                    <label>岗位ID</label>
+                                    <input type="number" id="updateFavJobId" placeholder="例如: 1001" value="1001">
+                                </div>
+                                <div class="form-group">
+                                    <label>新备注</label>
+                                    <input type="text" id="updateFavRemarks" placeholder="新备注内容" value="更新后的备注">
+                                </div>
+                            </div>
+                            <div class="btn-group">
+                                <button class="btn btn-primary" onclick="updateFavoriteRemarks()">更新备注</button>
+                            </div>
+                            <div id="updateFavResult" class="result-box"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 投递功能 -->
+                <div id="deliverTab" class="tab-content">
+                    <div class="info-card">
+                        <h4>投递接口说明</h4>
+                        <p>测试用户投递岗位的相关接口，功能与收藏类似但数据表不同。</p>
+                    </div>
+
+                    <div class="section">
+                        <div class="section-header">
+                            <h2>添加/重新投递</h2>
+                            <span class="badge">POST</span>
+                        </div>
+                        <div class="section-body">
+                            <div class="grid-2">
+                                <div class="form-group">
+                                    <label>岗位ID (job_id)</label>
+                                    <input type="number" id="delJobId" placeholder="例如: 1001" value="1001">
+                                </div>
+                                <div class="form-group">
+                                    <label>备注 (可选)</label>
+                                    <input type="text" id="delRemarks" placeholder="投递备注" value="测试投递">
+                                </div>
+                            </div>
+                            <div class="btn-group">
+                                <button class="btn btn-success" onclick="addDeliver()">添加投递</button>
+                            </div>
+                            <div id="addDelResult" class="result-box"></div>
+                        </div>
+                    </div>
+
+                    <div class="section">
+                        <div class="section-header">
+                            <h2>取消投递</h2>
+                            <span class="badge">POST</span>
+                        </div>
+                        <div class="section-body">
+                            <div class="form-group">
+                                <label>岗位ID (boss_job_id)</label>
+                                <input type="number" id="cancelDelJobId" placeholder="例如: 1001" value="1001">
+                            </div>
+                            <div class="btn-group">
+                                <button class="btn btn-danger" onclick="cancelDeliver()">取消投递</button>
+                                <button class="btn btn-warning" onclick="batchCancelDelivers()">批量取消</button>
+                            </div>
+                            <div id="cancelDelResult" class="result-box"></div>
+                        </div>
+                    </div>
+
+                    <div class="section">
+                        <div class="section-header">
+                            <h2>查询功能</h2>
+                            <span class="badge">GET</span>
+                        </div>
+                        <div class="section-body">
+                            <div class="btn-group">
+                                <button class="btn btn-info" onclick="getDelivers()">获取投递列表</button>
+                                <button class="btn btn-primary" onclick="getDelivers(true)">包含已取消</button>
+                                <button class="btn btn-success" onclick="checkDeliver()">检查投递状态</button>
+                                <button class="btn btn-warning" onclick="getDeliverDetail()">获取详情</button>
+                            </div>
+                            <div class="form-group" style="margin-top: 15px;">
+                                <label>查询岗位ID（用于检查状态/详情）</label>
+                                <input type="number" id="checkDelJobId" placeholder="例如: 1001" value="1001">
+                            </div>
+                            <div id="queryDelResult" class="result-box"></div>
+                        </div>
+                    </div>
+
+                    <div class="section">
+                        <div class="section-header">
+                            <h2>更新备注</h2>
+                            <span class="badge">POST</span>
+                        </div>
+                        <div class="section-body">
+                            <div class="grid-2">
+                                <div class="form-group">
+                                    <label>岗位ID</label>
+                                    <input type="number" id="updateDelJobId" placeholder="例如: 1001" value="1001">
+                                </div>
+                                <div class="form-group">
+                                    <label>新备注</label>
+                                    <input type="text" id="updateDelRemarks" placeholder="新备注内容" value="更新后的投递备注">
+                                </div>
+                            </div>
+                            <div class="btn-group">
+                                <button class="btn btn-primary" onclick="updateDeliverRemarks()">更新备注</button>
+                            </div>
+                            <div id="updateDelResult" class="result-box"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const BASE_URL = 'http://localhost:5000';
+        let currentToken = null;
+        let currentUserId = null;
+
+        // 页面加载时检查本地存储
+        window.onload = function() {
+            const savedToken = localStorage.getItem('access_token');
+            const savedUserId = localStorage.getItem('user_id');
+            if (savedToken && savedUserId) {
+                currentToken = savedToken;
+                currentUserId = savedUserId;
+                showLoggedInState();
+            }
+        };
+
+        // 测试服务器连接
+        async function testConnection() {
+            try {
+                const response = await fetch(`${BASE_URL}/api/job/job_lis_one_type`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({category_id: '1001'})
+                });
+
+                if (response.ok) {
+                    updateStatus(true, '服务器连接正常');
+                    showResult('loginResult', '服务器连接成功！', true);
+                } else {
+                    updateStatus(false, '服务器异常');
+                    showResult('loginResult', '服务器返回错误: ' + response.status, false);
+                }
+            } catch (error) {
+                updateStatus(false, '无法连接服务器');
+                showResult('loginResult', '连接失败: ' + error.message, false);
+            }
+        }
+
+        // 用户登录
+        async function login() {
+            const mobile = document.getElementById('mobile').value;
+            const password = document.getElementById('password').value;
+
+            if (!mobile || !password) {
+                showResult('loginResult', '请输入手机号和密码', false);
+                return;
+            }
+
+            const btnText = document.getElementById('loginBtnText');
+            btnText.innerHTML = '<span class="loading"></span> 登录中...';
+
+            try {
+                const response = await fetch(`${BASE_URL}/api/user/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        mobile: mobile,
+                        password: password
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.code === 200) {
+                    currentToken = data.data.token;
+                    currentUserId = data.data.user_info.user_id;
+
+                    // 保存到本地存储
+                    localStorage.setItem('access_token', currentToken);
+                    localStorage.setItem('user_id', currentUserId);
+
+                    showLoggedInState();
+                    showResult('loginResult', `登录成功！用户: ${data.data.user_info.real_name || data.data.user_info.mobile}`, true);
+
+                    // 显示Token
+                    const tokenBox = document.getElementById('tokenBox');
+                    tokenBox.textContent = `Token: ${currentToken.substring(0, 50)}...`;
+                    tokenBox.style.display = 'block';
+                } else {
+                    showResult('loginResult', `登录失败: ${data.message}`, false);
+                }
+            } catch (error) {
+                showResult('loginResult', '登录请求失败: ' + error.message, false);
+            } finally {
+                btnText.textContent = '登录';
+            }
+        }
+
+        // 显示登录状态
+        function showLoggedInState() {
+            document.getElementById('testSection').classList.remove('hidden');
+            document.getElementById('userStatus').textContent = `已登录 (ID: ${currentUserId})`;
+            updateStatus(true, '已连接');
+        }
+
+        // 更新连接状态
+        function updateStatus(connected, text) {
+            const indicator = document.getElementById('connectionStatus');
+            const statusText = document.getElementById('statusText');
+
+            if (connected) {
+                indicator.classList.remove('status-offline');
+                indicator.classList.add('status-online');
+            } else {
+                indicator.classList.remove('status-online');
+                indicator.classList.add('status-offline');
+            }
+            statusText.textContent = text;
+        }
+
+        // 切换标签页
+        function switchTab(tab) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+
+            if (tab === 'favorite') {
+                document.querySelectorAll('.tab')[0].classList.add('active');
+                document.getElementById('favoriteTab').classList.add('active');
+            } else {
+                document.querySelectorAll('.tab')[1].classList.add('active');
+                document.getElementById('deliverTab').classList.add('active');
+            }
+        }
+
+        // 显示结果
+        function showResult(elementId, message, isSuccess) {
+            const element = document.getElementById(elementId);
+            element.classList.remove('hidden', 'success', 'error');
+            element.classList.add('show');
+            element.classList.add(isSuccess ? 'success' : 'error');
+
+            if (typeof message === 'object') {
+                element.innerHTML = `<pre>${JSON.stringify(message, null, 2)}</pre>`;
+            } else {
+                element.innerHTML = `<pre>${message}</pre>`;
+            }
+        }
+
+        // ==================== 收藏功能 API ====================
+
+        async function addFavorite() {
+            const jobId = document.getElementById('favJobId').value;
+            const remarks = document.getElementById('favRemarks').value;
+
+            try {
+                const response = await fetch(`${BASE_URL}/api/job/favorite/add`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${currentToken}`
+                    },
+                    body: JSON.stringify({
+                        user_id: parseInt(currentUserId),
+                        job_id: parseInt(jobId),
+                        remarks: remarks
+                    })
+                });
+
+                const data = await response.json();
+                showResult('addFavResult', data, data.code === 200);
+            } catch (error) {
+                showResult('addFavResult', '请求失败: ' + error.message, false);
+            }
+        }
+
+        async function cancelFavorite() {
+            const jobId = document.getElementById('cancelFavJobId').value;
+
+            try {
+                const response = await fetch(`${BASE_URL}/api/job/favorite/cancel`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${currentToken}`
+                    },
+                    body: JSON.stringify({
+                        user_id: parseInt(currentUserId),
+                        boss_job_id: parseInt(jobId)
+                    })
+                });
+
+                const data = await response.json();
+                showResult('cancelFavResult', data, data.code === 200);
+            } catch (error) {
+                showResult('cancelFavResult', '请求失败: ' + error.message, false);
+            }
+        }
+
+        async function batchCancelFavorites() {
+            const jobIds = prompt('请输入要批量取消的岗位ID，用逗号分隔（例如: 1001,1002,1003）:');
+            if (!jobIds) return;
+
+            const idList = jobIds.split(',').map(id => parseInt(id.trim()));
+
+            try {
+                const response = await fetch(`${BASE_URL}/api/job/favorite/batch_cancel`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${currentToken}`
+                    },
+                    body: JSON.stringify({
+                        user_id: parseInt(currentUserId),
+                        boss_job_id_list: idList
+                    })
+                });
+
+                const data = await response.json();
+                showResult('cancelFavResult', data, data.code === 200);
+            } catch (error) {
+                showResult('cancelFavResult', '请求失败: ' + error.message, false);
+            }
+        }
+
+        async function getFavorites(includeCanceled = false) {
+            try {
+                const url = `${BASE_URL}/api/job/favorite/list?user_id=${currentUserId}&include_canceled=${includeCanceled ? 1 : 0}`;
+                const response = await fetch(url, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${currentToken}`
+                    }
+                });
+
+                const data = await response.json();
+                showResult('queryFavResult', data, data.code === 200);
+            } catch (error) {
+                showResult('queryFavResult', '请求失败: ' + error.message, false);
+            }
+        }
+
+        async function checkFavorite() {
+            const jobId = document.getElementById('checkFavJobId').value;
+
+            try {
+                const url = `${BASE_URL}/api/job/favorite/check?user_id=${currentUserId}&boss_job_id=${jobId}`;
+                const response = await fetch(url, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${currentToken}`
+                    }
+                });
+
+                const data = await response.json();
+                showResult('queryFavResult', data, data.code === 200);
+            } catch (error) {
+                showResult('queryFavResult', '请求失败: ' + error.message, false);
+            }
+        }
+
+        async function getFavoriteDetail() {
+            const jobId = document.getElementById('checkFavJobId').value;
+
+            try {
+                const url = `${BASE_URL}/api/job/favorite/detail?user_id=${currentUserId}&boss_job_id=${jobId}`;
+                const response = await fetch(url, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${currentToken}`
+                    }
+                });
+
+                const data = await response.json();
+                showResult('queryFavResult', data, data.code === 200);
+            } catch (error) {
+                showResult('queryFavResult', '请求失败: ' + error.message, false);
+            }
+        }
+
+        async function updateFavoriteRemarks() {
+            const jobId = document.getElementById('updateFavJobId').value;
+            const remarks = document.getElementById('updateFavRemarks').value;
+
+            try {
+                const response = await fetch(`${BASE_URL}/api/job/favorite/update_remarks`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${currentToken}`
+                    },
+                    body: JSON.stringify({
+                        user_id: parseInt(currentUserId),
+                        boss_job_id: parseInt(jobId),
+                        remarks: remarks
+                    })
+                });
+
+                const data = await response.json();
+                showResult('updateFavResult', data, data.code === 200);
+            } catch (error) {
+                showResult('updateFavResult', '请求失败: ' + error.message, false);
+            }
+        }
+
+        // ==================== 投递功能 API ====================
+
+        async function addDeliver() {
+            const jobId = document.getElementById('delJobId').value;
+            const remarks = document.getElementById('delRemarks').value;
+
+            try {
+                const response = await fetch(`${BASE_URL}/api/job/deliver/add`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${currentToken}`
+                    },
+                    body: JSON.stringify({
+                        user_id: parseInt(currentUserId),
+                        job_id: parseInt(jobId),
+                        remarks: remarks
+                    })
+                });
+
+                const data = await response.json();
+                showResult('addDelResult', data, data.code === 200);
+            } catch (error) {
+                showResult('addDelResult', '请求失败: ' + error.message, false);
+            }
+        }
+
+        async function cancelDeliver() {
+            const jobId = document.getElementById('cancelDelJobId').value;
+
+            try {
+                const response = await fetch(`${BASE_URL}/api/job/deliver/cancel`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${currentToken}`
+                    },
+                    body: JSON.stringify({
+                        user_id: parseInt(currentUserId),
+                        boss_job_id: parseInt(jobId)
+                    })
+                });
+
+                const data = await response.json();
+                showResult('cancelDelResult', data, data.code === 200);
+            } catch (error) {
+                showResult('cancelDelResult', '请求失败: ' + error.message, false);
+            }
+        }
+
+        async function batchCancelDelivers() {
+            const jobIds = prompt('请输入要批量取消投递的岗位ID，用逗号分隔（例如: 1001,1002,1003）:');
+            if (!jobIds) return;
+
+            const idList = jobIds.split(',').map(id => parseInt(id.trim()));
+
+            try {
+                const response = await fetch(`${BASE_URL}/api/job/deliver/batch_cancel`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${currentToken}`
+                    },
+                    body: JSON.stringify({
+                        user_id: parseInt(currentUserId),
+                        boss_job_id_list: idList
+                    })
+                });
+
+                const data = await response.json();
+                showResult('cancelDelResult', data, data.code === 200);
+            } catch (error) {
+                showResult('cancelDelResult', '请求失败: ' + error.message, false);
+            }
+        }
+
+        async function getDelivers(includeCanceled = false) {
+            try {
+                const url = `${BASE_URL}/api/job/deliver/list?user_id=${currentUserId}&include_canceled=${includeCanceled ? 1 : 0}`;
+                const response = await fetch(url, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${currentToken}`
+                    }
+                });
+
+                const data = await response.json();
+                showResult('queryDelResult', data, data.code === 200);
+            } catch (error) {
+                showResult('queryDelResult', '请求失败: ' + error.message, false);
+            }
+        }
+
+        async function checkDeliver() {
+            const jobId = document.getElementById('checkDelJobId').value;
+
+            try {
+                const url = `${BASE_URL}/api/job/deliver/check?user_id=${currentUserId}&boss_job_id=${jobId}`;
+                const response = await fetch(url, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${currentToken}`
+                    }
+                });
+
+                const data = await response.json();
+                showResult('queryDelResult', data, data.code === 200);
+            } catch (error) {
+                showResult('queryDelResult', '请求失败: ' + error.message, false);
+            }
+        }
+
+        async function getDeliverDetail() {
+            const jobId = document.getElementById('checkDelJobId').value;
+
+            try {
+                const url = `${BASE_URL}/api/job/deliver/detail?user_id=${currentUserId}&boss_job_id=${jobId}`;
+                const response = await fetch(url, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${currentToken}`
+                    }
+                });
+
+                const data = await response.json();
+                showResult('queryDelResult', data, data.code === 200);
+            } catch (error) {
+                showResult('queryDelResult', '请求失败: ' + error.message, false);
+            }
+        }
+
+        async function updateDeliverRemarks() {
+            const jobId = document.getElementById('updateDelJobId').value;
+            const remarks = document.getElementById('updateDelRemarks').value;
+
+            try {
+                const response = await fetch(`${BASE_URL}/api/job/deliver/update_remarks`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${currentToken}`
+                    },
+                    body: JSON.stringify({
+                        user_id: parseInt(currentUserId),
+                        boss_job_id: parseInt(jobId),
+                        remarks: remarks
+                    })
+                });
+
+                const data = await response.json();
+                showResult('updateDelResult', data, data.code === 200);
+            } catch (error) {
+                showResult('updateDelResult', '请求失败: ' + error.message, false);
+            }
+        }
+    </script>
+</body>
+</html>
