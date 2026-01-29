@@ -1,754 +1,852 @@
-================================================================================
-                         招聘求职平台 API 接口文档
-                         版本: 1.0.0
-                         更新日期: 2026-01-28
-================================================================================
+# 校园招聘平台后端API接口文档
 
-【基础信息】
-- 基础URL: http://localhost:5000
-- 数据格式: JSON
-- 字符编码: UTF-8
-- 认证方式: JWT Token (Bearer Token)
+## 项目概述
+基于Flask的校园招聘平台后端API，提供用户管理、岗位管理、简历管理、论坛交流、智能助手等功能。
 
-【通用响应格式】
-成功响应:
+## 基础信息
+- **基础URL**: `http://localhost:5000`
+- **数据格式**: JSON
+- **认证方式**: JWT Token
+- **Token传递**: `Authorization: Bearer <token>`
+
+---
+
+## 接口目录
+
+### 1. 用户管理
+### 2. 岗位管理
+### 3. 论坛管理
+### 4. 简历管理
+### 5. 投诉反馈
+### 6. 收藏功能
+### 7. 投递功能
+### 8. 系统管理
+
+---
+
+## 1. 用户管理
+
+### 1.1 用户注册
+**接口**: `/api/user/register`  
+**方法**: `POST`  
+**描述**: 用户注册接口
+
+**请求参数**:
+```json
 {
-    "code": 200,
-    "message": "操作成功",
-    "data": { ... }
+  "mobile": "13800138000",     // 手机号，必填
+  "password": "password123",   // 密码，必填，至少8位
+  "sms_code": "123456",        // 短信验证码，必填
+  "email": "user@example.com"  // 邮箱，可选
 }
+```
 
-错误响应:
+**响应成功**:
+```json
 {
-    "code": 400/401/403/404/500,
-    "message": "错误描述",
-    "data": null
-}
-
-状态码说明:
-- 200: 成功
-- 300: 参数错误/业务逻辑错误
-- 400: 请求参数错误
-- 401: 未授权/Token无效
-- 403: 禁止访问/账号被禁用或锁定
-- 404: 资源不存在
-- 500: 服务器内部错误
-
-【认证说明】
-需要登录的接口请在请求头中添加:
-Authorization: Bearer <access_token>
-
-================================================================================
-                              一、岗位管理接口
-================================================================================
-
-1.1 获取全部岗位列表
---------------------------------------------------------------------------------
-接口地址: GET /api/job/Job_List_all
-接口说明: 获取所有岗位的简要信息，用于首页列表展示
-请求参数: 无
-
-响应示例:
-[
-    {
-        "id": 1,
-        "title": "Java开发工程师",
-        "company_name": "某某科技有限公司",
-        "salary_min": 15000,
-        "salary_max": 25000,
-        "city_name": "北京",
-        "emp_type": 1,
-        "publish_time": "2026-01-20 10:30:00"
-    }
-]
-
-1.2 按岗位类别查询
---------------------------------------------------------------------------------
-接口地址: POST /api/job/job_lis_one_type
-接口说明: 根据岗位类别ID筛选岗位列表
-请求参数:
-{
-    "category_id": "1001"  // 岗位类别编码，如1001=技术开发
-}
-
-响应示例: 同1.1接口格式
-
-1.3 按类别+雇佣类型查询
---------------------------------------------------------------------------------
-接口地址: POST /api/job/job_list_two_given
-接口说明: 同时按岗位类别和雇佣类型(全职/兼职/实习)筛选
-请求参数:
-{
-    "category_id": "1001",  // 岗位类别编码
-    "emp_type": "1"         // 1=全职, 2=兼职, 3=实习
-}
-
-响应示例: 同1.1接口格式
-
-1.4 搜索岗位
---------------------------------------------------------------------------------
-接口地址: POST /api/job/job_search
-接口说明: 根据用户输入的关键词搜索岗位
-请求参数:
-{
-    "user_input": "开发工程师"  // 搜索关键词，支持岗位名称模糊匹配
-}
-
-响应示例: 同1.1接口格式
-
-1.5 获取岗位详情
---------------------------------------------------------------------------------
-接口地址: POST /api/job/job_details
-接口说明: 获取单个岗位的完整详细信息
-请求参数:
-{
-    "id": "1"  // 岗位唯一ID
-}
-
-响应示例:
-{
-    "id": 1,
-    "boss_job_id": "BJ123456",
-    "title": "Java开发工程师",
-    "company_id": 100,
-    "company_name": "某某科技有限公司",
-    "city_id": 110100,
-    "city_name": "北京",
-    "category_id": 1001,
-    "category_name": "后端开发",
-    "emp_type": 1,
-    "emp_type_text": "全职",
-    "salary_min": 15000,
-    "salary_max": 25000,
-    "salary_desc": "15-25K·14薪",
-    "edu_req": "本科及以上",
-    "exp_req": "3-5年",
-    "district": "海淀区",
-    "address": "中关村软件园XX号楼",
-    "recruiter_id": 5001,
-    "recruiter_name": "张经理",
-    "description": "岗位职责：...",
-    "require_list": ["Java基础扎实", "熟悉SpringBoot"],
-    "welfare_list": ["五险一金", "带薪年假", "股票期权"],
-    "publish_time": "2026-01-20 10:30:00",
-    "refresh_time": "2026-01-25 09:00:00",
-    "status": 1
-}
-
-1.6 发布新岗位
---------------------------------------------------------------------------------
-接口地址: POST /api/job/job_add
-接口说明: 发布新的招聘职位(需登录)
-认证要求: 需要JWT Token
-
-请求参数:
-{
-    "boss_job_id": "BJ123456",      // 必填，平台岗位ID
-    "title": "Python开发工程师",      // 必填，岗位名称
-    "company_id": 100,               // 必填，公司ID
-    "city_id": 110100,               // 必填，城市ID
-    "category_id": 1001,             // 必填，岗位类别ID
-    "emp_type": 1,                   // 可选，默认1。1=全职,2=兼职,3=实习
-    "salary_min": 15000,             // 可选，最低薪资
-    "salary_max": 25000,             // 可选，最高薪资
-    "salary_desc": "15-25K",         // 可选，薪资描述
-    "edu_req": "本科及以上",          // 可选，学历要求
-    "exp_req": "3-5年",              // 可选，经验要求
-    "district": "海淀区",             // 可选，区域
-    "address": "中关村软件园",         // 可选，详细地址
-    "recruiter_id": 5001,            // 可选，招聘者ID
-    "description": "岗位描述...",      // 可选，职位描述
-    "require_list": ["要求1","要求2"], // 可选，要求列表(JSON数组)
-    "welfare_list": ["福利1","福利2"], // 可选，福利列表(JSON数组)
-    "publish_time": "2026-01-28 10:00:00",  // 可选，发布时间
-    "refresh_time": "2026-01-28 10:00:00",  // 可选，刷新时间
-    "status": 1                       // 可选，默认1。0=下架,1=发布中
-}
-
-响应示例:
-{
-    "code": 200,
-    "message": "职位发布成功",
-    "data": {
-        "job_id": 123
-    }
-}
-
-================================================================================
-                              二、岗位分类接口
-================================================================================
-
-2.1 获取所有岗位分类
---------------------------------------------------------------------------------
-接口地址: GET /api/job_intro/job_intro_list
-接口说明: 获取所有岗位类别及介绍信息，用于筛选条件
-请求参数: 无
-
-响应示例:
-[
-    {
-        "id": 1001,
-        "category_name": "后端开发",
-        "category_code": "backend",
-        "description": "Java/Python/Go等后端开发岗位",
-        "icon_url": "/icons/backend.png",
-        "sort_order": 1,
-        "parent_id": 1000,
-        "status": 1
-    },
-    {
-        "id": 1002,
-        "category_name": "前端开发",
-        "category_code": "frontend",
-        "description": "Web前端、移动端开发岗位",
-        "icon_url": "/icons/frontend.png",
-        "sort_order": 2,
-        "parent_id": 1000,
-        "status": 1
-    }
-]
-
-================================================================================
-                              三、论坛评论接口
-================================================================================
-
-3.1 获取全部评论
---------------------------------------------------------------------------------
-接口地址: GET /api/forum/all_forum_data
-接口说明: 获取论坛所有评论记录
-请求参数: 无
-
-响应示例:
-[
-    {
-        "id": 1,
-        "category_id": 1001,
-        "user_id": 10001,
-        "user_name": "张三",
-        "user_avatar": "/avatars/10001.jpg",
-        "parent_id": null,
-        "content": "这个岗位怎么样？",
-        "level": 1,
-        "sort_order": 1,
-        "create_time": "2026-01-20 14:30:00",
-        "like_count": 5,
-        "reply_count": 2
-    }
-]
-
-3.2 获取某类岗位下的评论
---------------------------------------------------------------------------------
-接口地址: POST /api/forum/forum_one_category
-接口说明: 获取特定岗位类别下的所有评论
-请求参数:
-{
-    "category_id": "1001"  // 岗位类别ID
-}
-
-响应示例: 同3.1接口格式
-
-3.3 获取所有一级评论
---------------------------------------------------------------------------------
-接口地址: GET /api/forum/forum_all_first_talk
-接口说明: 获取所有顶级评论(不包含回复)
-请求参数: 无
-
-响应示例: 同3.1接口格式(level=1的评论)
-
-3.4 获取评论的回复
---------------------------------------------------------------------------------
-接口地址: POST /api/forum/forums_back
-接口说明: 获取某条评论的所有二级回复
-请求参数:
-{
-    "parent_id": "1"  // 父评论ID(即被回复的评论ID)
-}
-
-响应示例: 同3.1接口格式(level=2的评论)
-
-3.5 发表评论
---------------------------------------------------------------------------------
-接口地址: POST /api/forum/forums_add
-接口说明: 发表新评论或回复
-认证要求: 需要JWT Token
-
-请求参数:
-{
-    "category_id": "1001",    // 必填，岗位类别ID
-    "user_id": "10001",       // 必填，当前用户ID
-    "parent_id": "1",         // 可选，回复的评论ID(一级评论可不传或传空)
-    "content": "我也觉得不错",  // 必填，评论内容
-    "level": "1",             // 必填，1=一级评论，2=二级回复
-    "sort_order": "1"         // 必填，展示排序
-}
-
-响应示例:
-[
-    {
-        "code": 200
-    }
-]
-
-3.6 删除评论
---------------------------------------------------------------------------------
-接口地址: POST /api/forum/forum_delete
-接口说明: 删除指定评论(需登录，仅允许删除自己的评论或管理员)
-认证要求: 需要JWT Token
-
-请求参数:
-{
-    "id": "1"  // 要删除的评论ID
-}
-
-响应示例:
-[
-    {
-        "code": 200
-    }
-]
-
-3.7 评论统计
---------------------------------------------------------------------------------
-接口地址: POST /api/forum/forum_count
-接口说明: 获取各类评论数量统计
-请求参数:
-{
-    "switch": "all",          // 必填，统计类型
-    "category_id": "1001",    // 可选，岗位类别ID(switch=category时必填)
-    "parent_id": "1",         // 可选，父评论ID(switch=back时必填)
-    "user_id": "10001"        // 可选，用户ID(switch=user时必填)
-}
-
-switch参数说明:
-- "all": 返回全部评论数量
-- "category": 返回某岗位类别下的评论数(需传category_id)
-- "back": 返回某条评论的回复数(需传parent_id)
-- "user": 返回某用户发表的评论数(需传user_id)
-
-响应示例:
-{
-    "forum_count_num": 156,
-    "code": 200,
-    "message": "成功"
-}
-
-================================================================================
-                              四、用户管理接口
-================================================================================
-
-4.1 用户注册
---------------------------------------------------------------------------------
-接口地址: POST /api/user/register
-接口说明: 新用户注册
-请求参数:
-{
-    "mobile": "13800138000",     // 必填，手机号
-    "password": "yourPassword123", // 必填，密码(至少8位)
-    "sms_code": "123456",         // 必填，短信验证码(目前模拟验证通过)
-    "email": "user@example.com"   // 可选，邮箱地址
-}
-
-响应示例:
-{
-    "code": 200,
-    "message": "注册成功",
-    "data": {
-        "user_id": 1706428800000,
-        "mobile": "13800138000",
-        "register_time": "2026-01-28 10:00:00"
-    }
-}
-
-4.2 用户登录
---------------------------------------------------------------------------------
-接口地址: POST /api/user/login
-接口说明: 用户登录获取JWT令牌
-请求头:
-X-Device-Model: iPhone14,2      // 可选，设备型号
-X-Device-Type: 1                // 可选，设备类型 0=未知,1=安卓,2=iOS,3=Web
-
-请求参数:
-{
+  "code": 200,
+  "message": "注册成功",
+  "data": {
+    "user_id": 1635532800000,
     "mobile": "13800138000",
-    "password": "yourPassword123"
+    "register_time": "2024-10-29 10:30:45"
+  }
 }
+```
 
-响应示例:
+### 1.2 用户登录
+**接口**: `/api/user/login`  
+**方法**: `POST`  
+**描述**: 用户登录接口
+
+**请求参数**:
+```json
 {
-    "code": 200,
-    "message": "登录成功",
-    "data": {
-        "token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...",
-        "user_info": {
-            "user_id": 1706428800000,
-            "mobile": "13800138000",
-            "email": "user@example.com",
-            "real_name": "张三",
-            "avatar_url": "/avatars/default.jpg",
-            "status": 1,
-            "job_status": 0,
-            "last_login_time": "2026-01-28 10:00:00"
-        }
+  "mobile": "13800138000",
+  "password": "password123"
+}
+```
+
+**响应成功**:
+```json
+{
+  "code": 200,
+  "message": "登录成功",
+  "data": {
+    "token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...",
+    "user_info": {
+      "user_id": 1635532800000,
+      "mobile": "13800138000",
+      "email": "user@example.com",
+      "real_name": "张三",
+      "avatar_url": "http://example.com/avatar.jpg",
+      "status": 1,
+      "job_status": 0,
+      "last_login_time": "2024-10-29 10:30:45"
     }
+  }
 }
+```
 
-4.3 获取个人信息
---------------------------------------------------------------------------------
-接口地址: GET /api/user/profile
-接口说明: 获取当前登录用户的详细信息
-认证要求: 需要JWT Token
+### 1.3 获取用户个人信息
+**接口**: `/api/user/profile`  
+**方法**: `GET`  
+**认证**: 需要Token  
+**描述**: 获取当前登录用户的个人信息
 
-请求参数: 无
-
-响应示例:
+**响应成功**:
+```json
 {
-    "code": 200,
-    "message": "获取成功",
-    "data": {
-        "user_id": 1706428800000,
-        "mobile": "13800138000",
-        "email": "user@example.com",
-        "real_name": "张三",
-        "gender": 1,              // 0=未知,1=男,2=女
-        "birth_date": "1995-05-20",
-        "education_level": "本科",
-        "major": "计算机科学与技术",
-        "enrollment_year": 2013,
-        "graduation_year": 2017,
-        "bio": "5年Java开发经验...",
-        "avatar_url": "/avatars/10001.jpg",
-        "status": 1,              // 0=禁用,1=正常,2=未激活,3=锁定
-        "job_status": 0,          // 0=待业,1=实习中,2=应届求职
-        "register_time": "2026-01-20 10:00:00",
-        "last_login_time": "2026-01-28 09:30:00"
-    }
-}
-
-4.4 更新个人信息
---------------------------------------------------------------------------------
-接口地址: PUT /api/user/profile
-接口说明: 更新当前用户的个人资料
-认证要求: 需要JWT Token
-
-请求参数(所有字段均为可选):
-{
+  "code": 200,
+  "message": "获取成功",
+  "data": {
+    "user_id": 1635532800000,
+    "mobile": "13800138000",
+    "email": "user@example.com",
     "real_name": "张三",
-    "email": "newemail@example.com",
     "gender": 1,
-    "birth_date": "1995-05-20",
-    "education_level": "硕士",
-    "major": "软件工程",
-    "bio": "更新后的个人简介...",
-    "avatar_url": "/avatars/new.jpg"
+    "birth_date": "2000-01-01",
+    "education_level": "本科",
+    "major": "计算机科学",
+    "enrollment_year": "2018",
+    "graduation_year": "2022",
+    "bio": "热爱编程，喜欢挑战",
+    "avatar_url": "http://example.com/avatar.jpg",
+    "status": 1,
+    "job_status": 0,
+    "register_time": "2024-10-29 10:30:45",
+    "last_login_time": "2024-10-29 10:30:45"
+  }
 }
+```
 
-注意: 以下字段不可修改: user_id, mobile, password_hash, status, register_time
+### 1.4 更新用户信息
+**接口**: `/api/user/profile`  
+**方法**: `PUT`  
+**认证**: 需要Token  
+**描述**: 更新用户个人信息
 
-响应示例:
+**请求参数**:
+```json
 {
-    "code": 200,
-    "message": "更新成功",
-    "data": {
-        "real_name": "张三",
-        "email": "newemail@example.com",
-        "gender": 1,
-        "birth_date": "1995-05-20",
-        "education_level": "硕士",
-        "major": "软件工程",
-        "bio": "更新后的个人简介...",
-        "avatar_url": "/avatars/new.jpg",
-        "updated_at": "2026-01-28 10:30:00"
+  "real_name": "李四",
+  "email": "newemail@example.com",
+  "gender": 1,
+  "birth_date": "2000-01-01",
+  "education_level": "硕士",
+  "major": "软件工程",
+  "bio": "热爱编程，喜欢挑战"
+}
+```
+
+### 1.5 修改密码
+**接口**: `/api/user/password`  
+**方法**: `PUT`  
+**认证**: 需要Token  
+**描述**: 修改用户密码
+
+**请求参数**:
+```json
+{
+  "old_password": "oldpassword123",
+  "new_password": "newpassword123"
+}
+```
+
+### 1.6 更新头像
+**接口**: `/api/user/avatar`  
+**方法**: `POST`  
+**认证**: 需要Token  
+**描述**: 更新用户头像
+
+**请求参数**:
+```json
+{
+  "avatar_url": "http://example.com/new_avatar.jpg"
+}
+```
+
+### 1.7 用户登出
+**接口**: `/api/user/logout`  
+**方法**: `POST`  
+**认证**: 需要Token  
+**描述**: 用户登出
+
+---
+
+## 2. 岗位管理
+
+### 2.1 获取所有岗位列表
+**接口**: `/api/job/Job_List_all`  
+**方法**: `GET`  
+**描述**: 获取所有岗位列表
+
+**响应成功**:
+```json
+[
+  {
+    "id": 1,
+    "title": "Java开发工程师",
+    "company_name": "阿里巴巴",
+    "salary_desc": "15-30K",
+    "city_name": "杭州",
+    "education_req": "本科",
+    "experience_req": "1-3年",
+    "publish_time": "2024-10-29"
+  }
+]
+```
+
+### 2.2 按类别获取岗位列表
+**接口**: `/api/job/job_lis_one_type`  
+**方法**: `POST`  
+**描述**: 按岗位类别获取岗位列表
+
+**请求参数**:
+```json
+{
+  "category_id": 1001
+}
+```
+
+### 2.3 按类别和工作类型获取岗位
+**接口**: `/api/job/job_list_two_given`  
+**方法**: `POST`  
+**描述**: 按岗位类别和工作类型筛选岗位
+
+**请求参数**:
+```json
+{
+  "category_id": 1001,
+  "emp_type": 1  // 1=全职 2=兼职 3=实习
+}
+```
+
+### 2.4 岗位搜索
+**接口**: `/api/job/job_search`  
+**方法**: `POST`  
+**描述**: 搜索岗位
+
+**请求参数**:
+```json
+{
+  "user_input": "Java工程师"
+}
+```
+
+### 2.5 获取岗位详情
+**接口**: `/api/job/job_details`  
+**方法**: `POST`  
+**描述**: 获取岗位详细信息
+
+**请求参数**:
+```json
+{
+  "id": 1
+}
+```
+
+**响应成功**:
+```json
+{
+  "id": 1,
+  "boss_job_id": "J1001",
+  "title": "Java开发工程师",
+  "company_name": "阿里巴巴",
+  "company_id": 101,
+  "city_name": "杭州",
+  "city_id": 330100,
+  "category_name": "技术研发",
+  "category_id": 1001,
+  "emp_type": 1,
+  "emp_type_name": "全职",
+  "salary_min": 15000,
+  "salary_max": 30000,
+  "salary_desc": "15-30K·15薪",
+  "edu_req": "本科",
+  "exp_req": "1-3年",
+  "district": "余杭区",
+  "address": "文一西路969号",
+  "recruiter_name": "张先生",
+  "recruiter_id": 1001,
+  "description": "岗位职责：\n1. 负责Java后台开发...",
+  "require_list": ["Java基础扎实", "熟悉Spring框架"],
+  "welfare_list": ["五险一金", "带薪年假", "年终奖"],
+  "publish_time": "2024-10-29 10:30:00",
+  "refresh_time": "2024-10-29 10:30:00",
+  "status": 1
+}
+```
+
+### 2.6 发布新岗位
+**接口**: `/api/job/job_add`  
+**方法**: `POST`  
+**认证**: 需要Token（招聘者权限）  
+**描述**: 发布新的职位
+
+**请求参数**:
+```json
+{
+  "boss_job_id": "J1001",
+  "title": "Java开发工程师",
+  "company_id": 101,
+  "city_id": 330100,
+  "category_id": 1001,
+  "emp_type": 1,
+  "salary_min": 15000,
+  "salary_max": 30000,
+  "salary_desc": "15-30K",
+  "edu_req": "本科",
+  "exp_req": "1-3年",
+  "district": "余杭区",
+  "address": "文一西路969号",
+  "recruiter_id": 1001,
+  "description": "岗位职责...",
+  "require_list": ["Java基础扎实"],
+  "welfare_list": ["五险一金"],
+  "publish_time": "2024-10-29",
+  "refresh_time": "2024-10-29",
+  "status": 1
+}
+```
+
+### 2.7 获取岗位分类
+**接口**: `/api/job_intro/job_intro_list`  
+**方法**: `GET`  
+**描述**: 获取所有岗位分类
+
+**响应成功**:
+```json
+[
+  {
+    "id": 1001,
+    "category_name": "技术研发",
+    "description": "技术研发类岗位",
+    "sort_order": 1,
+    "parent_id": 0
+  }
+]
+```
+
+---
+
+## 3. 论坛管理
+
+### 3.1 获取所有论坛评论
+**接口**: `/api/forum/all_forum_data`  
+**方法**: `GET`  
+**描述**: 获取所有论坛评论
+
+### 3.2 按类别获取论坛评论
+**接口**: `/api/forum/forum_one_category`  
+**方法**: `POST`  
+**描述**: 获取特定类别的论坛评论
+
+**请求参数**:
+```json
+{
+  "category_id": 1001
+}
+```
+
+### 3.3 获取所有一级评论
+**接口**: `/api/forum/forum_all_first_talk`  
+**方法**: `GET`  
+**描述**: 获取所有一级评论
+
+### 3.4 获取评论回复
+**接口**: `/api/forum/forums_back`  
+**方法**: `POST`  
+**描述**: 获取评论的回复（二级评论）
+
+**请求参数**:
+```json
+{
+  "parent_id": 1
+}
+```
+
+### 3.5 发表评论
+**接口**: `/api/forum/forums_add`  
+**方法**: `POST`  
+**认证**: 需要Token  
+**描述**: 发表新的评论
+
+**请求参数**:
+```json
+{
+  "category_id": 1001,
+  "user_id": 1635532800000,
+  "parent_id": 1,    // 可选，回复时填写
+  "content": "这个岗位很不错！",
+  "level": 1,        // 1：一级评论，2：二级评论
+  "sort_order": 1
+}
+```
+
+### 3.6 删除评论
+**接口**: `/api/forum/forum_delete`  
+**方法**: `POST`  
+**认证**: 需要Token（只能删除自己的评论）  
+**描述**: 删除评论
+
+**请求参数**:
+```json
+{
+  "id": 1
+}
+```
+
+### 3.7 评论计数
+**接口**: `/api/forum/forum_count`  
+**方法**: `POST`  
+**描述**: 获取评论数量统计
+
+**请求参数**:
+```json
+{
+  "switch": "all",       // all|category|back|user
+  "category_id": 1001,   // 可选
+  "parent_id": 1,        // 可选
+  "user_id": 1635532800000  // 可选
+}
+```
+
+---
+
+## 4. 简历管理
+
+### 4.1 创建/更新简历基本信息
+**接口**: `/api/resume/basic`  
+**方法**: `POST`  
+**认证**: 需要Token  
+**描述**: 创建或更新简历基本信息
+
+**请求参数**:
+```json
+{
+  "real_name": "张三",
+  "phone": "13800138000",
+  "email": "zhangsan@example.com",
+  "education_level": "本科",
+  "school_name": "北京大学",
+  "major": "计算机科学",
+  "graduation_year": "2024",
+  "birth_date": "2000-01-01",
+  "gender": 1,
+  "current_location": "北京",
+  "work_years": 0,
+  "self_introduction": "热爱编程，喜欢挑战"
+}
+```
+
+### 4.2 获取简历基本信息
+**接口**: `/api/resume/basic`  
+**方法**: `GET`  
+**认证**: 需要Token
+
+### 4.3 添加证书
+**接口**: `/api/resume/certificates`  
+**方法**: `POST`  
+**认证**: 需要Token
+
+**请求参数**:
+```json
+{
+  "cert_name": "大学英语六级",
+  "cert_type": "语言证书",
+  "cert_number": "CET-6123456789",
+  "issuing_org": "教育部考试中心",
+  "obtain_date": "2022-06-01",
+  "valid_until": "永久有效"
+}
+```
+
+### 4.4 获取证书列表
+**接口**: `/api/resume/certificates`  
+**方法**: `GET`  
+**认证**: 需要Token
+
+### 4.5 更新/创建校园经历
+**接口**: `/api/resume/campus-experience`  
+**方法**: `POST`  
+**认证**: 需要Token
+
+**请求参数**:
+```json
+{
+  "club_name": "学生会",
+  "position": "主席",
+  "start_date": "2020-09-01",
+  "end_date": "2022-06-30",
+  "responsibility": "组织校园活动...",
+  "achievement": "成功举办3次大型活动"
+}
+```
+
+### 4.6 添加实习经历
+**接口**: `/api/resume/internships`  
+**方法**: `POST`  
+**认证**: 需要Token
+
+**请求参数**:
+```json
+{
+  "company_name": "腾讯科技",
+  "position": "后端开发实习生",
+  "start_date": "2023-07-01",
+  "end_date": "2023-09-30",
+  "department": "微信事业群",
+  "responsibility": "参与微信支付后台开发...",
+  "achievement": "独立完成XX模块开发"
+}
+```
+
+### 4.7 更新/创建求职意向
+**接口**: `/api/resume/job-intention`  
+**方法**: `POST`  
+**认证**: 需要Token
+
+**请求参数**:
+```json
+{
+  "target_industries": ["互联网", "金融科技"],
+  "target_positions": ["后端开发", "Java工程师"],
+  "salary_min": 10000,
+  "salary_max": 20000,
+  "target_cities": ["北京", "上海", "深圳"],
+  "job_type": 1,  // 1=全职 2=兼职 3=实习
+  "arrival_time": "随时到岗"
+}
+```
+
+### 4.8 获取完整简历
+**接口**: `/api/resume/complete`  
+**方法**: `GET`  
+**认证**: 需要Token
+
+---
+
+## 5. 投诉反馈
+
+### 5.1 获取投诉类型
+**接口**: `/api/complaint/types`  
+**方法**: `GET`  
+**描述**: 获取所有投诉类型
+
+### 5.2 提交反馈
+**接口**: `/api/feedback/submit`  
+**方法**: `POST`  
+**认证**: 需要Token
+
+**请求参数**:
+```json
+{
+  "complaint_type": 2,
+  "description": "APP闪退问题",
+  "image_url_1": "http://example.com/image1.jpg",
+  "image_url_2": "http://example.com/image2.jpg",
+  "priority": 1
+}
+```
+
+### 5.3 获取用户反馈列表
+**接口**: `/api/feedback/list`  
+**方法**: `GET`  
+**认证**: 需要Token
+
+**查询参数**:
+- `is_resolved`: 0/1（可选）
+- `page`: 页码（默认1）
+- `limit`: 每页数量（默认20）
+
+### 5.4 获取反馈详情
+**接口**: `/api/feedback/detail/<feedback_id>`  
+**方法**: `GET`  
+**认证**: 需要Token
+
+---
+
+## 6. 收藏功能
+
+### 6.1 添加收藏
+**接口**: `/api/job/favorite/add`  
+**方法**: `POST`  
+**认证**: 需要Token
+
+**请求参数**:
+```json
+{
+  "user_id": 1635532800000,
+  "job_id": 1001,
+  "remarks": "重点关注"
+}
+```
+
+### 6.2 取消收藏
+**接口**: `/api/job/favorite/cancel`  
+**方法**: `POST`  
+**认证**: 需要Token
+
+**请求参数**:
+```json
+{
+  "user_id": 1635532800000,
+  "boss_job_id": 1001
+}
+```
+
+### 6.3 获取收藏列表
+**接口**: `/api/job/favorite/list`  
+**方法**: `GET`  
+**认证**: 需要Token
+
+**查询参数**:
+- `user_id`: 用户ID（必填）
+- `include_canceled`: 0/1（默认0）
+
+### 6.4 检查是否收藏
+**接口**: `/api/job/favorite/check`  
+**方法**: `GET`  
+**认证**: 需要Token
+
+**查询参数**:
+- `user_id`: 用户ID（必填）
+- `boss_job_id`: 岗位ID（必填）
+
+---
+
+## 7. 投递功能
+
+### 7.1 投递岗位
+**接口**: `/api/job/deliver/add`  
+**方法**: `POST`  
+**认证**: 需要Token
+
+**请求参数**:
+```json
+{
+  "user_id": 1635532800000,
+  "job_id": 1001,
+  "remarks": "期待面试"
+}
+```
+
+### 7.2 取消投递
+**接口**: `/api/job/deliver/cancel`  
+**方法**: `POST`  
+**认证**: 需要Token
+
+**请求参数**:
+```json
+{
+  "user_id": 1635532800000,
+  "boss_job_id": 1001
+}
+```
+
+### 7.3 获取投递列表
+**接口**: `/api/job/deliver/list`  
+**方法**: `GET`  
+**认证**: 需要Token
+
+**查询参数**:
+- `user_id`: 用户ID（必填）
+- `include_canceled`: 0/1（默认0）
+
+### 7.4 检查是否投递
+**接口**: `/api/job/deliver/check`  
+**方法**: `GET`  
+**认证**: 需要Token
+
+**查询参数**:
+- `user_id`: 用户ID（必填）
+- `boss_job_id`: 岗位ID（必填）
+
+---
+
+## 8. 系统管理
+
+### 8.1 健康检查
+**接口**: `/api/health`  
+**方法**: `GET`  
+**描述**: 检查服务状态
+
+**响应成功**:
+```json
+{
+  "code": 200,
+  "message": "服务正常",
+  "data": {
+    "timestamp": "2024-10-29 10:30:45",
+    "database": "正常",
+    "service": "运行正常"
+  }
+}
+```
+
+### 8.2 搜索用户
+**接口**: `/api/user/search`  
+**方法**: `GET`  
+**描述**: 搜索用户（公开信息）
+
+**查询参数**:
+- `keyword`: 关键词（可选）
+- `page`: 页码（默认1）
+- `page_size`: 每页数量（默认20）
+
+### 8.3 获取公开用户信息
+**接口**: `/api/user/public/<user_id>`  
+**方法**: `GET`  
+**描述**: 获取用户的公开信息
+
+---
+
+## 错误码说明
+
+| 错误码 | 说明 | HTTP状态码 |
+|--------|------|------------|
+| 200 | 成功 | 200 |
+| 400 | 请求参数错误 | 400 |
+| 401 | 未授权/Token无效 | 401 |
+| 403 | 禁止访问/权限不足 | 403 |
+| 404 | 资源不存在 | 404 |
+| 500 | 服务器内部错误 | 500 |
+
+---
+
+## 注意事项
+
+### 1. Token使用
+- 所有需要认证的接口需要在请求头中添加：
+  ```
+  Authorization: Bearer <your_token>
+  ```
+
+### 2. 参数验证
+- 所有必填参数都有验证，前端需要确保参数格式正确
+- 手机号：11位数字，以1开头
+- 邮箱：标准邮箱格式
+- 密码：至少8位
+
+### 3. 分页参数
+- 所有列表接口支持分页
+- page从1开始
+- 默认每页20条数据
+
+### 4. 文件上传
+- 头像上传需要先上传文件到服务器，获取URL后调用头像更新接口
+- 支持格式：png, jpg, jpeg, gif, bmp
+- 最大文件大小：16MB
+
+### 5. 时间格式
+- 所有时间字段使用字符串格式：`YYYY-MM-DD HH:MM:SS`
+- 日期字段：`YYYY-MM-DD`
+
+### 6. 状态码说明
+- 用户状态：0=禁用, 1=正常, 2=未激活, 3=锁定
+- 工作状态：0=待业, 1=实习中, 2=应届求职
+- 雇佣类型：1=全职, 2=兼职, 3=实习
+
+---
+
+## 前端对接建议
+
+### 1. 请求拦截器
+建议在axios拦截器中统一添加Token：
+```javascript
+axios.interceptors.request.use(config => {
+  const token = localStorage.getItem('token');
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
+```
+
+### 2. 响应拦截器
+统一处理错误响应：
+```javascript
+axios.interceptors.response.use(
+  response => response.data,
+  error => {
+    if (error.response?.status === 401) {
+      // Token过期，跳转到登录页
+      router.push('/login');
     }
-}
+    return Promise.reject(error);
+  }
+);
+```
 
-4.5 修改密码
---------------------------------------------------------------------------------
-接口地址: PUT /api/user/password
-接口说明: 修改登录密码
-认证要求: 需要JWT Token
+### 3. 文件上传
+使用FormData进行文件上传：
+```javascript
+const formData = new FormData();
+formData.append('file', file);
 
-请求参数:
-{
-    "old_password": "oldPass123",    // 必填，原密码
-    "new_password": "newPass456"     // 必填，新密码(至少8位)
-}
+axios.post('/api/upload', formData, {
+  headers: {
+    'Content-Type': 'multipart/form-data'
+  }
+});
+```
 
-响应示例:
-{
-    "code": 200,
-    "message": "密码修改成功",
-    "data": {
-        "updated_at": "2026-01-28 10:30:00"
-    }
-}
-
-4.6 更新头像
---------------------------------------------------------------------------------
-接口地址: POST /api/user/avatar
-接口说明: 更新用户头像URL
-认证要求: 需要JWT Token
-
-请求参数:
-{
-    "avatar_url": "/avatars/10001_new.jpg"  // 头像图片URL
-}
-
-响应示例:
-{
-    "code": 200,
-    "message": "头像更新成功",
-    "data": {
-        "avatar_url": "/avatars/10001_new.jpg",
-        "updated_at": "2026-01-28 10:30:00"
-    }
-}
-
-4.7 获取用户状态
---------------------------------------------------------------------------------
-接口地址: GET /api/user/status
-接口说明: 获取当前账号状态信息
-认证要求: 需要JWT Token
-
-请求参数: 无
-
-响应示例:
-{
-    "code": 200,
-    "message": "获取成功",
-    "data": {
-        "user_id": 1706428800000,
-        "status": 1,
-        "status_text": "正常",
-        "job_status": 0,
-        "job_status_text": "待业",
-        "last_login_time": "2026-01-28 09:30:00",
-        "last_device_type": "iOS"
-    }
-}
-
-4.8 用户登出
---------------------------------------------------------------------------------
-接口地址: POST /api/user/logout
-接口说明: 用户登出(前端需清除本地Token)
-认证要求: 需要JWT Token
-
-请求参数: 无
-
-响应示例:
-{
-    "code": 200,
-    "message": "登出成功",
-    "data": {
-        "logout_time": "2026-01-28 10:30:00"
-    }
-}
-
-4.9 搜索用户(公开)
---------------------------------------------------------------------------------
-接口地址: GET /api/user/search
-接口说明: 搜索用户(仅返回公开信息)
-请求参数:
-?keyword=张三&page=1&page_size=20
-
-参数说明:
-- keyword: 搜索关键词(姓名/手机号等)
-- page: 页码，默认1
-- page_size: 每页数量，默认20
-
-响应示例:
-{
-    "code": 200,
-    "message": "搜索成功",
-    "data": {
-        "users": [
-            {
-                "user_id": 1706428800000,
-                "real_name": "张三",
-                "avatar_url": "/avatars/10001.jpg",
-                "bio": "Java开发工程师",
-                "education_level": "本科",
-                "major": "计算机科学",
-                "graduation_year": 2017,
-                "job_status": 0
-            }
-        ],
-        "total": 100,
-        "page": 1,
-        "page_size": 20,
-        "total_pages": 5
-    }
-}
-
-4.10 获取用户公开信息
---------------------------------------------------------------------------------
-接口地址: GET /api/user/public/<user_id>
-接口说明: 获取指定用户的公开资料
-请求参数: URL参数 user_id
-
-响应示例:
-{
-    "code": 200,
-    "message": "获取成功",
-    "data": {
-        "user_id": 1706428800000,
-        "real_name": "张三",
-        "avatar_url": "/avatars/10001.jpg",
-        "bio": "Java开发工程师",
-        "education_level": "本科",
-        "major": "计算机科学",
-        "enrollment_year": 2013,
-        "graduation_year": 2017,
-        "job_status": 0
-    }
-}
-
-4.11 获取用户统计信息
---------------------------------------------------------------------------------
-接口地址: GET /api/user/statistics
-接口说明: 获取平台用户统计数据(仅管理员或用户自己)
-认证要求: 需要JWT Token
-
-请求参数: 无
-
-响应示例:
-{
-    "code": 200,
-    "message": "获取成功",
-    "data": {
-        "total_users": 1000,
-        "active_users": 850,
-        "disabled_users": 10,
-        "job_seekers": 300,
-        "interns": 150,
-        "fresh_graduates": 200,
-        "timestamp": "2026-01-28 10:30:00"
-    }
-}
-
-================================================================================
-                              五、系统接口
-================================================================================
-
-5.1 健康检查
---------------------------------------------------------------------------------
-接口地址: GET /api/health
-接口说明: 检查服务及数据库连接状态
-请求参数: 无
-
-响应示例:
-{
-    "code": 200,
-    "message": "服务正常",
-    "data": {
-        "timestamp": "2026-01-28 10:30:00",
-        "database": "正常",
-        "service": "运行正常"
-    }
-}
-
-================================================================================
-                              附录：数据字典
-================================================================================
-
-【雇佣类型 emp_type】
-1 - 全职
-2 - 兼职
-3 - 实习
-
-【用户状态 status】
-0 - 禁用(无法登录)
-1 - 正常
-2 - 未激活(需验证)
-3 - 锁定(临时限制)
-
-【求职状态 job_status】
-0 - 待业
-1 - 实习中
-2 - 应届求职
-
-【性别 gender】
-0 - 未知/保密
-1 - 男
-2 - 女
-
-【设备类型 device_type】
-0 - 未知
-1 - Android
-2 - iOS
-3 - Web
-
-【评论层级 level】
-1 - 一级评论(主题帖)
-2 - 二级评论(回复)
-
-================================================================================
-                              附录：前端注意事项
-================================================================================
-
-1. Token处理
-   - 登录成功后保存返回的token
-   - 每次请求需登录的接口时，在Header中添加: Authorization: Bearer <token>
-   - Token过期时间为24小时，过期后需重新登录
-
-2. 图片上传
-   - 上传接口暂未在文档中列出，如需使用请参考代码中的文件上传逻辑
-   - 支持格式: png, jpg, jpeg, gif, bmp
-   - 最大文件大小: 16MB
-
-3. 错误处理
-   - 401错误: Token过期或无效，需跳转登录页
-   - 403错误: 账号被禁用或锁定，提示用户联系客服
-   - 500错误: 服务器错误，可提示用户稍后重试
-
-4. 数据缓存建议
-   - 岗位分类数据可本地缓存，更新频率较低
-   - 岗位列表数据建议分页加载，避免一次性加载过多
-   - 用户个人信息可在登录后缓存，减少请求次数
-
-================================================================================
-                              附录：示例代码
-================================================================================
-
-【JavaScript/Fetch 请求示例】
-
-// 1. 登录获取Token
-const login = async (mobile, password) => {
-    const res = await fetch('http://localhost:5000/api/user/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ mobile, password })
-    });
-    const data = await res.json();
-    if (data.code === 200) {
-        localStorage.setItem('token', data.data.token);
-        localStorage.setItem('userInfo', JSON.stringify(data.data.user_info));
-    }
-    return data;
+### 4. 分页加载
+实现无限滚动或分页器：
+```javascript
+// 分页参数
+const params = {
+  page: 1,
+  limit: 20
 };
 
-// 2. 带认证的请求
-const getProfile = async () => {
-    const token = localStorage.getItem('token');
-    const res = await fetch('http://localhost:5000/api/user/profile', {
-        method: 'GET',
-        headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-        }
-    });
-    return await res.json();
+// 加载更多
+const loadMore = () => {
+  params.page++;
+  fetchData();
 };
+```
 
-// 3. POST请求示例
-const searchJobs = async (keyword) => {
-    const res = await fetch('http://localhost:5000/api/job/job_search', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ user_input: keyword })
-    });
-    return await res.json();
-};
+### 5. 错误处理
+统一错误提示：
+```javascript
+try {
+  const response = await api.someRequest();
+} catch (error) {
+  if (error.response?.data?.message) {
+    showToast(error.response.data.message);
+  } else {
+    showToast('网络错误，请重试');
+  }
+}
+```
 
-================================================================================
-                              文档结束
-================================================================================
+---
+
+## 快速开始
+
+### 1. 安装依赖
+```bash
+pip install -r requirements.txt
+```
+
+### 2. 环境配置
+创建`.env`文件：
+```env
+SECRET_KEY=your-secret-key
+JWT_SECRET_KEY=jwt-secret-key
+DATABASE_URL=mysql+pymysql://root:123456@localhost:3306/end_demo
+```
+
+### 3. 启动服务
+```bash
+python app.py
+```
+
+### 4. 接口测试
+健康检查：`GET http://localhost:5000/api/health`
+
+---
+
+有任何问题请及时沟通，祝开发顺利！
