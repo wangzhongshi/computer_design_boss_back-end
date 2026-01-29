@@ -3,20 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>投诉反馈API调试页面</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <title>投诉反馈接口调试工具</title>
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
         }
 
         body {
-            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-            color: #333;
-            line-height: 1.6;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
             padding: 20px;
         }
@@ -24,1816 +21,1182 @@
         .container {
             max-width: 1400px;
             margin: 0 auto;
-            padding: 20px;
         }
 
-        header {
+        h1 {
             text-align: center;
-            margin-bottom: 40px;
-            padding: 20px;
-            background: linear-gradient(to right, #4a6fa5, #6a93cb);
             color: white;
-            border-radius: 10px;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-        }
-
-        header h1 {
-            font-size: 2.5rem;
-            margin-bottom: 10px;
-        }
-
-        header p {
-            font-size: 1.2rem;
-            opacity: 0.9;
-        }
-
-        .status-bar {
-            display: flex;
-            justify-content: space-between;
-            background: white;
-            padding: 15px;
-            border-radius: 10px;
             margin-bottom: 30px;
-            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
         }
 
-        .status-item {
-            text-align: center;
-            flex: 1;
+        .config-panel {
+            background: rgba(255,255,255,0.95);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
         }
 
-        .status-value {
-            font-size: 2rem;
-            font-weight: bold;
-            color: #4a6fa5;
-        }
-
-        .status-label {
-            font-size: 0.9rem;
-            color: #666;
-            margin-top: 5px;
-        }
-
-        .tabs {
+        .config-row {
             display: flex;
-            background: white;
-            border-radius: 10px 10px 0 0;
-            overflow: hidden;
-            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+            gap: 20px;
+            flex-wrap: wrap;
+            align-items: center;
         }
 
-        .tab {
+        .config-item {
             flex: 1;
-            padding: 15px 20px;
-            text-align: center;
-            background: #f1f5f9;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            font-weight: 600;
-            color: #64748b;
-            border-bottom: 3px solid transparent;
+            min-width: 200px;
         }
 
-        .tab:hover {
-            background: #e2e8f0;
-        }
-
-        .tab.active {
-            background: white;
-            color: #4a6fa5;
-            border-bottom: 3px solid #4a6fa5;
-        }
-
-        .tab-content {
-            background: white;
-            border-radius: 0 0 10px 10px;
-            padding: 30px;
-            margin-bottom: 30px;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
-            display: none;
-        }
-
-        .tab-content.active {
+        .config-item label {
             display: block;
-            animation: fadeIn 0.5s ease;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #333;
         }
 
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
+        .config-item input {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+
+        .config-item input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 20px;
+        }
+
+        .api-card {
+            background: rgba(255,255,255,0.95);
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            transition: transform 0.3s;
+        }
+
+        .api-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .api-card.disabled {
+            opacity: 0.6;
+            pointer-events: none;
+            position: relative;
+        }
+
+        .api-card.disabled::after {
+            content: '请先登录';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0,0,0,0.8);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-weight: bold;
+        }
+
+        .api-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 15px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #eee;
+        }
+
+        .method {
+            padding: 5px 12px;
+            border-radius: 6px;
+            font-weight: bold;
+            font-size: 12px;
+            text-transform: uppercase;
+        }
+
+        .method.get { background: #61affe; color: white; }
+        .method.post { background: #49cc90; color: white; }
+        .method.put { background: #fca130; color: white; }
+
+        .path {
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            color: #333;
+            word-break: break-all;
         }
 
         .form-group {
-            margin-bottom: 20px;
+            margin-bottom: 15px;
         }
 
         .form-group label {
             display: block;
-            margin-bottom: 8px;
+            margin-bottom: 5px;
             font-weight: 600;
-            color: #4a5568;
+            color: #555;
+            font-size: 14px;
         }
 
-        .form-control {
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
             width: 100%;
-            padding: 12px 15px;
-            border: 1px solid #e2e8f0;
+            padding: 10px;
+            border: 2px solid #ddd;
             border-radius: 8px;
-            font-size: 1rem;
-            transition: border-color 0.3s ease;
+            font-size: 14px;
+            transition: all 0.3s;
         }
 
-        .form-control:focus {
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
             outline: none;
-            border-color: #4a6fa5;
-            box-shadow: 0 0 0 3px rgba(74, 111, 165, 0.1);
+            border-color: #667eea;
         }
 
-        .form-row {
-            display: flex;
-            gap: 20px;
-        }
-
-        .form-col {
-            flex: 1;
-        }
-
-        textarea.form-control {
-            min-height: 120px;
+        .form-group textarea {
             resize: vertical;
+            min-height: 80px;
+            font-family: 'Courier New', monospace;
         }
 
         .btn {
-            padding: 12px 25px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
             border: none;
+            padding: 12px 24px;
             border-radius: 8px;
-            font-size: 1rem;
-            font-weight: 600;
             cursor: pointer;
-            transition: all 0.3s ease;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-        }
-
-        .btn-primary {
-            background: #4a6fa5;
-            color: white;
-        }
-
-        .btn-primary:hover {
-            background: #3a5a8c;
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(74, 111, 165, 0.3);
-        }
-
-        .btn-secondary {
-            background: #718096;
-            color: white;
-        }
-
-        .btn-secondary:hover {
-            background: #4a5568;
-        }
-
-        .btn-danger {
-            background: #e53e3e;
-            color: white;
-        }
-
-        .btn-danger:hover {
-            background: #c53030;
-        }
-
-        .btn-success {
-            background: #38a169;
-            color: white;
-        }
-
-        .btn-success:hover {
-            background: #2f855a;
-        }
-
-        .btn-block {
-            display: block;
-            width: 100%;
-        }
-
-        .actions {
-            display: flex;
-            gap: 10px;
-            margin-top: 20px;
-        }
-
-        .response-section {
-            margin-top: 30px;
-        }
-
-        .response-title {
-            font-size: 1.2rem;
+            font-size: 14px;
             font-weight: 600;
-            margin-bottom: 15px;
-            color: #4a6fa5;
-            display: flex;
-            align-items: center;
-            gap: 10px;
+            width: 100%;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
-        .response-box {
-            background: #f7fafc;
-            border: 1px solid #e2e8f0;
-            border-radius: 8px;
-            padding: 20px;
-            max-height: 400px;
-            overflow-y: auto;
-            font-family: 'Consolas', 'Monaco', monospace;
-            font-size: 0.9rem;
-            line-height: 1.5;
-            white-space: pre-wrap;
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
         }
 
-        .complaint-item {
-            background: #f8fafc;
-            border: 1px solid #e2e8f0;
-            border-radius: 8px;
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn.secondary {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+
+        .btn.success {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+        }
+
+        .btn.warning {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+
+        .result {
+            margin-top: 15px;
             padding: 15px;
-            margin-bottom: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+            display: none;
         }
 
-        .complaint-header {
+        .result.show {
+            display: block;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .result-header {
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: #333;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 10px;
         }
 
-        .complaint-id {
+        .status-code {
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 12px;
             font-weight: bold;
-            color: #4a6fa5;
-            font-size: 1.1rem;
         }
 
-        .complaint-status {
-            padding: 4px 10px;
+        .status-code.success { background: #d4edda; color: #155724; }
+        .status-code.error { background: #f8d7da; color: #721c24; }
+
+        .result-body {
+            background: #2d2d2d;
+            color: #f8f8f2;
+            padding: 15px;
+            border-radius: 6px;
+            overflow-x: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            line-height: 1.5;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+            margin-left: 10px;
+            vertical-align: middle;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .section-title {
+            color: white;
+            font-size: 1.5em;
+            margin: 30px 0 15px 0;
+            padding-left: 10px;
+            border-left: 4px solid white;
+        }
+
+        .quick-actions {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+
+        .quick-btn {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: 1px solid rgba(255,255,255,0.3);
+            padding: 8px 16px;
             border-radius: 20px;
-            font-size: 0.8rem;
-            font-weight: 600;
-        }
-
-        .status-resolved {
-            background: #c6f6d5;
-            color: #22543d;
-        }
-
-        .status-pending {
-            background: #fed7d7;
-            color: #742a2a;
-        }
-
-        .complaint-details {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-            gap: 10px;
-            margin-top: 10px;
-        }
-
-        .detail-item {
-            display: flex;
-            flex-direction: column;
-        }
-
-        .detail-label {
-            font-size: 0.8rem;
-            color: #718096;
-        }
-
-        .detail-value {
-            font-weight: 600;
-            color: #2d3748;
-        }
-
-        .priority-high {
-            color: #e53e3e;
-            font-weight: bold;
-        }
-
-        .priority-medium {
-            color: #d69e2e;
-            font-weight: bold;
-        }
-
-        .priority-low {
-            color: #38a169;
-            font-weight: bold;
-        }
-
-        .image-preview {
-            display: flex;
-            gap: 10px;
-            margin-top: 10px;
-            flex-wrap: wrap;
-        }
-
-        .image-thumb {
-            width: 80px;
-            height: 80px;
-            border-radius: 5px;
-            object-fit: cover;
-            border: 2px solid #e2e8f0;
             cursor: pointer;
-            transition: transform 0.3s ease;
+            font-size: 13px;
+            transition: all 0.3s;
         }
 
-        .image-thumb:hover {
-            transform: scale(1.05);
+        .quick-btn:hover {
+            background: rgba(255,255,255,0.3);
         }
 
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-            gap: 20px;
-            margin-top: 20px;
-        }
-
-        .stat-card {
-            background: #f8fafc;
-            border-radius: 10px;
+        /* 登录状态栏 */
+        .login-status {
+            background: rgba(255,255,255,0.95);
+            border-radius: 15px;
             padding: 20px;
-            text-align: center;
-            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
-        }
-
-        .stat-value {
-            font-size: 2.5rem;
-            font-weight: bold;
-            color: #4a6fa5;
-            margin: 10px 0;
-        }
-
-        .stat-label {
-            font-size: 1rem;
-            color: #718096;
-        }
-
-        .filter-controls {
-            display: flex;
-            gap: 15px;
             margin-bottom: 20px;
-            flex-wrap: wrap;
-        }
-
-        .pagination {
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
             display: flex;
-            justify-content: center;
+            justify-content: space-between;
             align-items: center;
-            gap: 10px;
-            margin-top: 20px;
+            flex-wrap: wrap;
+            gap: 15px;
         }
 
-        .pagination-btn {
-            padding: 8px 15px;
-            border: 1px solid #e2e8f0;
-            background: white;
-            border-radius: 5px;
-            cursor: pointer;
-            transition: all 0.3s ease;
+        .login-status.logged-in {
+            border-left: 5px solid #38ef7d;
         }
 
-        .pagination-btn:hover {
-            background: #f1f5f9;
+        .login-status.logged-out {
+            border-left: 5px solid #f5576c;
         }
 
-        .pagination-btn.active {
-            background: #4a6fa5;
+        .status-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .status-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        .status-dot.online {
+            background: #38ef7d;
+            box-shadow: 0 0 10px #38ef7d;
+        }
+
+        .status-dot.offline {
+            background: #f5576c;
+        }
+
+        .user-badge {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
-            border-color: #4a6fa5;
-        }
-
-        .toast {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            padding: 15px 20px;
-            border-radius: 8px;
-            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 14px;
             font-weight: 600;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
-            z-index: 1000;
-            transform: translateY(100px);
-            opacity: 0;
-            transition: all 0.5s ease;
         }
 
-        .toast.show {
-            transform: translateY(0);
-            opacity: 1;
+        .token-display {
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            color: #666;
+            background: #f0f0f0;
+            padding: 5px 10px;
+            border-radius: 4px;
+            max-width: 300px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
         }
 
-        .toast.success {
-            background: #38a169;
+        .login-form {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            align-items: end;
         }
 
-        .toast.error {
-            background: #e53e3e;
+        .login-form .form-group {
+            margin-bottom: 0;
+            flex: 1;
+            min-width: 150px;
         }
 
-        .toast.info {
-            background: #4a6fa5;
+        .login-form .btn {
+            width: auto;
+            padding: 10px 30px;
         }
 
-        footer {
-            text-align: center;
-            margin-top: 40px;
-            padding: 20px;
-            color: #718096;
-            font-size: 0.9rem;
+        .logout-btn {
+            background: #dc3545;
+            padding: 8px 20px;
+            width: auto;
         }
 
-        @media (max-width: 768px) {
-            .form-row {
-                flex-direction: column;
-                gap: 0;
-            }
+        .section-locked {
+            position: relative;
+        }
 
-            .status-bar {
-                flex-direction: column;
-                gap: 20px;
-            }
-
-            .tabs {
-                flex-wrap: wrap;
-            }
-
-            .tab {
-                min-width: 50%;
-            }
-
-            .stats-grid {
-                grid-template-columns: 1fr;
-            }
+        .section-locked::before {
+            content: '🔒 请先登录以使用以下接口';
+            position: absolute;
+            top: -40px;
+            right: 0;
+            background: rgba(245, 87, 108, 0.9);
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <header>
-            <h1><i class="fas fa-comments"></i> 投诉反馈API调试页面</h1>
-            <p>用于测试投诉反馈管理系统的所有API接口</p>
-        </header>
+        <h1>🛠️ 投诉反馈接口调试工具</h1>
 
-        <div class="status-bar">
-            <div class="status-item">
-                <div class="status-value" id="total-complaints">--</div>
-                <div class="status-label">总投诉数</div>
-            </div>
-            <div class="status-item">
-                <div class="status-value" id="unresolved-count">--</div>
-                <div class="status-label">未解决投诉</div>
-            </div>
-            <div class="status-item">
-                <div class="status-value" id="high-priority">--</div>
-                <div class="status-label">高优先级</div>
-            </div>
-            <div class="status-item">
-                <div class="status-value" id="api-status">在线</div>
-                <div class="status-label">API状态</div>
+        <!-- 全局配置 -->
+        <div class="config-panel">
+            <h3 style="margin-bottom: 15px; color: #333;">⚙️ 全局配置</h3>
+            <div class="config-row">
+                <div class="config-item">
+                    <label>Base URL</label>
+                    <input type="text" id="baseUrl" value="http://localhost:5000" placeholder="http://localhost:5000">
+                </div>
             </div>
         </div>
 
-        <div class="tabs">
-            <div class="tab active" data-tab="submit">提交投诉</div>
-            <div class="tab" data-tab="view-user">用户投诉查询</div>
-            <div class="tab" data-tab="view-detail">投诉详情</div>
-            <div class="tab" data-tab="admin-list">投诉列表(管理员)</div>
-            <div class="tab" data-tab="reply">回复投诉</div>
-            <div class="tab" data-tab="stats">统计信息</div>
-            <div class="tab" data-tab="types">投诉类型</div>
-        </div>
-
-        <!-- 提交投诉标签 -->
-        <div class="tab-content active" id="submit-tab">
-            <h2><i class="fas fa-plus-circle"></i> 提交投诉</h2>
-            <p class="description">用户提交投诉信息</p>
-
-            <div class="form-group">
-                <label for="user-id">用户ID *</label>
-                <input type="number" id="user-id" class="form-control" placeholder="请输入用户ID" value="1001">
-            </div>
-
-            <div class="form-group">
-                <label for="complaint-type">投诉类型 *</label>
-                <select id="complaint-type" class="form-control">
-                    <option value="">请选择投诉类型</option>
-                    <!-- 类型将通过JS动态加载 -->
-                </select>
-            </div>
-
-            <div class="form-group">
-                <label for="description">投诉描述 *</label>
-                <textarea id="description" class="form-control" placeholder="请详细描述投诉内容...">测试投诉内容：平台功能异常，无法正常使用搜索功能。</textarea>
-            </div>
-
-            <div class="form-row">
-                <div class="form-col">
-                    <div class="form-group">
-                        <label for="priority">优先级</label>
-                        <select id="priority" class="form-control">
-                            <option value="1">低</option>
-                            <option value="2" selected>中</option>
-                            <option value="3">高</option>
-                        </select>
-                    </div>
+        <!-- 登录状态栏 -->
+        <div id="loginStatusPanel" class="login-status logged-out">
+            <div class="status-info">
+                <span class="status-dot offline" id="statusDot"></span>
+                <div>
+                    <div style="font-weight: 600; margin-bottom: 5px;" id="statusText">未登录</div>
+                    <div class="token-display" id="tokenDisplay" style="display: none;">Token: </div>
                 </div>
-                <div class="form-col">
+                <span class="user-badge" id="userBadge" style="display: none;">User: <span id="userIdDisplay"></span></span>
+            </div>
+
+            <div id="loginFormContainer">
+                <div class="login-form">
                     <div class="form-group">
-                        <label for="image-urls">图片URL（JSON数组格式）</label>
-                        <input type="text" id="image-urls" class="form-control" placeholder='["url1.jpg", "url2.png"]' value='["https://via.placeholder.com/150"]'>
+                        <label>手机号</label>
+                        <input type="text" id="loginMobile" placeholder="13800138000" value="">
                     </div>
+                    <div class="form-group">
+                        <label>密码</label>
+                        <input type="password" id="loginPassword" placeholder="password" value="">
+                    </div>
+                    <button class="btn success" onclick="handleLogin()">
+                        登录
+                    </button>
                 </div>
             </div>
 
-            <div class="actions">
-                <button class="btn btn-primary" id="submit-complaint-btn">
-                    <i class="fas fa-paper-plane"></i> 提交投诉
-                </button>
-                <button class="btn btn-secondary" id="clear-submit-form">
-                    <i class="fas fa-broom"></i> 清空表单
+            <div id="logoutContainer" style="display: none;">
+                <button class="btn warning logout-btn" onclick="handleLogout()">
+                    退出登录
                 </button>
             </div>
-
-            <div class="response-section">
-                <div class="response-title">
-                    <i class="fas fa-server"></i> API响应
-                </div>
-                <div class="response-box" id="submit-response">
-                    {/* 响应将显示在这里 */}
-                </div>
-            </div>
         </div>
 
-        <!-- 用户投诉查询标签 -->
-        <div class="tab-content" id="view-user-tab">
-            <h2><i class="fas fa-search"></i> 用户投诉查询</h2>
-            <p class="description">根据用户ID查询该用户的所有投诉</p>
+        <!-- 快捷操作 -->
+        <div class="quick-actions">
+            <button class="quick-btn" onclick="fillTestData()">📝 填充测试数据</button>
+            <button class="quick-btn" onclick="clearAllResults()">🧹 清空所有结果</button>
+        </div>
 
-            <div class="form-row">
-                <div class="form-col">
-                    <div class="form-group">
-                        <label for="query-user-id">用户ID</label>
-                        <input type="number" id="query-user-id" class="form-control" placeholder="请输入用户ID" value="1001">
-                    </div>
+        <!-- 公开接口 -->
+        <div class="section-title">🌐 公开接口</div>
+        <div class="grid">
+            <!-- 获取投诉类型 -->
+            <div class="api-card">
+                <div class="api-header">
+                    <span class="method get">GET</span>
+                    <span class="path">/api/complaint/types</span>
                 </div>
-                <div class="form-col">
-                    <div class="form-group">
-                        <label for="query-resolved">解决状态筛选</label>
-                        <select id="query-resolved" class="form-control">
-                            <option value="">全部</option>
-                            <option value="0">未解决</option>
-                            <option value="1">已解决</option>
-                        </select>
-                    </div>
-                </div>
-            </div>
-
-            <div class="actions">
-                <button class="btn btn-primary" id="query-user-complaints-btn">
-                    <i class="fas fa-search"></i> 查询用户投诉
+                <button class="btn" onclick="testGetTypes()">
+                    获取投诉类型列表
                 </button>
+                <div class="result" id="result-types"></div>
             </div>
 
-            <div class="response-section">
-                <div class="response-title">
-                    <i class="fas fa-list"></i> 查询结果
+            <!-- 用户登录 -->
+            <div class="api-card">
+                <div class="api-header">
+                    <span class="method post">POST</span>
+                    <span class="path">/api/user/login</span>
                 </div>
-                <div class="response-box" id="user-complaints-response">
-                    {/* 查询结果将显示在这里 */}
+                <div class="form-group">
+                    <label>手机号 *</label>
+                    <input type="text" id="test-mobile" placeholder="13800138000">
                 </div>
-            </div>
-        </div>
-
-        <!-- 投诉详情标签 -->
-        <div class="tab-content" id="view-detail-tab">
-            <h2><i class="fas fa-info-circle"></i> 投诉详情</h2>
-            <p class="description">根据投诉ID查询投诉的详细信息</p>
-
-            <div class="form-group">
-                <label for="complaint-id">投诉ID</label>
-                <input type="number" id="complaint-id" class="form-control" placeholder="请输入投诉ID">
-            </div>
-
-            <div class="actions">
-                <button class="btn btn-primary" id="query-complaint-detail-btn">
-                    <i class="fas fa-search"></i> 查询投诉详情
+                <div class="form-group">
+                    <label>密码 *</label>
+                    <input type="password" id="test-password" placeholder="password">
+                </div>
+                <div class="form-group">
+                    <label>设备型号 (Header)</label>
+                    <input type="text" id="test-device-model" value="WebBrowser" placeholder="WebBrowser">
+                </div>
+                <div class="form-group">
+                    <label>设备类型 (Header)</label>
+                    <input type="text" id="test-device-type" value="2" placeholder="2">
+                </div>
+                <button class="btn secondary" onclick="testLogin()">
+                    测试登录接口
                 </button>
-            </div>
-
-            <div class="response-section">
-                <div class="response-title">
-                    <i class="fas fa-file-alt"></i> 投诉详情
-                </div>
-                <div class="response-box" id="complaint-detail-response">
-                    {/* 投诉详情将显示在这里 */}
-                </div>
+                <div class="result" id="result-login"></div>
             </div>
         </div>
 
-        <!-- 投诉列表(管理员)标签 -->
-        <div class="tab-content" id="admin-list-tab">
-            <h2><i class="fas fa-tasks"></i> 投诉列表(管理员)</h2>
-            <p class="description">管理员查看投诉列表，支持筛选和分页</p>
-
-            <div class="filter-controls">
-                <div class="form-group" style="flex: 1; min-width: 150px;">
-                    <label for="filter-status">解决状态</label>
-                    <select id="filter-status" class="form-control">
+        <!-- 用户接口（需要登录） -->
+        <div class="section-title" id="userSectionTitle">👤 用户接口</div>
+        <div class="grid" id="userSection">
+            <!-- 获取我的反馈列表 -->
+            <div class="api-card" data-requires-auth="true">
+                <div class="api-header">
+                    <span class="method get">GET</span>
+                    <span class="path">/api/feedback/list</span>
+                </div>
+                <div class="form-group">
+                    <label>解决状态 (is_resolved)</label>
+                    <select id="list-resolved">
                         <option value="">全部</option>
                         <option value="0">未解决</option>
                         <option value="1">已解决</option>
                     </select>
                 </div>
+                <div class="form-group">
+                    <label>页码 (page)</label>
+                    <input type="number" id="list-page" value="1" min="1">
+                </div>
+                <div class="form-group">
+                    <label>每页数量 (limit)</label>
+                    <input type="number" id="list-limit" value="20" min="1" max="100">
+                </div>
+                <button class="btn" onclick="testGetMyList()">
+                    获取我的反馈列表
+                </button>
+                <div class="result" id="result-mylist"></div>
+            </div>
 
-                <div class="form-group" style="flex: 1; min-width: 150px;">
-                    <label for="filter-priority">优先级</label>
-                    <select id="filter-priority" class="form-control">
-                        <option value="">全部</option>
-                        <option value="1">低</option>
-                        <option value="2">中</option>
-                        <option value="3">高</option>
+            <!-- 获取反馈详情 -->
+            <div class="api-card" data-requires-auth="true">
+                <div class="api-header">
+                    <span class="method get">GET</span>
+                    <span class="path">/api/feedback/detail/{id}</span>
+                </div>
+                <div class="form-group">
+                    <label>反馈ID</label>
+                    <input type="number" id="detail-id" placeholder="输入反馈ID">
+                </div>
+                <button class="btn" onclick="testGetDetail()">
+                    查看反馈详情
+                </button>
+                <div class="result" id="result-detail"></div>
+            </div>
+
+            <!-- 提交反馈 -->
+            <div class="api-card" data-requires-auth="true">
+                <div class="api-header">
+                    <span class="method post">POST</span>
+                    <span class="path">/api/feedback/submit</span>
+                </div>
+                <div class="form-group">
+                    <label>投诉类型 *</label>
+                    <select id="submit-type">
+                        <option value="1">1-功能</option>
+                        <option value="2" selected>2-BUG</option>
+                        <option value="3">3-建议</option>
+                        <option value="4">4-其他</option>
+                        <option value="5">5-隐私安全</option>
                     </select>
                 </div>
-
-                <div class="form-group" style="flex: 1; min-width: 150px;">
-                    <label for="filter-type">投诉类型</label>
-                    <select id="filter-type" class="form-control">
-                        <option value="">全部</option>
-                        <!-- 类型将通过JS动态加载 -->
+                <div class="form-group">
+                    <label>描述内容 *</label>
+                    <textarea id="submit-desc" placeholder="请详细描述您遇到的问题..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label>图片URL 1</label>
+                    <input type="text" id="submit-img1" placeholder="http://example.com/img1.jpg">
+                </div>
+                <div class="form-group">
+                    <label>图片URL 2</label>
+                    <input type="text" id="submit-img2" placeholder="http://example.com/img2.jpg">
+                </div>
+                <div class="form-group">
+                    <label>图片URL 3</label>
+                    <input type="text" id="submit-img3" placeholder="http://example.com/img3.jpg">
+                </div>
+                <div class="form-group">
+                    <label>优先级</label>
+                    <select id="submit-priority">
+                        <option value="1">1-低</option>
+                        <option value="2">2-中</option>
+                        <option value="3" selected>3-高</option>
                     </select>
                 </div>
-
-                <div class="form-group" style="flex: 1; min-width: 150px;">
-                    <label for="filter-user-id">用户ID</label>
-                    <input type="number" id="filter-user-id" class="form-control" placeholder="用户ID">
-                </div>
-            </div>
-
-            <div class="form-row">
-                <div class="form-col">
-                    <div class="form-group">
-                        <label for="page-size">每页显示数量</label>
-                        <input type="number" id="page-size" class="form-control" value="10" min="1" max="100">
-                    </div>
-                </div>
-                <div class="form-col">
-                    <div class="form-group">
-                        <label for="current-page">当前页码</label>
-                        <input type="number" id="current-page" class="form-control" value="1" min="1">
-                    </div>
-                </div>
-            </div>
-
-            <div class="actions">
-                <button class="btn btn-primary" id="query-complaint-list-btn">
-                    <i class="fas fa-search"></i> 查询投诉列表
+                <button class="btn" onclick="testSubmit()">
+                    提交反馈
                 </button>
-                <button class="btn btn-secondary" id="reset-filters-btn">
-                    <i class="fas fa-filter"></i> 重置筛选
-                </button>
+                <div class="result" id="result-submit"></div>
             </div>
 
-            <div class="response-section">
-                <div class="response-title">
-                    <i class="fas fa-table"></i> 投诉列表
+            <!-- 更新反馈 -->
+            <div class="api-card" data-requires-auth="true">
+                <div class="api-header">
+                    <span class="method put">PUT</span>
+                    <span class="path">/api/feedback/update/{id}</span>
                 </div>
-                <div class="response-box" id="complaint-list-response">
-                    {/* 投诉列表将显示在这里 */}
+                <div class="form-group">
+                    <label>反馈ID *</label>
+                    <input type="number" id="update-id" placeholder="输入反馈ID">
                 </div>
-
-                <div class="pagination" id="pagination-controls">
-                    {/* 分页控件将通过JS动态生成 */}
+                <div class="form-group">
+                    <label>新描述内容</label>
+                    <textarea id="update-desc" placeholder="更新描述..."></textarea>
                 </div>
+                <div class="form-group">
+                    <label>新优先级</label>
+                    <select id="update-priority">
+                        <option value="">不修改</option>
+                        <option value="1">1-低</option>
+                        <option value="2">2-中</option>
+                        <option value="3">3-高</option>
+                    </select>
+                </div>
+                <button class="btn" onclick="testUpdate()">
+                    更新反馈
+                </button>
+                <div class="result" id="result-update"></div>
             </div>
         </div>
 
-        <!-- 回复投诉标签 -->
-        <div class="tab-content" id="reply-tab">
-            <h2><i class="fas fa-reply"></i> 回复投诉</h2>
-            <p class="description">管理员回复投诉并更新解决状态</p>
-
-            <div class="form-group">
-                <label for="reply-complaint-id">投诉ID *</label>
-                <input type="number" id="reply-complaint-id" class="form-control" placeholder="请输入投诉ID">
-            </div>
-
-            <div class="form-group">
-                <label for="feedback-content">回复内容 *</label>
-                <textarea id="feedback-content" class="form-control" placeholder="请输入回复内容..." rows="4">我们已经收到您的反馈，将尽快处理此问题。感谢您的反馈！</textarea>
-            </div>
-
-            <div class="form-row">
-                <div class="form-col">
-                    <div class="form-group">
-                        <label for="resolved-by">处理人ID *</label>
-                        <input type="number" id="resolved-by" class="form-control" placeholder="请输入处理人ID" value="9999">
-                    </div>
+        <!-- 管理员接口 -->
+        <div class="section-title">🔧 管理员接口</div>
+        <div class="grid">
+            <!-- 管理员获取列表 -->
+            <div class="api-card">
+                <div class="api-header">
+                    <span class="method get">GET</span>
+                    <span class="path">/api/admin/feedback/list</span>
                 </div>
-                <div class="form-col">
-                    <div class="form-group">
-                        <label for="mark-resolved">标记为已解决</label>
-                        <select id="mark-resolved" class="form-control">
-                            <option value="true">是</option>
-                            <option value="false">否</option>
-                        </select>
-                    </div>
+                <div class="form-group">
+                    <label>用户ID (筛选)</label>
+                    <input type="number" id="admin-list-userid" placeholder="可选">
                 </div>
-            </div>
-
-            <div class="actions">
-                <button class="btn btn-primary" id="reply-complaint-btn">
-                    <i class="fas fa-reply"></i> 回复投诉
+                <div class="form-group">
+                    <label>投诉类型 (筛选)</label>
+                    <select id="admin-list-type">
+                        <option value="">全部</option>
+                        <option value="1">1-功能</option>
+                        <option value="2">2-BUG</option>
+                        <option value="3">3-建议</option>
+                        <option value="4">4-其他</option>
+                        <option value="5">5-隐私安全</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>解决状态</label>
+                    <select id="admin-list-resolved">
+                        <option value="">全部</option>
+                        <option value="0">未解决</option>
+                        <option value="1">已解决</option>
+                    </select>
+                </div>
+                <button class="btn secondary" onclick="testAdminList()">
+                    获取全部反馈列表
                 </button>
-                <button class="btn btn-success" id="mark-resolved-btn">
-                    <i class="fas fa-check-circle"></i> 仅标记为已解决
-                </button>
+                <div class="result" id="result-adminlist"></div>
             </div>
 
-            <div class="response-section">
-                <div class="response-title">
-                    <i class="fas fa-server"></i> API响应
+            <!-- 管理员查看详情 -->
+            <div class="api-card">
+                <div class="api-header">
+                    <span class="method get">GET</span>
+                    <span class="path">/api/admin/feedback/detail/{id}</span>
                 </div>
-                <div class="response-box" id="reply-response">
-                    {/* 响应将显示在这里 */}
+                <div class="form-group">
+                    <label>反馈ID</label>
+                    <input type="number" id="admin-detail-id" placeholder="输入反馈ID">
                 </div>
+                <button class="btn secondary" onclick="testAdminDetail()">
+                    查看反馈详情
+                </button>
+                <div class="result" id="result-admindetail"></div>
+            </div>
+
+            <!-- 管理员解决反馈 -->
+            <div class="api-card">
+                <div class="api-header">
+                    <span class="method post">POST</span>
+                    <span class="path">/api/admin/feedback/resolve/{id}</span>
+                </div>
+                <div class="form-group">
+                    <label>反馈ID *</label>
+                    <input type="number" id="resolve-id" placeholder="输入反馈ID">
+                </div>
+                <div class="form-group">
+                    <label>回复内容 *</label>
+                    <textarea id="resolve-content" placeholder="请输入处理结果和回复内容..."></textarea>
+                </div>
+                <button class="btn secondary" onclick="testResolve()">
+                    解决并回复反馈
+                </button>
+                <div class="result" id="result-resolve"></div>
             </div>
         </div>
-
-        <!-- 统计信息标签 -->
-        <div class="tab-content" id="stats-tab">
-            <h2><i class="fas fa-chart-bar"></i> 统计信息</h2>
-            <p class="description">查看投诉反馈系统的统计信息</p>
-
-            <div class="actions">
-                <button class="btn btn-primary" id="load-stats-btn">
-                    <i class="fas fa-sync-alt"></i> 加载统计信息
-                </button>
-                <button class="btn btn-secondary" id="load-recent-btn">
-                    <i class="fas fa-history"></i> 查看最近投诉
-                </button>
-                <button class="btn btn-danger" id="load-high-priority-btn">
-                    <i class="fas fa-exclamation-triangle"></i> 查看高优先级投诉
-                </button>
-            </div>
-
-            <div class="stats-grid" id="stats-container">
-                {/* 统计卡片将通过JS动态生成 */}
-            </div>
-
-            <div class="response-section">
-                <div class="response-title">
-                    <i class="fas fa-server"></i> 原始数据
-                </div>
-                <div class="response-box" id="stats-response">
-                    {/* 原始统计响应将显示在这里 */}
-                </div>
-            </div>
-        </div>
-
-        <!-- 投诉类型标签 -->
-        <div class="tab-content" id="types-tab">
-            <h2><i class="fas fa-tags"></i> 投诉类型管理</h2>
-            <p class="description">查看和管理投诉类型</p>
-
-            <div class="actions">
-                <button class="btn btn-primary" id="load-types-btn">
-                    <i class="fas fa-sync-alt"></i> 加载投诉类型
-                </button>
-                <button class="btn btn-success" id="show-add-type-form">
-                    <i class="fas fa-plus"></i> 添加新类型
-                </button>
-            </div>
-
-            <div id="types-list-container">
-                {/* 类型列表将通过JS动态生成 */}
-            </div>
-
-            <div id="add-type-form" style="display: none; margin-top: 30px;">
-                <h3><i class="fas fa-plus-circle"></i> 添加新投诉类型</h3>
-                <div class="form-row">
-                    <div class="form-col">
-                        <div class="form-group">
-                            <label for="new-type-name">类型名称 *</label>
-                            <input type="text" id="new-type-name" class="form-control" placeholder="请输入类型名称">
-                        </div>
-                    </div>
-                    <div class="form-col">
-                        <div class="form-group">
-                            <label for="new-type-order">排序顺序</label>
-                            <input type="number" id="new-type-order" class="form-control" placeholder="排序顺序" value="0">
-                        </div>
-                    </div>
-                </div>
-                <div class="actions">
-                    <button class="btn btn-primary" id="add-type-btn">
-                        <i class="fas fa-save"></i> 添加类型
-                    </button>
-                    <button class="btn btn-secondary" id="cancel-add-type">
-                        <i class="fas fa-times"></i> 取消
-                    </button>
-                </div>
-            </div>
-
-            <div class="response-section">
-                <div class="response-title">
-                    <i class="fas fa-server"></i> API响应
-                </div>
-                <div class="response-box" id="types-response">
-                    {/* 响应将显示在这里 */}
-                </div>
-            </div>
-        </div>
-
-        <footer>
-            <p>投诉反馈API调试页面 &copy; 2023 | 后端API地址: <span id="api-base-url">http://localhost:5000</span></p>
-            <p>使用说明: 请确保后端服务正在运行，然后点击各标签页测试对应功能</p>
-        </footer>
     </div>
 
-    <div id="toast" class="toast"></div>
-
     <script>
-        // API基础URL
-        const API_BASE_URL = 'http://localhost:5000';
-
         // 全局状态
-        let currentPage = 1;
-        let totalPages = 1;
-        let complaintTypes = [];
+        let authState = {
+            isLoggedIn: false,
+            token: null,
+            userId: null,
+            userInfo: null
+        };
 
-        // DOM元素
-        const tabs = document.querySelectorAll('.tab');
-        const tabContents = document.querySelectorAll('.tab-content');
-        const apiStatusElement = document.getElementById('api-status');
-
-        // 初始化函数
+        // 初始化
         document.addEventListener('DOMContentLoaded', function() {
-            // 设置标签切换
-            setupTabs();
-
-            // 设置按钮事件
-            setupButtonEvents();
-
-            // 初始化表单
-            initializeForms();
-
-            // 测试API连接并加载初始数据
-            testApiConnection();
-            loadComplaintTypes();
-            updateStatistics();
+            // 检查本地存储的登录状态
+            const savedAuth = localStorage.getItem('debug_auth');
+            if (savedAuth) {
+                const auth = JSON.parse(savedAuth);
+                // 检查token是否过期（简单判断）
+                if (auth.token) {
+                    restoreLoginState(auth);
+                }
+            }
+            updateUI();
         });
 
-        // 设置标签切换
-        function setupTabs() {
-            tabs.forEach(tab => {
-                tab.addEventListener('click', () => {
-                    const tabId = tab.getAttribute('data-tab');
+        // 保存登录状态
+        function saveAuthState() {
+            localStorage.setItem('debug_auth', JSON.stringify(authState));
+        }
 
-                    // 更新活动标签
-                    tabs.forEach(t => t.classList.remove('active'));
-                    tab.classList.add('active');
+        // 恢复登录状态
+        function restoreLoginState(auth) {
+            authState = auth;
+        }
 
-                    // 显示对应内容
-                    tabContents.forEach(content => {
-                        content.classList.remove('active');
-                        if (content.id === `${tabId}-tab`) {
-                            content.classList.add('active');
-                        }
-                    });
+        // 更新UI状态
+        function updateUI() {
+            const panel = document.getElementById('loginStatusPanel');
+            const dot = document.getElementById('statusDot');
+            const statusText = document.getElementById('statusText');
+            const tokenDisplay = document.getElementById('tokenDisplay');
+            const userBadge = document.getElementById('userBadge');
+            const userIdDisplay = document.getElementById('userIdDisplay');
+            const loginForm = document.getElementById('loginFormContainer');
+            const logoutContainer = document.getElementById('logoutContainer');
+            const userSection = document.getElementById('userSection');
+            const userSectionTitle = document.getElementById('userSectionTitle');
 
-                    // 如果切换到统计标签，自动加载统计信息
-                    if (tabId === 'stats') {
-                        loadStatistics();
-                    }
+            if (authState.isLoggedIn) {
+                // 已登录状态
+                panel.className = 'login-status logged-in';
+                dot.className = 'status-dot online';
+                statusText.textContent = `已登录: ${authState.userInfo?.real_name || authState.userInfo?.mobile || 'Unknown'}`;
+                tokenDisplay.style.display = 'block';
+                tokenDisplay.textContent = `Token: ${authState.token.substring(0, 20)}...`;
+                userBadge.style.display = 'inline-block';
+                userIdDisplay.textContent = authState.userId;
+                loginForm.style.display = 'none';
+                logoutContainer.style.display = 'block';
 
-                    // 如果切换到类型标签，自动加载类型
-                    if (tabId === 'types') {
-                        loadComplaintTypes();
-                    }
+                // 解锁用户接口区域
+                userSectionTitle.classList.remove('section-locked');
+                document.querySelectorAll('[data-requires-auth="true"]').forEach(card => {
+                    card.classList.remove('disabled');
                 });
-            });
-        }
-
-        // 设置按钮事件
-        function setupButtonEvents() {
-            // 提交投诉
-            document.getElementById('submit-complaint-btn').addEventListener('click', submitComplaint);
-            document.getElementById('clear-submit-form').addEventListener('click', clearSubmitForm);
-
-            // 用户投诉查询
-            document.getElementById('query-user-complaints-btn').addEventListener('click', queryUserComplaints);
-
-            // 投诉详情查询
-            document.getElementById('query-complaint-detail-btn').addEventListener('click', queryComplaintDetail);
-
-            // 投诉列表查询
-            document.getElementById('query-complaint-list-btn').addEventListener('click', queryComplaintList);
-            document.getElementById('reset-filters-btn').addEventListener('click', resetFilters);
-
-            // 回复投诉
-            document.getElementById('reply-complaint-btn').addEventListener('click', replyComplaint);
-            document.getElementById('mark-resolved-btn').addEventListener('click', markResolvedOnly);
-
-            // 统计信息
-            document.getElementById('load-stats-btn').addEventListener('click', loadStatistics);
-            document.getElementById('load-recent-btn').addEventListener('click', loadRecentComplaints);
-            document.getElementById('load-high-priority-btn').addEventListener('click', loadHighPriorityComplaints);
-
-            // 投诉类型管理
-            document.getElementById('load-types-btn').addEventListener('click', loadComplaintTypes);
-            document.getElementById('show-add-type-form').addEventListener('click', showAddTypeForm);
-            document.getElementById('add-type-btn').addEventListener('click', addComplaintType);
-            document.getElementById('cancel-add-type').addEventListener('click', hideAddTypeForm);
-        }
-
-        // 初始化表单
-        function initializeForms() {
-            // 设置当前日期作为默认时间
-            const now = new Date();
-            const formattedDate = now.toISOString().split('T')[0];
-
-            // 初始化表单值
-            document.getElementById('user-id').value = Math.floor(Math.random() * 1000) + 1000;
-            document.getElementById('query-user-id').value = Math.floor(Math.random() * 1000) + 1000;
-            document.getElementById('resolved-by').value = 9999;
-        }
-
-        // 测试API连接
-        async function testApiConnection() {
-            try {
-                const response = await fetch(`${API_BASE_URL}/api/complaint/test`);
-                if (response.ok) {
-                    apiStatusElement.textContent = '在线';
-                    apiStatusElement.style.color = '#38a169';
-                    showToast('API连接正常', 'success');
-                } else {
-                    apiStatusElement.textContent = '离线';
-                    apiStatusElement.style.color = '#e53e3e';
-                    showToast('API连接失败', 'error');
-                }
-            } catch (error) {
-                apiStatusElement.textContent = '错误';
-                apiStatusElement.style.color = '#e53e3e';
-                showToast(`API连接错误: ${error.message}`, 'error');
-            }
-        }
-
-        // 加载投诉类型
-        async function loadComplaintTypes() {
-            try {
-                showLoading('types-response', '正在加载投诉类型...');
-
-                const response = await fetch(`${API_BASE_URL}/api/complaint/types`);
-                const result = await response.json();
-
-                if (result.code === 200) {
-                    complaintTypes = result.data || [];
-                    updateTypeSelects();
-                    displayTypesList();
-                    displayResponse('types-response', result);
-                    showToast('投诉类型加载成功', 'success');
-                } else {
-                    displayResponse('types-response', result);
-                    showToast(`加载投诉类型失败: ${result.message}`, 'error');
-                }
-            } catch (error) {
-                displayError('types-response', error);
-                showToast(`加载投诉类型异常: ${error.message}`, 'error');
-            }
-        }
-
-        // 更新类型选择框
-        function updateTypeSelects() {
-            // 更新投诉提交表单的类型选择
-            const typeSelect = document.getElementById('complaint-type');
-            typeSelect.innerHTML = '<option value="">请选择投诉类型</option>';
-
-            // 更新筛选表单的类型选择
-            const filterTypeSelect = document.getElementById('filter-type');
-            filterTypeSelect.innerHTML = '<option value="">全部</option>';
-
-            complaintTypes.forEach(type => {
-                const option = document.createElement('option');
-                option.value = type.type_code;
-                option.textContent = type.type_name;
-                typeSelect.appendChild(option.cloneNode(true));
-                filterTypeSelect.appendChild(option);
-            });
-
-            // 设置默认值
-            if (complaintTypes.length > 0) {
-                typeSelect.value = complaintTypes[0].type_code;
-            }
-        }
-
-        // 显示类型列表
-        function displayTypesList() {
-            const container = document.getElementById('types-list-container');
-
-            if (complaintTypes.length === 0) {
-                container.innerHTML = '<div class="complaint-item"><p>暂无投诉类型</p></div>';
-                return;
-            }
-
-            let html = '<h3>现有投诉类型</h3>';
-            complaintTypes.forEach(type => {
-                html += `
-                <div class="complaint-item">
-                    <div class="complaint-header">
-                        <div class="complaint-id">${type.type_code}</div>
-                        <div>排序: ${type.sort_order}</div>
-                    </div>
-                    <div class="complaint-details">
-                        <div class="detail-item">
-                            <span class="detail-label">类型名称:</span>
-                            <span class="detail-value">${type.type_name}</span>
-                        </div>
-                        <div class="detail-item">
-                            <span class="detail-label">创建时间:</span>
-                            <span class="detail-value">${new Date(type.created_at).toLocaleString()}</span>
-                        </div>
-                    </div>
-                </div>
-                `;
-            });
-
-            container.innerHTML = html;
-        }
-
-        // 提交投诉
-        async function submitComplaint() {
-            const userId = document.getElementById('user-id').value;
-            const complaintType = document.getElementById('complaint-type').value;
-            const description = document.getElementById('description').value;
-            const priority = document.getElementById('priority').value;
-            const imageUrlsInput = document.getElementById('image-urls').value;
-
-            // 验证输入
-            if (!userId || !complaintType || !description) {
-                showToast('请填写必填字段: 用户ID、投诉类型和描述', 'error');
-                return;
-            }
-
-            let imageUrls = [];
-            try {
-                if (imageUrlsInput.trim()) {
-                    imageUrls = JSON.parse(imageUrlsInput);
-                }
-            } catch (e) {
-                showToast('图片URL格式错误，应为JSON数组格式', 'error');
-                return;
-            }
-
-            const data = {
-                user_id: parseInt(userId),
-                complaint_type: complaintType,
-                description: description,
-                priority: parseInt(priority),
-                image_urls: imageUrls
-            };
-
-            try {
-                showLoading('submit-response', '正在提交投诉...');
-
-                const response = await fetch(`${API_BASE_URL}/api/complaint/submit`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(data)
-                });
-
-                const result = await response.json();
-                displayResponse('submit-response', result);
-
-                if (result.code === 200) {
-                    showToast('投诉提交成功', 'success');
-                    // 更新统计信息
-                    updateStatistics();
-                } else {
-                    showToast(`投诉提交失败: ${result.message}`, 'error');
-                }
-            } catch (error) {
-                displayError('submit-response', error);
-                showToast(`提交投诉异常: ${error.message}`, 'error');
-            }
-        }
-
-        // 清空提交表单
-        function clearSubmitForm() {
-            document.getElementById('description').value = '';
-            document.getElementById('image-urls').value = '';
-            document.getElementById('priority').value = '2';
-            showToast('表单已清空', 'info');
-        }
-
-        // 查询用户投诉
-        async function queryUserComplaints() {
-            const userId = document.getElementById('query-user-id').value;
-            const isResolved = document.getElementById('query-resolved').value;
-
-            if (!userId) {
-                showToast('请输入用户ID', 'error');
-                return;
-            }
-
-            let url = `${API_BASE_URL}/api/complaint/user/${userId}`;
-            if (isResolved !== '') {
-                url += `?is_resolved=${isResolved}`;
-            }
-
-            try {
-                showLoading('user-complaints-response', '正在查询用户投诉...');
-
-                const response = await fetch(url);
-                const result = await response.json();
-                displayResponse('user-complaints-response', result, true);
-
-                if (result.code === 200) {
-                    showToast('查询成功', 'success');
-                } else {
-                    showToast(`查询失败: ${result.message}`, 'error');
-                }
-            } catch (error) {
-                displayError('user-complaints-response', error);
-                showToast(`查询异常: ${error.message}`, 'error');
-            }
-        }
-
-        // 查询投诉详情
-        async function queryComplaintDetail() {
-            const complaintId = document.getElementById('complaint-id').value;
-
-            if (!complaintId) {
-                showToast('请输入投诉ID', 'error');
-                return;
-            }
-
-            try {
-                showLoading('complaint-detail-response', '正在查询投诉详情...');
-
-                const response = await fetch(`${API_BASE_URL}/api/complaint/${complaintId}`);
-                const result = await response.json();
-                displayResponse('complaint-detail-response', result, true);
-
-                if (result.code === 200) {
-                    showToast('查询成功', 'success');
-                } else {
-                    showToast(`查询失败: ${result.message}`, 'error');
-                }
-            } catch (error) {
-                displayError('complaint-detail-response', error);
-                showToast(`查询异常: ${error.message}`, 'error');
-            }
-        }
-
-        // 查询投诉列表
-        async function queryComplaintList(page = 1) {
-            const status = document.getElementById('filter-status').value;
-            const priority = document.getElementById('filter-priority').value;
-            const type = document.getElementById('filter-type').value;
-            const userId = document.getElementById('filter-user-id').value;
-            const pageSize = document.getElementById('page-size').value;
-
-            currentPage = page;
-            document.getElementById('current-page').value = page;
-
-            const filters = {};
-            if (status !== '') filters.is_resolved = parseInt(status);
-            if (priority !== '') filters.priority = parseInt(priority);
-            if (type !== '') filters.complaint_type = type;
-            if (userId !== '') filters.user_id = parseInt(userId);
-
-            const data = {
-                filters: filters,
-                page: currentPage,
-                page_size: parseInt(pageSize)
-            };
-
-            try {
-                showLoading('complaint-list-response', '正在查询投诉列表...');
-
-                const response = await fetch(`${API_BASE_URL}/api/complaint/list`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(data)
-                });
-
-                const result = await response.json();
-                displayResponse('complaint-list-response', result, true);
-
-                if (result.code === 200) {
-                    showToast('查询成功', 'success');
-                    updatePagination(result.data.total, result.data.page_size);
-                } else {
-                    showToast(`查询失败: ${result.message}`, 'error');
-                }
-            } catch (error) {
-                displayError('complaint-list-response', error);
-                showToast(`查询异常: ${error.message}`, 'error');
-            }
-        }
-
-        // 重置筛选条件
-        function resetFilters() {
-            document.getElementById('filter-status').value = '';
-            document.getElementById('filter-priority').value = '';
-            document.getElementById('filter-type').value = '';
-            document.getElementById('filter-user-id').value = '';
-            document.getElementById('page-size').value = '10';
-            document.getElementById('current-page').value = '1';
-            showToast('筛选条件已重置', 'info');
-        }
-
-        // 更新分页控件
-        function updatePagination(total, pageSize) {
-            totalPages = Math.ceil(total / pageSize);
-            const paginationContainer = document.getElementById('pagination-controls');
-
-            if (totalPages <= 1) {
-                paginationContainer.innerHTML = '';
-                return;
-            }
-
-            let html = '';
-
-            // 上一页按钮
-            if (currentPage > 1) {
-                html += `<button class="pagination-btn" onclick="queryComplaintList(${currentPage - 1})">上一页</button>`;
-            }
-
-            // 页码按钮
-            const maxPagesToShow = 5;
-            let startPage = Math.max(1, currentPage - Math.floor(maxPagesToShow / 2));
-            let endPage = Math.min(totalPages, startPage + maxPagesToShow - 1);
-
-            if (endPage - startPage + 1 < maxPagesToShow) {
-                startPage = Math.max(1, endPage - maxPagesToShow + 1);
-            }
-
-            for (let i = startPage; i <= endPage; i++) {
-                if (i === currentPage) {
-                    html += `<button class="pagination-btn active">${i}</button>`;
-                } else {
-                    html += `<button class="pagination-btn" onclick="queryComplaintList(${i})">${i}</button>`;
-                }
-            }
-
-            // 下一页按钮
-            if (currentPage < totalPages) {
-                html += `<button class="pagination-btn" onclick="queryComplaintList(${currentPage + 1})">下一页</button>`;
-            }
-
-            paginationContainer.innerHTML = html;
-        }
-
-        // 回复投诉
-        async function replyComplaint() {
-            const complaintId = document.getElementById('reply-complaint-id').value;
-            const feedbackContent = document.getElementById('feedback-content').value;
-            const resolvedBy = document.getElementById('resolved-by').value;
-            const markResolved = document.getElementById('mark-resolved').value === 'true';
-
-            if (!complaintId || !feedbackContent || !resolvedBy) {
-                showToast('请填写必填字段: 投诉ID、回复内容和处理人ID', 'error');
-                return;
-            }
-
-            const data = {
-                complaint_id: parseInt(complaintId),
-                feedback_content: feedbackContent,
-                resolved_by: parseInt(resolvedBy),
-                mark_resolved: markResolved
-            };
-
-            try {
-                showLoading('reply-response', '正在回复投诉...');
-
-                const response = await fetch(`${API_BASE_URL}/api/complaint/reply`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(data)
-                });
-
-                const result = await response.json();
-                displayResponse('reply-response', result);
-
-                if (result.code === 200) {
-                    showToast('回复成功', 'success');
-                    // 更新统计信息
-                    updateStatistics();
-                } else {
-                    showToast(`回复失败: ${result.message}`, 'error');
-                }
-            } catch (error) {
-                displayError('reply-response', error);
-                showToast(`回复异常: ${error.message}`, 'error');
-            }
-        }
-
-        // 仅标记为已解决
-        async function markResolvedOnly() {
-            const complaintId = document.getElementById('reply-complaint-id').value;
-            const resolvedBy = document.getElementById('resolved-by').value;
-
-            if (!complaintId || !resolvedBy) {
-                showToast('请填写必填字段: 投诉ID和处理人ID', 'error');
-                return;
-            }
-
-            const data = {
-                complaint_id: parseInt(complaintId),
-                is_resolved: 1,
-                resolved_by: parseInt(resolvedBy)
-            };
-
-            try {
-                showLoading('reply-response', '正在标记为已解决...');
-
-                const response = await fetch(`${API_BASE_URL}/api/complaint/status`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(data)
-                });
-
-                const result = await response.json();
-                displayResponse('reply-response', result);
-
-                if (result.code === 200) {
-                    showToast('标记成功', 'success');
-                    // 更新统计信息
-                    updateStatistics();
-                } else {
-                    showToast(`标记失败: ${result.message}`, 'error');
-                }
-            } catch (error) {
-                displayError('reply-response', error);
-                showToast(`标记异常: ${error.message}`, 'error');
-            }
-        }
-
-        // 加载统计信息
-        async function loadStatistics() {
-            try {
-                showLoading('stats-response', '正在加载统计信息...');
-
-                const response = await fetch(`${API_BASE_URL}/api/complaint/statistics`);
-                const result = await response.json();
-                displayResponse('stats-response', result);
-
-                if (result.code === 200) {
-                    displayStatistics(result.data);
-                    showToast('统计信息加载成功', 'success');
-                } else {
-                    showToast(`加载统计信息失败: ${result.message}`, 'error');
-                }
-            } catch (error) {
-                displayError('stats-response', error);
-                showToast(`加载统计信息异常: ${error.message}`, 'error');
-            }
-        }
-
-        // 显示统计信息
-        function displayStatistics(stats) {
-            const container = document.getElementById('stats-container');
-
-            if (!stats) {
-                container.innerHTML = '<p>暂无统计信息</p>';
-                return;
-            }
-
-            let html = '';
-
-            // 总投诉数
-            if (stats.total_complaints !== undefined) {
-                html += `
-                <div class="stat-card">
-                    <div class="stat-value">${stats.total_complaints}</div>
-                    <div class="stat-label">总投诉数</div>
-                </div>
-                `;
-            }
-
-            // 未解决投诉数
-            if (stats.unresolved_count !== undefined) {
-                html += `
-                <div class="stat-card">
-                    <div class="stat-value">${stats.unresolved_count}</div>
-                    <div class="stat-label">未解决投诉</div>
-                </div>
-                `;
-            }
-
-            // 已解决投诉数
-            if (stats.resolved_count !== undefined) {
-                html += `
-                <div class="stat-card">
-                    <div class="stat-value">${stats.resolved_count}</div>
-                    <div class="stat-label">已解决投诉</div>
-                </div>
-                `;
-            }
-
-            // 高优先级投诉数
-            if (stats.high_priority_count !== undefined) {
-                html += `
-                <div class="stat-card">
-                    <div class="stat-value">${stats.high_priority_count}</div>
-                    <div class="stat-label">高优先级投诉</div>
-                </div>
-                `;
-            }
-
-            // 解决率
-            if (stats.resolved_count !== undefined && stats.total_complaints !== undefined && stats.total_complaints > 0) {
-                const resolutionRate = Math.round((stats.resolved_count / stats.total_complaints) * 100);
-                html += `
-                <div class="stat-card">
-                    <div class="stat-value">${resolutionRate}%</div>
-                    <div class="stat-label">解决率</div>
-                </div>
-                `;
-            }
-
-            // 平均处理时间
-            if (stats.avg_resolution_time !== undefined) {
-                html += `
-                <div class="stat-card">
-                    <div class="stat-value">${stats.avg_resolution_time}</div>
-                    <div class="stat-label">平均处理时间(天)</div>
-                </div>
-                `;
-            }
-
-            // 按类型分布
-            if (stats.by_type && stats.by_type.length > 0) {
-                html += `
-                <div class="stat-card" style="grid-column: 1 / -1;">
-                    <h3>按类型分布</h3>
-                    <div style="margin-top: 15px;">
-                `;
-
-                stats.by_type.forEach(typeStat => {
-                    html += `
-                    <div style="display: flex; justify-content: space-between; margin-bottom: 8px; padding-bottom: 8px; border-bottom: 1px solid #e2e8f0;">
-                        <span>${typeStat.type_name}</span>
-                        <span><strong>${typeStat.count}</strong> (${typeStat.percentage}%)</span>
-                    </div>
-                    `;
-                });
-
-                html += `</div></div>`;
-            }
-
-            container.innerHTML = html;
-        }
-
-        // 加载最近投诉
-        async function loadRecentComplaints() {
-            try {
-                showLoading('stats-response', '正在加载最近投诉...');
-
-                const response = await fetch(`${API_BASE_URL}/api/complaint/recent?days=7`);
-                const result = await response.json();
-                displayResponse('stats-response', result, true);
-
-                if (result.code === 200) {
-                    showToast('最近投诉加载成功', 'success');
-                } else {
-                    showToast(`加载最近投诉失败: ${result.message}`, 'error');
-                }
-            } catch (error) {
-                displayError('stats-response', error);
-                showToast(`加载最近投诉异常: ${error.message}`, 'error');
-            }
-        }
-
-        // 加载高优先级投诉
-        async function loadHighPriorityComplaints() {
-            try {
-                showLoading('stats-response', '正在加载高优先级投诉...');
-
-                const response = await fetch(`${API_BASE_URL}/api/complaint/high-priority`);
-                const result = await response.json();
-                displayResponse('stats-response', result, true);
-
-                if (result.code === 200) {
-                    showToast('高优先级投诉加载成功', 'success');
-                } else {
-                    showToast(`加载高优先级投诉失败: ${result.message}`, 'error');
-                }
-            } catch (error) {
-                displayError('stats-response', error);
-                showToast(`加载高优先级投诉异常: ${error.message}`, 'error');
-            }
-        }
-
-        // 显示添加类型表单
-        function showAddTypeForm() {
-            document.getElementById('add-type-form').style.display = 'block';
-            document.getElementById('new-type-name').focus();
-        }
-
-        // 隐藏添加类型表单
-        function hideAddTypeForm() {
-            document.getElementById('add-type-form').style.display = 'none';
-            document.getElementById('new-type-name').value = '';
-            document.getElementById('new-type-order').value = '0';
-        }
-
-        // 添加投诉类型
-        async function addComplaintType() {
-            const typeName = document.getElementById('new-type-name').value;
-            const sortOrder = document.getElementById('new-type-order').value;
-
-            if (!typeName) {
-                showToast('请输入类型名称', 'error');
-                return;
-            }
-
-            const data = {
-                type_name: typeName,
-                sort_order: parseInt(sortOrder) || 0
-            };
-
-            try {
-                showLoading('types-response', '正在添加投诉类型...');
-
-                const response = await fetch(`${API_BASE_URL}/api/complaint/type/add`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(data)
-                });
-
-                const result = await response.json();
-                displayResponse('types-response', result);
-
-                if (result.code === 200) {
-                    showToast('投诉类型添加成功', 'success');
-                    hideAddTypeForm();
-                    // 重新加载类型列表
-                    loadComplaintTypes();
-                } else {
-                    showToast(`添加投诉类型失败: ${result.message}`, 'error');
-                }
-            } catch (error) {
-                displayError('types-response', error);
-                showToast(`添加投诉类型异常: ${error.message}`, 'error');
-            }
-        }
-
-        // 更新统计信息显示
-        async function updateStatistics() {
-            try {
-                // 获取未解决投诉数
-                const unresolvedResponse = await fetch(`${API_BASE_URL}/api/complaint/unresolved/count`);
-                const unresolvedResult = await unresolvedResponse.json();
-
-                if (unresolvedResult.code === 200) {
-                    document.getElementById('unresolved-count').textContent = unresolvedResult.data.unresolved_count || 0;
-                }
-
-                // 获取高优先级投诉
-                const highPriorityResponse = await fetch(`${API_BASE_URL}/api/complaint/high-priority`);
-                const highPriorityResult = await highPriorityResponse.json();
-
-                if (highPriorityResult.code === 200) {
-                    document.getElementById('high-priority').textContent = highPriorityResult.data ? highPriorityResult.data.length : 0;
-                }
-
-                // 获取总投诉数（通过查询列表第一页来估算）
-                const listResponse = await fetch(`${API_BASE_URL}/api/complaint/list`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        filters: {},
-                        page: 1,
-                        page_size: 1
-                    })
-                });
-
-                const listResult = await listResponse.json();
-                if (listResult.code === 200) {
-                    document.getElementById('total-complaints').textContent = listResult.data.total || 0;
-                }
-
-            } catch (error) {
-                console.error('更新统计信息失败:', error);
-            }
-        }
-
-        // 显示加载状态
-        function showLoading(elementId, message) {
-            const element = document.getElementById(elementId);
-            element.innerHTML = `<div style="color: #4a6fa5; text-align: center; padding: 20px;">
-                <i class="fas fa-spinner fa-spin"></i> ${message}
-            </div>`;
-        }
-
-        // 显示响应
-        function displayResponse(elementId, response, formatAsComplaints = false) {
-            const element = document.getElementById(elementId);
-
-            if (formatAsComplaints && response.code === 200 && response.data) {
-                if (Array.isArray(response.data)) {
-                    element.innerHTML = formatComplaintsList(response.data);
-                } else if (response.data.list && Array.isArray(response.data.list)) {
-                    element.innerHTML = formatComplaintsList(response.data.list);
-                } else {
-                    element.innerHTML = formatComplaintDetail(response.data);
-                }
             } else {
-                element.textContent = JSON.stringify(response, null, 2);
+                // 未登录状态
+                panel.className = 'login-status logged-out';
+                dot.className = 'status-dot offline';
+                statusText.textContent = '未登录';
+                tokenDisplay.style.display = 'none';
+                userBadge.style.display = 'none';
+                loginForm.style.display = 'block';
+                logoutContainer.style.display = 'none';
+
+                // 锁定用户接口区域
+                userSectionTitle.classList.add('section-locked');
+                document.querySelectorAll('[data-requires-auth="true"]').forEach(card => {
+                    card.classList.add('disabled');
+                });
             }
         }
 
-        // 格式化投诉列表
-        function formatComplaintsList(complaints) {
-            if (!complaints || complaints.length === 0) {
-                return '<div style="text-align: center; padding: 20px; color: #718096;">暂无投诉数据</div>';
+        // 获取配置
+        function getConfig() {
+            return {
+                baseUrl: document.getElementById('baseUrl').value.trim() || 'http://localhost:5000'
+            };
+        }
+
+        // 显示结果
+        function showResult(elementId, response, isError = false) {
+            const el = document.getElementById(elementId);
+            const statusClass = isError ? 'error' : 'success';
+            const statusText = isError ? 'ERROR' : 'SUCCESS';
+
+            el.innerHTML = `
+                <div class="result-header">
+                    <span>请求结果</span>
+                    <span class="status-code ${statusClass}">${statusText}</span>
+                </div>
+                <div class="result-body">${syntaxHighlight(JSON.stringify(response, null, 2))}</div>
+            `;
+            el.classList.add('show');
+        }
+
+        // JSON语法高亮
+        function syntaxHighlight(json) {
+            json = json.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+            return json.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, function (match) {
+                let cls = 'number';
+                if (/^"/.test(match)) {
+                    if (/:$/.test(match)) {
+                        cls = 'key';
+                        match = match.slice(0, -1) + '</span>:';
+                        return `<span style="color: #f92672;">${match}</span>`;
+                    } else {
+                        cls = 'string';
+                        return `<span style="color: #e6db74;">${match}</span>`;
+                    }
+                } else if (/true|false/.test(match)) {
+                    cls = 'boolean';
+                    return `<span style="color: #ae81ff;">${match}</span>`;
+                } else if (/null/.test(match)) {
+                    cls = 'null';
+                    return `<span style="color: #66d9ef;">${match}</span>`;
+                }
+                return `<span style="color: #ae81ff;">${match}</span>`;
+            });
+        }
+
+        // 发送请求封装
+        async function sendRequest(url, options = {}) {
+            const config = getConfig();
+            const fullUrl = config.baseUrl + url;
+
+            // 设置默认headers
+            const headers = {
+                'Content-Type': 'application/json',
+                ...options.headers
+            };
+
+            // 如果有token，添加到header（使用Authorization Bearer格式）
+            if (authState.token && options.useAuth !== false) {
+                headers['Authorization'] = `Bearer ${authState.token}`;
             }
 
-            let html = '';
+            try {
+                const response = await fetch(fullUrl, {
+                    ...options,
+                    headers: headers
+                });
+                const data = await response.json();
+                return {
+                    status: response.status,
+                    data: data,
+                    ok: response.ok
+                };
+            } catch (error) {
+                return {
+                    status: 0,
+                    data: { code: 0, message: '网络请求失败: ' + error.message, data: null },
+                    ok: false
+                };
+            }
+        }
 
-            complaints.forEach(complaint => {
-                const statusClass = complaint.is_resolved ? 'status-resolved' : 'status-pending';
-                const statusText = complaint.is_resolved ? '已解决' : '未解决';
-                const priorityClass = `priority-${getPriorityText(complaint.priority).toLowerCase()}`;
-                const priorityText = getPriorityText(complaint.priority);
+        // 登录处理
+        async function handleLogin() {
+            const mobile = document.getElementById('loginMobile').value.trim();
+            const password = document.getElementById('loginPassword').value;
 
-                html += `
-                <div class="complaint-item">
-                    <div class="complaint-header">
-                        <div class="complaint-id">投诉ID: ${complaint.id}</div>
-                        <div class="complaint-status ${statusClass}">${statusText}</div>
-                    </div>
-                    <div class="complaint-details">
-                        <div class="detail-item">
-                            <span class="detail-label">用户ID:</span>
-                            <span class="detail-value">${complaint.user_id}</span>
-                        </div>
-                        <div class="detail-item">
-                            <span class="detail-label">投诉类型:</span>
-                            <span class="detail-value">${getTypeName(complaint.complaint_type)}</span>
-                        </div>
-                        <div class="detail-item">
-                            <span class="detail-label">优先级:</span>
-                            <span class="detail-value ${priorityClass}">${priorityText}</span>
-                        </div>
-                        <div class="detail-item">
-                            <span class="detail-label">提交时间:</span>
-                            <span class="detail-value">${new Date(complaint.created_at).toLocaleString()}</span>
-                        </div>
-                    </div>
-                    <div class="detail-item" style="margin-top: 10px;">
-                        <span class="detail-label">投诉描述:</span>
-                        <div style="margin-top: 5px; padding: 10px; background: #f1f5f9; border-radius: 5px;">
-                            ${complaint.description}
-                        </div>
-                    </div>
-                </div>
-                `;
+            if (!mobile || !password) {
+                alert('请输入手机号和密码');
+                return;
+            }
+
+            await performLogin(mobile, password, 'WebDebugger', '2');
+        }
+
+        // 执行登录
+        async function performLogin(mobile, password, deviceModel, deviceType) {
+            const btn = event ? event.target : document.querySelector('#loginFormContainer .btn');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '登录中<span class="loading"></span>';
+
+            const result = await sendRequest('/api/user/login', {
+                method: 'POST',
+                body: JSON.stringify({
+                    mobile: mobile,
+                    password: password
+                }),
+                headers: {
+                    'X-Device-Model': deviceModel,
+                    'X-Device-Type': deviceType
+                },
+                useAuth: false // 登录接口不需要token
             });
 
-            return html;
-        }
+            if (result.ok && result.data.code === 200) {
+                // 登录成功
+                authState.isLoggedIn = true;
+                authState.token = result.data.data.token;
+                authState.userId = result.data.data.user_info.user_id;
+                authState.userInfo = result.data.data.user_info;
 
-        // 格式化投诉详情
-        function formatComplaintDetail(complaint) {
-            if (!complaint) return '<div style="text-align: center; padding: 20px; color: #718096;">投诉不存在</div>';
+                saveAuthState();
+                updateUI();
 
-            const statusClass = complaint.is_resolved ? 'status-resolved' : 'status-pending';
-            const statusText = complaint.is_resolved ? '已解决' : '未解决';
-            const priorityClass = `priority-${getPriorityText(complaint.priority).toLowerCase()}`;
-            const priorityText = getPriorityText(complaint.priority);
-
-            let feedbackHtml = '';
-            if (complaint.feedback_content) {
-                feedbackHtml = `
-                <div class="detail-item" style="margin-top: 15px;">
-                    <span class="detail-label" style="color: #38a169;">管理员回复:</span>
-                    <div style="margin-top: 5px; padding: 10px; background: #f0fff4; border-radius: 5px; border-left: 4px solid #38a169;">
-                        ${complaint.feedback_content}
-                    </div>
-                    <div style="margin-top: 5px; font-size: 0.9rem; color: #718096;">
-                        回复时间: ${new Date(complaint.resolved_at).toLocaleString()} | 处理人: ${complaint.resolved_by}
-                    </div>
-                </div>
-                `;
+                // 显示成功提示
+                alert(`登录成功！欢迎, ${authState.userInfo.real_name || authState.userInfo.mobile}`);
+            } else {
+                alert('登录失败: ' + (result.data.message || '未知错误'));
             }
 
-            let imagesHtml = '';
-            if (complaint.image_urls && complaint.image_urls.length > 0) {
-                imagesHtml = `
-                <div class="detail-item" style="margin-top: 10px;">
-                    <span class="detail-label">相关图片:</span>
-                    <div class="image-preview">
-                `;
+            btn.innerHTML = originalText;
+            return result;
+        }
 
-                complaint.image_urls.forEach(url => {
-                    imagesHtml += `<img src="${url}" alt="投诉图片" class="image-thumb" onclick="window.open('${url}', '_blank')">`;
-                });
+        // 退出登录
+        function handleLogout() {
+            authState = {
+                isLoggedIn: false,
+                token: null,
+                userId: null,
+                userInfo: null
+            };
+            localStorage.removeItem('debug_auth');
+            updateUI();
+            clearAllResults();
+        }
 
-                imagesHtml += `</div></div>`;
+        // ============== 公开接口 ==============
+        async function testGetTypes() {
+            const btn = event.target;
+            btn.innerHTML = '请求中<span class="loading"></span>';
+
+            const result = await sendRequest('/api/complaint/types', { useAuth: false });
+            showResult('result-types', result.data, !result.ok);
+
+            btn.innerHTML = '获取投诉类型列表';
+        }
+
+        async function testLogin() {
+            const btn = event.target;
+            const mobile = document.getElementById('test-mobile').value.trim();
+            const password = document.getElementById('test-password').value;
+            const deviceModel = document.getElementById('test-device-model').value;
+            const deviceType = document.getElementById('test-device-type').value;
+
+            if (!mobile || !password) {
+                alert('请输入手机号和密码');
+                return;
             }
 
-            return `
-            <div class="complaint-item">
-                <div class="complaint-header">
-                    <div class="complaint-id">投诉ID: ${complaint.id}</div>
-                    <div class="complaint-status ${statusClass}">${statusText}</div>
-                </div>
-                <div class="complaint-details">
-                    <div class="detail-item">
-                        <span class="detail-label">用户ID:</span>
-                        <span class="detail-value">${complaint.user_id}</span>
-                    </div>
-                    <div class="detail-item">
-                        <span class="detail-label">投诉类型:</span>
-                        <span class="detail-value">${getTypeName(complaint.complaint_type)}</span>
-                    </div>
-                    <div class="detail-item">
-                        <span class="detail-label">优先级:</span>
-                        <span class="detail-value ${priorityClass}">${priorityText}</span>
-                    </div>
-                    <div class="detail-item">
-                        <span class="detail-label">提交时间:</span>
-                        <span class="detail-value">${new Date(complaint.created_at).toLocaleString()}</span>
-                    </div>
-                    ${complaint.resolved_at ? `
-                    <div class="detail-item">
-                        <span class="detail-label">解决时间:</span>
-                        <span class="detail-value">${new Date(complaint.resolved_at).toLocaleString()}</span>
-                    </div>
-                    ` : ''}
-                </div>
-                <div class="detail-item" style="margin-top: 10px;">
-                    <span class="detail-label">投诉描述:</span>
-                    <div style="margin-top: 5px; padding: 10px; background: #f1f5f9; border-radius: 5px;">
-                        ${complaint.description}
-                    </div>
-                </div>
-                ${imagesHtml}
-                ${feedbackHtml}
-            </div>
-            `;
-        }
+            btn.innerHTML = '请求中<span class="loading"></span>';
 
-        // 显示错误
-        function displayError(elementId, error) {
-            const element = document.getElementById(elementId);
-            element.innerHTML = `<div style="color: #e53e3e; padding: 20px;">
-                <strong>错误:</strong> ${error.message || error}
-            </div>`;
-        }
+            const result = await sendRequest('/api/user/login', {
+                method: 'POST',
+                body: JSON.stringify({
+                    mobile: mobile,
+                    password: password
+                }),
+                headers: {
+                    'X-Device-Model': deviceModel,
+                    'X-Device-Type': deviceType
+                },
+                useAuth: false
+            });
 
-        // 显示提示消息
-        function showToast(message, type = 'info') {
-            const toast = document.getElementById('toast');
-            toast.textContent = message;
-            toast.className = `toast ${type}`;
+            showResult('result-login', result.data, !result.ok);
 
-            setTimeout(() => {
-                toast.classList.add('show');
-            }, 10);
+            // 如果登录成功，询问是否保存登录状态
+            if (result.ok && result.data.code === 200 && !authState.isLoggedIn) {
+                if (confirm('登录成功！是否保存登录状态到调试工具？')) {
+                    authState.isLoggedIn = true;
+                    authState.token = result.data.data.token;
+                    authState.userId = result.data.data.user_info.user_id;
+                    authState.userInfo = result.data.data.user_info;
+                    saveAuthState();
+                    updateUI();
 
-            setTimeout(() => {
-                toast.classList.remove('show');
-            }, 3000);
-        }
-
-        // 获取优先级文本
-        function getPriorityText(priority) {
-            switch (parseInt(priority)) {
-                case 1: return '低';
-                case 2: return '中';
-                case 3: return '高';
-                default: return '未知';
+                    // 同步到顶部登录表单
+                    document.getElementById('loginMobile').value = mobile;
+                }
             }
+
+            btn.innerHTML = '测试登录接口';
         }
 
-        // 获取类型名称
-        function getTypeName(typeCode) {
-            const type = complaintTypes.find(t => t.type_code === typeCode);
-            return type ? type.type_name : typeCode;
+        // ============== 用户接口（需要登录） ==============
+        async function testGetMyList() {
+            if (!authState.isLoggedIn) {
+                alert('请先登录');
+                return;
+            }
+
+            const btn = event.target;
+            btn.innerHTML = '请求中<span class="loading"></span>';
+
+            const resolved = document.getElementById('list-resolved').value;
+            const page = document.getElementById('list-page').value;
+            const limit = document.getElementById('list-limit').value;
+
+            let url = `/api/feedback/list?page=${page}&limit=${limit}`;
+            if (resolved !== '') url += `&is_resolved=${resolved}`;
+
+            const result = await sendRequest(url);
+            showResult('result-mylist', result.data, !result.ok);
+
+            btn.innerHTML = '获取我的反馈列表';
+        }
+
+        async function testGetDetail() {
+            if (!authState.isLoggedIn) {
+                alert('请先登录');
+                return;
+            }
+
+            const btn = event.target;
+            const id = document.getElementById('detail-id').value;
+
+            if (!id) {
+                alert('请输入反馈ID');
+                return;
+            }
+
+            btn.innerHTML = '请求中<span class="loading"></span>';
+            const result = await sendRequest(`/api/feedback/detail/${id}`);
+            showResult('result-detail', result.data, !result.ok);
+
+            btn.innerHTML = '查看反馈详情';
+        }
+
+        async function testSubmit() {
+            if (!authState.isLoggedIn) {
+                alert('请先登录');
+                return;
+            }
+
+            const btn = event.target;
+            const type = document.getElementById('submit-type').value;
+            const desc = document.getElementById('submit-desc').value.trim();
+            const img1 = document.getElementById('submit-img1').value.trim();
+            const img2 = document.getElementById('submit-img2').value.trim();
+            const img3 = document.getElementById('submit-img3').value.trim();
+            const priority = document.getElementById('submit-priority').value;
+
+            if (!desc) {
+                alert('请填写描述内容');
+                return;
+            }
+
+            btn.innerHTML = '提交中<span class="loading"></span>';
+
+            const body = {
+                complaint_type: parseInt(type),
+                description: desc,
+                priority: parseInt(priority)
+            };
+
+            if (img1) body.image_url_1 = img1;
+            if (img2) body.image_url_2 = img2;
+            if (img3) body.image_url_3 = img3;
+
+            const result = await sendRequest('/api/feedback/submit', {
+                method: 'POST',
+                body: JSON.stringify(body)
+            });
+
+            showResult('result-submit', result.data, !result.ok);
+
+            // 如果成功，自动填充ID到更新和解决表单
+            if (result.ok && result.data.data && result.data.data.feedback_id) {
+                document.getElementById('update-id').value = result.data.data.feedback_id;
+                document.getElementById('resolve-id').value = result.data.data.feedback_id;
+            }
+
+            btn.innerHTML = '提交反馈';
+        }
+
+        async function testUpdate() {
+            if (!authState.isLoggedIn) {
+                alert('请先登录');
+                return;
+            }
+
+            const btn = event.target;
+            const id = document.getElementById('update-id').value;
+            const desc = document.getElementById('update-desc').value.trim();
+            const priority = document.getElementById('update-priority').value;
+
+            if (!id) {
+                alert('请输入反馈ID');
+                return;
+            }
+
+            btn.innerHTML = '更新中<span class="loading"></span>';
+
+            const body = {};
+            if (desc) body.description = desc;
+            if (priority) body.priority = parseInt(priority);
+
+            const result = await sendRequest(`/api/feedback/update/${id}`, {
+                method: 'PUT',
+                body: JSON.stringify(body)
+            });
+
+            showResult('result-update', result.data, !result.ok);
+            btn.innerHTML = '更新反馈';
+        }
+
+        // ============== 管理员接口 ==============
+        async function testAdminList() {
+            const btn = event.target;
+            btn.innerHTML = '请求中<span class="loading"></span>';
+
+            const userId = document.getElementById('admin-list-userid').value;
+            const type = document.getElementById('admin-list-type').value;
+            const resolved = document.getElementById('admin-list-resolved').value;
+
+            let url = '/api/admin/feedback/list?page=1&limit=20';
+            if (userId) url += `&user_id=${userId}`;
+            if (type) url += `&complaint_type=${type}`;
+            if (resolved !== '') url += `&is_resolved=${resolved}`;
+
+            const result = await sendRequest(url, { useAuth: false });
+            showResult('result-adminlist', result.data, !result.ok);
+
+            btn.innerHTML = '获取全部反馈列表';
+        }
+
+        async function testAdminDetail() {
+            const btn = event.target;
+            const id = document.getElementById('admin-detail-id').value;
+
+            if (!id) {
+                alert('请输入反馈ID');
+                return;
+            }
+
+            btn.innerHTML = '请求中<span class="loading"></span>';
+            const result = await sendRequest(`/api/admin/feedback/detail/${id}`, { useAuth: false });
+            showResult('result-admindetail', result.data, !result.ok);
+
+            btn.innerHTML = '查看反馈详情';
+        }
+
+        async function testResolve() {
+            const btn = event.target;
+            const id = document.getElementById('resolve-id').value;
+            const content = document.getElementById('resolve-content').value.trim();
+
+            if (!id || !content) {
+                alert('请填写反馈ID和回复内容');
+                return;
+            }
+
+            btn.innerHTML = '处理中<span class="loading"></span>';
+
+            const result = await sendRequest(`/api/admin/feedback/resolve/${id}`, {
+                method: 'POST',
+                body: JSON.stringify({ feedback_content: content }),
+                useAuth: false
+            });
+
+            showResult('result-resolve', result.data, !result.ok);
+            btn.innerHTML = '解决并回复反馈';
+        }
+
+        // ============== 工具函数 ==============
+        function fillTestData() {
+            document.getElementById('test-mobile').value = '13800138000';
+            document.getElementById('test-password').value = '123456';
+            document.getElementById('loginMobile').value = '13800138000';
+            document.getElementById('loginPassword').value = '123456';
+            document.getElementById('submit-desc').value = '这是一个测试反馈，用于调试接口功能。描述内容需要至少10个字符。';
+            document.getElementById('submit-img1').value = 'https://example.com/test-image-1.jpg';
+            document.getElementById('update-desc').value = '这是更新后的描述内容，用于测试更新接口。';
+            document.getElementById('resolve-content').value = '感谢您的反馈，问题已修复，请更新到最新版本查看。';
+        }
+
+        function clearAllResults() {
+            document.querySelectorAll('.result').forEach(el => {
+                el.classList.remove('show');
+                el.innerHTML = '';
+            });
         }
     </script>
 </body>
