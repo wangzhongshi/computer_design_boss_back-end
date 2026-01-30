@@ -12,6 +12,7 @@ from datetime import datetime
 import json
 import os
 from X1_ws import think_speaker
+from demo_boss import Ai_job_demo
 import logging
 from pathlib import Path
 from sql_data_demo import EndDemoDatabase, Job_prot, Job_category_simple, Forum_comments, Sys_user, ResumeManager, ComplaintTypeManager,UserFeedbackManager,UserDeliverJobs,UserFavoriteJobs
@@ -31,6 +32,14 @@ from datetime import datetime
 from flask import request, jsonify, g
 from functools import wraps
 
+from flask import Flask, request, jsonify, current_app
+from flask_cors import CORS
+from flask_jwt_extended import jwt_required, get_jwt_identity
+import os
+from werkzeug.utils import secure_filename
+import tempfile
+import json
+
 
 db = EndDemoDatabase(host='localhost', user='root', password='123456')
 job_prot = Job_prot(db.connection)
@@ -42,6 +51,8 @@ type_manager = ComplaintTypeManager(db.connection)
 feedback_manager = UserFeedbackManager(db.connection)
 deliver_jobs = UserDeliverJobs(db.connection)
 favorite_jobs = UserFavoriteJobs(db.connection)
+
+ai_job_demo = Ai_job_demo()
 
 think_speaker = think_speaker()
 
@@ -57,8 +68,6 @@ chat_history = []
 # 配置日志
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
-
-app = Flask(__name__)
 CORS(app)  # 允许跨域
 
 # 配置
@@ -91,8 +100,6 @@ if not HISTORY_FILE.exists():
 # 加载环境变量
 load_dotenv()
 
-# 创建Flask应用
-app = Flask(__name__)
 
 # 配置
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'dev-secret-key')
@@ -112,6 +119,11 @@ app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
 CORS(app, supports_credentials=True)
 jwt = JWTManager(app)
 db = SQLAlchemy(app)
+
+# 配置文件上传设置
+UPLOAD_FOLDER = tempfile.gettempdir()  # 使用临时目录存储上传的PDF文件
+ALLOWED_EXTENSIONS = {'pdf'}
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 # 辅助函数：验证手机号格式
 def validate_mobile(mobile):
@@ -3093,6 +3105,726 @@ def batch_cancel_delivers():
     except Exception as e:
         app.logger.error(f'批量取消投递失败: {str(e)}')
         return jsonify({'code': 500, 'message': '服务器内部错误'}), 500
+
+
+
+def allowed_file(filename):
+    """检查文件扩展名是否允许"""
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+
+def save_uploaded_file():
+    """保存上传的PDF文件并返回文件路径"""
+    if 'pdf_file' not in request.files:
+        return None, 'No PDF file uploaded'
+
+    file = request.files['pdf_file']
+    if file.filename == '':
+        return None, 'No file selected'
+
+    if file and allowed_file(file.filename):
+        filename = secure_filename(file.filename)
+        filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+        file.save(filepath)
+        return filepath, None
+    else:
+        return None, 'File type not allowed. Only PDF files are accepted.'
+
+
+@app.route('/api/ai/ask_by_pdf_job_id', methods=['POST'])
+@jwt_required()
+def api_ask_by_pdf_and_job_id():
+    """使用PDF文件和职位ID进行分析"""
+    try:
+        # 检查文件上传
+        if 'pdf_file' not in request.files:
+            return jsonify({
+                'code': 400,
+                'message': '请上传PDF简历文件',
+                'data': None
+            }), 400
+
+        # 获取job_id
+        job_id = request.form.get('job_id')
+        if not job_id:
+            return jsonify({
+                'code': 400,
+                'message': '请提供职位ID',
+                'data': None
+            }), 400
+
+        # 保存PDF文件
+        pdf_path, error = save_uploaded_file()
+        if error:
+            return jsonify({
+                'code': 400,
+                'message': error,
+                'data': None
+            }), 400
+
+        # 调用AI分析函数
+        ai_answer = ai_job_demo.ask_by_pdf_and_job_id(pdf_path, job_id)
+
+        # 清理临时文件
+        try:
+            if os.path.exists(pdf_path):
+                os.remove(pdf_path)
+        except:
+            pass
+
+        return jsonify({
+            'code': 200,
+            'message': '分析成功',
+            'data': {
+                'analysis': ai_answer
+            }
+        })
+
+    except Exception as e:
+        current_app.logger.error(f'PDF+职位ID分析异常：{e}')
+        return jsonify({
+            'code': 500,
+            'message': f'服务器异常: {str(e)}',
+            'data': None
+        }), 500
+
+
+@app.route('/api/ai/ask_by_pdf_job_text', methods=['POST'])
+@jwt_required()
+def api_ask_by_pdf_and_job_text():
+    """使用PDF文件和职位文本进行分析"""
+    try:
+        # 检查文件上传
+        if 'pdf_file' not in request.files:
+            return jsonify({
+                'code': 400,
+                'message': '请上传PDF简历文件',
+                'data': None
+            }), 400
+
+        # 获取job_text
+        job_text = request.form.get('job_text')
+        if not job_text:
+            return jsonify({
+                'code': 400,
+                'message': '请提供职位描述文本',
+                'data': None
+            }), 400
+
+        # 保存PDF文件
+        pdf_path, error = save_uploaded_file()
+        if error:
+            return jsonify({
+                'code': 400,
+                'message': error,
+                'data': None
+            }), 400
+
+        # 调用AI分析函数
+        ai_answer = ai_job_demo.ask_by_pdf_and_job_text(pdf_path, job_text)
+
+        # 清理临时文件
+        try:
+            if os.path.exists(pdf_path):
+                os.remove(pdf_path)
+        except:
+            pass
+
+        return jsonify({
+            'code': 200,
+            'message': '分析成功',
+            'data': {
+                'analysis': ai_answer
+            }
+        })
+
+    except Exception as e:
+        current_app.logger.error(f'PDF+职位文本分析异常：{e}')
+        return jsonify({
+            'code': 500,
+            'message': f'服务器异常: {str(e)}',
+            'data': None
+        }), 500
+
+
+@app.route('/api/ai/ask_by_user_job_text', methods=['POST'])
+@jwt_required()
+def api_ask_by_user_id_and_job_text():
+    """使用用户ID和职位文本进行分析"""
+    try:
+        user_id = get_jwt_identity()
+
+        # 获取job_text
+        data = request.get_json()
+        if not data or 'job_text' not in data:
+            return jsonify({
+                'code': 400,
+                'message': '请提供职位描述文本',
+                'data': None
+            }), 400
+
+        job_text = data['job_text']
+
+        # 调用AI分析函数
+        ai_answer = ai_job_demo.ask_by_user_id_and_job_text(user_id, job_text)
+
+        return jsonify({
+            'code': 200,
+            'message': '分析成功',
+            'data': {
+                'analysis': ai_answer
+            }
+        })
+
+    except Exception as e:
+        current_app.logger.error(f'用户ID+职位文本分析异常：{e}')
+        return jsonify({
+            'code': 500,
+            'message': f'服务器异常: {str(e)}',
+            'data': None
+        }), 500
+
+
+@app.route('/api/ai/ask_by_user_job_id', methods=['GET'])
+@jwt_required()
+def api_ask_by_user_id_and_job_id():
+    """使用用户ID和职位ID进行分析"""
+    try:
+        user_id = get_jwt_identity()
+
+        # 获取job_id
+        job_id = request.args.get('job_id')
+        if not job_id:
+            return jsonify({
+                'code': 400,
+                'message': '请提供职位ID',
+                'data': None
+            }), 400
+
+        # 调用AI分析函数
+        ai_answer = ai_job_demo.ask_by_user_id_and_job_id(user_id, job_id)
+
+        return jsonify({
+            'code': 200,
+            'message': '分析成功',
+            'data': {
+                'analysis': ai_answer
+            }
+        })
+
+    except Exception as e:
+        current_app.logger.error(f'用户ID+职位ID分析异常：{e}')
+        return jsonify({
+            'code': 500,
+            'message': f'服务器异常: {str(e)}',
+            'data': None
+        }), 500
+
+
+@app.route('/api/ai/chat', methods=['POST'])
+@jwt_required()
+def api_chat():
+    """AI对话接口"""
+    try:
+        data = request.get_json()
+        if not data or 'message' not in data:
+            return jsonify({
+                'code': 400,
+                'message': '请输入对话内容',
+                'data': None
+            }), 400
+
+        user_message = data['message']
+
+        # 调用AI对话函数
+        ai_answer = ai_job_demo.chat(user_message)
+
+        return jsonify({
+            'code': 200,
+            'message': '对话成功',
+            'data': {
+                'response': ai_answer
+            }
+        })
+
+    except Exception as e:
+        current_app.logger.error(f'AI对话异常：{e}')
+        return jsonify({
+            'code': 500,
+            'message': f'服务器异常: {str(e)}',
+            'data': None
+        }), 500
+
+
+@app.route('/api/ai/resume_evaluation', methods=['GET'])
+@jwt_required()
+def api_resume_evaluation_by_user_id():
+    """简历评估（使用用户ID）"""
+    try:
+        user_id = get_jwt_identity()
+
+        # 调用简历评估函数
+        ai_answer = ai_job_demo.resume_evalu_by_user_id(user_id)
+
+        return jsonify({
+            'code': 200,
+            'message': '评估成功',
+            'data': {
+                'evaluation': ai_answer
+            }
+        })
+
+    except Exception as e:
+        current_app.logger.error(f'简历评估异常：{e}')
+        return jsonify({
+            'code': 500,
+            'message': f'服务器异常: {str(e)}',
+            'data': None
+        }), 500
+
+
+@app.route('/api/ai/resume_evaluation_text', methods=['POST'])
+@jwt_required()
+def api_resume_evaluation_by_text():
+    """简历评估（使用简历文本）"""
+    try:
+        # 检查文件上传
+        if 'pdf_file' not in request.files:
+            return jsonify({
+                'code': 400,
+                'message': '请上传PDF简历文件',
+                'data': None
+            }), 400
+
+        # 保存PDF文件
+        pdf_path, error = save_uploaded_file()
+
+        # 调用简历评估函数
+        ai_answer = ai_job_demo.resume_evalu_by_user_pdf(pdf_path)
+
+        return jsonify({
+            'code': 200,
+            'message': '评估成功',
+            'data': {
+                'evaluation': ai_answer
+            }
+        })
+
+    except Exception as e:
+        current_app.logger.error(f'简历文本评估异常：{e}')
+        return jsonify({
+            'code': 500,
+            'message': f'服务器异常: {str(e)}',
+            'data': None
+        }), 500
+
+
+@app.route('/api/ai/success_rate_pdf_job_id', methods=['POST'])
+@jwt_required()
+def api_success_rate_by_pdf_and_job_id():
+    """成功率分析（PDF+职位ID）"""
+    try:
+        # 检查文件上传
+        if 'pdf_file' not in request.files:
+            return jsonify({
+                'code': 400,
+                'message': '请上传PDF简历文件',
+                'data': None
+            }), 400
+
+        # 获取job_id
+        job_id = request.form.get('job_id')
+        if not job_id:
+            return jsonify({
+                'code': 400,
+                'message': '请提供职位ID',
+                'data': None
+            }), 400
+
+        # 保存PDF文件
+        pdf_path, error = save_uploaded_file()
+        if error:
+            return jsonify({
+                'code': 400,
+                'message': error,
+                'data': None
+            }), 400
+
+        # 调用成功率分析函数
+        ai_answer = ai_job_demo.success_rate_by_pdf_and_job_id(pdf_path, job_id)
+
+        # 清理临时文件
+        try:
+            if os.path.exists(pdf_path):
+                os.remove(pdf_path)
+        except:
+            pass
+
+        return jsonify({
+            'code': 200,
+            'message': '分析成功',
+            'data': {
+                'analysis': ai_answer
+            }
+        })
+
+    except Exception as e:
+        current_app.logger.error(f'PDF+职位ID成功率分析异常：{e}')
+        return jsonify({
+            'code': 500,
+            'message': f'服务器异常: {str(e)}',
+            'data': None
+        }), 500
+
+
+@app.route('/api/ai/success_rate_pdf_job_text', methods=['POST'])
+@jwt_required()
+def api_success_rate_by_pdf_and_job_text():
+    """成功率分析（PDF+职位文本）"""
+    try:
+        # 检查文件上传
+        if 'pdf_file' not in request.files:
+            return jsonify({
+                'code': 400,
+                'message': '请上传PDF简历文件',
+                'data': None
+            }), 400
+
+        # 获取job_text
+        job_text = request.form.get('job_text')
+        if not job_text:
+            return jsonify({
+                'code': 400,
+                'message': '请提供职位描述文本',
+                'data': None
+            }), 400
+
+        # 保存PDF文件
+        pdf_path, error = save_uploaded_file()
+        if error:
+            return jsonify({
+                'code': 400,
+                'message': error,
+                'data': None
+            }), 400
+
+        # 调用成功率分析函数
+        ai_answer = ai_job_demo.success_rate_by_pdf_and_job_text(pdf_path, job_text)
+
+        # 清理临时文件
+        try:
+            if os.path.exists(pdf_path):
+                os.remove(pdf_path)
+        except:
+            pass
+
+        return jsonify({
+            'code': 200,
+            'message': '分析成功',
+            'data': {
+                'analysis': ai_answer
+            }
+        })
+
+    except Exception as e:
+        current_app.logger.error(f'PDF+职位文本成功率分析异常：{e}')
+        return jsonify({
+            'code': 500,
+            'message': f'服务器异常: {str(e)}',
+            'data': None
+        }), 500
+
+
+@app.route('/api/ai/success_rate_user_job_text', methods=['POST'])
+@jwt_required()
+def api_success_rate_by_user_id_and_job_text():
+    """成功率分析（用户ID+职位文本）"""
+    try:
+        user_id = get_jwt_identity()
+
+        # 获取job_text
+        data = request.get_json()
+        if not data or 'job_text' not in data:
+            return jsonify({
+                'code': 400,
+                'message': '请提供职位描述文本',
+                'data': None
+            }), 400
+
+        job_text = data['job_text']
+
+        # 调用成功率分析函数
+        ai_answer = ai_job_demo.success_rate_by_user_id_and_job_text(user_id, job_text)
+
+        return jsonify({
+            'code': 200,
+            'message': '分析成功',
+            'data': {
+                'analysis': ai_answer
+            }
+        })
+
+    except Exception as e:
+        current_app.logger.error(f'用户ID+职位文本成功率分析异常：{e}')
+        return jsonify({
+            'code': 500,
+            'message': f'服务器异常: {str(e)}',
+            'data': None
+        }), 500
+
+
+@app.route('/api/ai/success_rate_user_job_id', methods=['GET'])
+@jwt_required()
+def api_success_rate_by_user_id_and_job_id():
+    """成功率分析（用户ID+职位ID）"""
+    try:
+        user_id = get_jwt_identity()
+
+        # 获取job_id
+        job_id = request.args.get('job_id')
+        if not job_id:
+            return jsonify({
+                'code': 400,
+                'message': '请提供职位ID',
+                'data': None
+            }), 400
+
+        # 调用成功率分析函数
+        ai_answer = ai_job_demo.success_rate_by_user_id_and_job_id(user_id, job_id)
+
+        return jsonify({
+            'code': 200,
+            'message': '分析成功',
+            'data': {
+                'analysis': ai_answer
+            }
+        })
+
+    except Exception as e:
+        current_app.logger.error(f'用户ID+职位ID成功率分析异常：{e}')
+        return jsonify({
+            'code': 500,
+            'message': f'服务器异常: {str(e)}',
+            'data': None
+        }), 500
+
+
+@app.route('/api/ai/university_plan_pdf_job_id', methods=['POST'])
+@jwt_required()
+def api_university_plan_by_pdf_and_job_id():
+    """大学生活规划（PDF+职位ID）"""
+    try:
+        # 检查文件上传
+        if 'pdf_file' not in request.files:
+            return jsonify({
+                'code': 400,
+                'message': '请上传PDF简历文件',
+                'data': None
+            }), 400
+
+        # 获取job_id和user_grade
+        job_id = request.form.get('job_id')
+        user_grade = request.form.get('user_grade')
+
+        if not job_id:
+            return jsonify({
+                'code': 400,
+                'message': '请提供职位ID',
+                'data': None
+            }), 400
+
+        if not user_grade:
+            return jsonify({
+                'code': 400,
+                'message': '请提供学生年级',
+                'data': None
+            }), 400
+
+        # 保存PDF文件
+        pdf_path, error = save_uploaded_file()
+        if error:
+            return jsonify({
+                'code': 400,
+                'message': error,
+                'data': None
+            }), 400
+
+        # 调用大学生活规划函数
+        ai_answer = ai_job_demo.uni_plan_by_pdf_and_job_id(pdf_path, job_id, user_grade)
+
+        # 清理临时文件
+        try:
+            if os.path.exists(pdf_path):
+                os.remove(pdf_path)
+        except:
+            pass
+
+        return jsonify({
+            'code': 200,
+            'message': '规划生成成功',
+            'data': {
+                'plan': ai_answer
+            }
+        })
+
+    except Exception as e:
+        current_app.logger.error(f'PDF+职位ID大学生活规划异常：{e}')
+        return jsonify({
+            'code': 500,
+            'message': f'服务器异常: {str(e)}',
+            'data': None
+        }), 500
+
+
+@app.route('/api/ai/university_plan_pdf_job_text', methods=['POST'])
+@jwt_required()
+def api_university_plan_by_pdf_and_job_text():
+    """大学生活规划（PDF+职位文本）"""
+    try:
+        # 检查文件上传
+        if 'pdf_file' not in request.files:
+            return jsonify({
+                'code': 400,
+                'message': '请上传PDF简历文件',
+                'data': None
+            }), 400
+
+        # 获取job_text和user_grade
+        job_text = request.form.get('job_text')
+        user_grade = request.form.get('user_grade')
+
+        if not job_text:
+            return jsonify({
+                'code': 400,
+                'message': '请提供职位描述文本',
+                'data': None
+            }), 400
+
+        if not user_grade:
+            return jsonify({
+                'code': 400,
+                'message': '请提供学生年级',
+                'data': None
+            }), 400
+
+        # 保存PDF文件
+        pdf_path, error = save_uploaded_file()
+        if error:
+            return jsonify({
+                'code': 400,
+                'message': error,
+                'data': None
+            }), 400
+
+        # 调用大学生活规划函数
+        ai_answer = ai_job_demo.uni_plan_by_pdf_and_job_text(pdf_path, job_text, user_grade)
+
+        # 清理临时文件
+        try:
+            if os.path.exists(pdf_path):
+                os.remove(pdf_path)
+        except:
+            pass
+
+        return jsonify({
+            'code': 200,
+            'message': '规划生成成功',
+            'data': {
+                'plan': ai_answer
+            }
+        })
+
+    except Exception as e:
+        current_app.logger.error(f'PDF+职位文本大学生活规划异常：{e}')
+        return jsonify({
+            'code': 500,
+            'message': f'服务器异常: {str(e)}',
+            'data': None
+        }), 500
+
+
+@app.route('/api/ai/university_plan_user_job_text', methods=['POST'])
+@jwt_required()
+def api_university_plan_by_user_id_and_job_text():
+    """大学生活规划（用户ID+职位文本）"""
+    try:
+        user_id = get_jwt_identity()
+
+        # 获取job_text和user_grade
+        data = request.get_json()
+        if not data or 'job_text' not in data or 'user_grade' not in data:
+            return jsonify({
+                'code': 400,
+                'message': '请提供职位描述文本和学生年级',
+                'data': None
+            }), 400
+
+        job_text = data['job_text']
+        user_grade = data['user_grade']
+
+        # 调用大学生活规划函数
+        ai_answer = ai_job_demo.uni_plan_by_user_id_and_job_text(user_id, job_text, user_grade)
+
+        return jsonify({
+            'code': 200,
+            'message': '规划生成成功',
+            'data': {
+                'plan': ai_answer
+            }
+        })
+
+    except Exception as e:
+        current_app.logger.error(f'用户ID+职位文本大学生活规划异常：{e}')
+        return jsonify({
+            'code': 500,
+            'message': f'服务器异常: {str(e)}',
+            'data': None
+        }), 500
+
+
+@app.route('/api/ai/university_plan_user_job_id', methods=['GET'])
+@jwt_required()
+def api_university_plan_by_user_id_and_job_id():
+    """大学生活规划（用户ID+职位ID）"""
+    try:
+        user_id = get_jwt_identity()
+
+        # 获取job_id和user_grade
+        job_id = request.args.get('job_id')
+        user_grade = request.args.get('user_grade')
+
+        if not job_id:
+            return jsonify({
+                'code': 400,
+                'message': '请提供职位ID',
+                'data': None
+            }), 400
+
+        if not user_grade:
+            return jsonify({
+                'code': 400,
+                'message': '请提供学生年级',
+                'data': None
+            }), 400
+
+        # 调用大学生活规划函数
+        ai_answer = ai_job_demo.uni_plan_by_user_id_and_job_id(user_id, job_id, user_grade)
+
+        return jsonify({
+            'code': 200,
+            'message': '规划生成成功',
+            'data': {
+                'plan': ai_answer
+            }
+        })
+
+    except Exception as e:
+        current_app.logger.error(f'用户ID+职位ID大学生活规划异常：{e}')
+        return jsonify({
+            'code': 500,
+            'message': f'服务器异常: {str(e)}',
+            'data': None
+        }), 500
 
 
 @app.route('/api/health', methods=['GET'])
