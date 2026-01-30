@@ -1,0 +1,1201 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI接口测试平台</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #4361ee;
+            --secondary-color: #3a0ca3;
+            --success-color: #4cc9f0;
+            --light-bg: #f8f9fa;
+            --dark-bg: #212529;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f5f7fb;
+            color: #333;
+        }
+
+        .header {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            padding: 2rem 0;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .card {
+            border-radius: 12px;
+            border: none;
+            box-shadow: 0 6px 15px rgba(0,0,0,0.08);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            margin-bottom: 1.5rem;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.12);
+        }
+
+        .card-header {
+            background-color: var(--primary-color);
+            color: white;
+            border-radius: 12px 12px 0 0 !important;
+            padding: 1rem 1.25rem;
+            font-weight: 600;
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+            padding: 0.5rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 500;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--secondary-color);
+            border-color: var(--secondary-color);
+        }
+
+        .btn-success {
+            background-color: var(--success-color);
+            border-color: var(--success-color);
+        }
+
+        .api-section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            color: var(--secondary-color);
+            border-bottom: 2px solid var(--primary-color);
+            padding-bottom: 0.5rem;
+            margin-bottom: 1.5rem;
+            font-weight: 600;
+        }
+
+        .result-container {
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-top: 1rem;
+            max-height: 400px;
+            overflow-y: auto;
+            border-left: 4px solid var(--primary-color);
+        }
+
+        .result-title {
+            font-weight: 600;
+            color: var(--primary-color);
+            margin-bottom: 0.5rem;
+        }
+
+        .form-label {
+            font-weight: 500;
+            color: #555;
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+
+        .status-online {
+            background-color: #28a745;
+        }
+
+        .status-offline {
+            background-color: #dc3545;
+        }
+
+        .login-container {
+            max-width: 500px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+        }
+
+        .token-display {
+            background-color: #f0f4ff;
+            border-radius: 8px;
+            padding: 0.75rem;
+            margin-top: 1rem;
+            word-break: break-all;
+            font-size: 0.85rem;
+            border: 1px dashed #b3c6ff;
+        }
+
+        .api-test-btn {
+            margin-top: 1rem;
+        }
+
+        .file-input-wrapper {
+            position: relative;
+            overflow: hidden;
+            display: inline-block;
+            width: 100%;
+        }
+
+        .file-input-wrapper input[type=file] {
+            position: absolute;
+            left: 0;
+            top: 0;
+            opacity: 0;
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+        }
+
+        .file-input-label {
+            display: block;
+            padding: 0.75rem;
+            background-color: #f8f9fa;
+            border: 1px solid #ced4da;
+            border-radius: 0.375rem;
+            text-align: center;
+            cursor: pointer;
+        }
+
+        .file-name {
+            margin-top: 0.5rem;
+            font-size: 0.9rem;
+            color: #6c757d;
+        }
+
+        .response-time {
+            font-size: 0.85rem;
+            color: #6c757d;
+            margin-top: 0.5rem;
+        }
+
+        .loading-spinner {
+            display: none;
+            width: 2rem;
+            height: 2rem;
+            border: 0.25rem solid #f3f3f3;
+            border-top: 0.25rem solid var(--primary-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 1rem auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .tab-content {
+            padding: 1.5rem 0;
+        }
+
+        .nav-tabs .nav-link {
+            color: #666;
+            font-weight: 500;
+            border: none;
+            padding: 0.75rem 1.5rem;
+        }
+
+        .nav-tabs .nav-link.active {
+            color: var(--primary-color);
+            border-bottom: 3px solid var(--primary-color);
+            background-color: transparent;
+        }
+
+        .nav-tabs {
+            border-bottom: 1px solid #dee2e6;
+        }
+    </style>
+</head>
+<body>
+    <!-- 头部 -->
+    <div class="header">
+        <div class="container">
+            <h1 class="display-5 fw-bold">AI接口测试平台</h1>
+            <p class="lead">测试后端AI相关接口的可用性和功能</p>
+            <div class="d-flex align-items-center">
+                <span class="status-indicator" id="serverStatus"></span>
+                <span id="serverStatusText">检查服务器状态...</span>
+                <span class="ms-3" id="currentTime"></span>
+            </div>
+        </div>
+    </div>
+
+    <!-- 主容器 -->
+    <div class="container">
+        <!-- 登录/Token区域 -->
+        <div class="api-section">
+            <h3 class="section-title">身份验证</h3>
+            <div class="card">
+                <div class="card-header">获取访问令牌</div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="mobile" class="form-label">手机号</label>
+                                <input type="text" class="form-control" id="mobile" placeholder="请输入手机号" value="13800138000">
+                            </div>
+                            <div class="mb-3">
+                                <label for="password" class="form-label">密码</label>
+                                <input type="password" class="form-control" id="password" placeholder="请输入密码" value="12345678">
+                            </div>
+                            <button class="btn btn-primary" id="btnLogin">登录获取Token</button>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">当前Token</label>
+                                <div class="token-display" id="currentToken">未获取Token</div>
+                            </div>
+                            <div class="mb-3">
+                                <button class="btn btn-outline-primary me-2" id="btnTestToken">测试Token有效性</button>
+                                <button class="btn btn-outline-secondary" id="btnClearToken">清除Token</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 标签页导航 -->
+        <ul class="nav nav-tabs" id="apiTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="analysis-tab" data-bs-toggle="tab" data-bs-target="#analysis" type="button" role="tab">简历分析</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="evaluation-tab" data-bs-toggle="tab" data-bs-target="#evaluation" type="button" role="tab">简历评估</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="success-tab" data-bs-toggle="tab" data-bs-target="#success" type="button" role="tab">成功率分析</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="university-tab" data-bs-toggle="tab" data-bs-target="#university" type="button" role="tab">大学生活规划</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="chat-tab" data-bs-toggle="tab" data-bs-target="#chat" type="button" role="tab">AI对话</button>
+            </li>
+        </ul>
+
+        <!-- 标签页内容 -->
+        <div class="tab-content" id="apiTabsContent">
+            <!-- 简历分析标签页 -->
+            <div class="tab-pane fade show active" id="analysis" role="tabpanel">
+                <div class="row">
+                    <!-- PDF + 职位ID分析 -->
+                    <div class="col-lg-6">
+                        <div class="card">
+                            <div class="card-header">PDF简历 + 职位ID分析</div>
+                            <div class="card-body">
+                                <div class="mb-3">
+                                    <label for="pdfFile1" class="form-label">上传PDF简历</label>
+                                    <div class="file-input-wrapper">
+                                        <input type="file" class="form-control" id="pdfFile1" accept=".pdf">
+                                        <div class="file-input-label">点击选择PDF文件</div>
+                                    </div>
+                                    <div class="file-name" id="fileName1">未选择文件</div>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="jobId1" class="form-label">职位ID</label>
+                                    <input type="text" class="form-control" id="jobId1" placeholder="请输入职位ID" value="1">
+                                </div>
+                                <button class="btn btn-primary api-test-btn" id="btnPdfJobId">分析简历匹配度</button>
+                                <div class="loading-spinner" id="spinner1"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- PDF + 职位文本分析 -->
+                    <div class="col-lg-6">
+                        <div class="card">
+                            <div class="card-header">PDF简历 + 职位文本分析</div>
+                            <div class="card-body">
+                                <div class="mb-3">
+                                    <label for="pdfFile2" class="form-label">上传PDF简历</label>
+                                    <div class="file-input-wrapper">
+                                        <input type="file" class="form-control" id="pdfFile2" accept=".pdf">
+                                        <div class="file-input-label">点击选择PDF文件</div>
+                                    </div>
+                                    <div class="file-name" id="fileName2">未选择文件</div>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="jobText1" class="form-label">职位描述文本</label>
+                                    <textarea class="form-control" id="jobText1" rows="4" placeholder="请输入职位描述文本">我们需要一位前端开发工程师，要求掌握HTML、CSS、JavaScript，有Vue或React开发经验，熟悉移动端开发，具备良好的沟通能力。</textarea>
+                                </div>
+                                <button class="btn btn-primary api-test-btn" id="btnPdfJobText">分析简历匹配度</button>
+                                <div class="loading-spinner" id="spinner2"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 用户ID + 职位文本分析 -->
+                    <div class="col-lg-6">
+                        <div class="card">
+                            <div class="card-header">用户ID + 职位文本分析</div>
+                            <div class="card-body">
+                                <div class="mb-3">
+                                    <label for="userId1" class="form-label">用户ID (自动从Token获取)</label>
+                                    <input type="text" class="form-control" id="userId1" placeholder="从Token自动获取" disabled>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="jobText2" class="form-label">职位描述文本</label>
+                                    <textarea class="form-control" id="jobText2" rows="4" placeholder="请输入职位描述文本">招聘后端开发工程师，要求熟悉Python、Django/Flask框架，了解MySQL数据库，有RESTful API设计经验，有高并发处理经验者优先。</textarea>
+                                </div>
+                                <button class="btn btn-primary api-test-btn" id="btnUserJobText">分析简历匹配度</button>
+                                <div class="loading-spinner" id="spinner3"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 用户ID + 职位ID分析 -->
+                    <div class="col-lg-6">
+                        <div class="card">
+                            <div class="card-header">用户ID + 职位ID分析</div>
+                            <div class="card-body">
+                                <div class="mb-3">
+                                    <label for="userId2" class="form-label">用户ID (自动从Token获取)</label>
+                                    <input type="text" class="form-control" id="userId2" placeholder="从Token自动获取" disabled>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="jobId2" class="form-label">职位ID</label>
+                                    <input type="text" class="form-control" id="jobId2" placeholder="请输入职位ID" value="2">
+                                </div>
+                                <button class="btn btn-primary api-test-btn" id="btnUserJobId">分析简历匹配度</button>
+                                <div class="loading-spinner" id="spinner4"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 简历评估标签页 -->
+            <div class="tab-pane fade" id="evaluation" role="tabpanel">
+                <div class="row">
+                    <!-- 用户ID简历评估 -->
+                    <div class="col-lg-6">
+                        <div class="card">
+                            <div class="card-header">用户ID简历评估</div>
+                            <div class="card-body">
+                                <div class="mb-3">
+                                    <label for="userIdEval" class="form-label">用户ID (自动从Token获取)</label>
+                                    <input type="text" class="form-control" id="userIdEval" placeholder="从Token自动获取" disabled>
+                                </div>
+                                <button class="btn btn-primary api-test-btn" id="btnUserEval">评估简历</button>
+                                <div class="loading-spinner" id="spinner5"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- PDF简历评估 -->
+                    <div class="col-lg-6">
+                        <div class="card">
+                            <div class="card-header">PDF简历评估</div>
+                            <div class="card-body">
+                                <div class="mb-3">
+                                    <label for="pdfFileEval" class="form-label">上传PDF简历</label>
+                                    <div class="file-input-wrapper">
+                                        <input type="file" class="form-control" id="pdfFileEval" accept=".pdf">
+                                        <div class="file-input-label">点击选择PDF文件</div>
+                                    </div>
+                                    <div class="file-name" id="fileNameEval">未选择文件</div>
+                                </div>
+                                <button class="btn btn-primary api-test-btn" id="btnPdfEval">评估简历</button>
+                                <div class="loading-spinner" id="spinner6"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 成功率分析标签页 -->
+            <div class="tab-pane fade" id="success" role="tabpanel">
+                <div class="row">
+                    <!-- PDF + 职位ID成功率分析 -->
+                    <div class="col-lg-6">
+                        <div class="card">
+                            <div class="card-header">PDF + 职位ID成功率分析</div>
+                            <div class="card-body">
+                                <div class="mb-3">
+                                    <label for="pdfFileSuccess1" class="form-label">上传PDF简历</label>
+                                    <div class="file-input-wrapper">
+                                        <input type="file" class="form-control" id="pdfFileSuccess1" accept=".pdf">
+                                        <div class="file-input-label">点击选择PDF文件</div>
+                                    </div>
+                                    <div class="file-name" id="fileNameSuccess1">未选择文件</div>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="jobIdSuccess1" class="form-label">职位ID</label>
+                                    <input type="text" class="form-control" id="jobIdSuccess1" placeholder="请输入职位ID" value="3">
+                                </div>
+                                <button class="btn btn-primary api-test-btn" id="btnPdfJobIdSuccess">分析成功率</button>
+                                <div class="loading-spinner" id="spinner7"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 用户ID + 职位文本成功率分析 -->
+                    <div class="col-lg-6">
+                        <div class="card">
+                            <div class="card-header">用户ID + 职位文本成功率分析</div>
+                            <div class="card-body">
+                                <div class="mb-3">
+                                    <label for="userIdSuccess" class="form-label">用户ID (自动从Token获取)</label>
+                                    <input type="text" class="form-control" id="userIdSuccess" placeholder="从Token自动获取" disabled>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="jobTextSuccess" class="form-label">职位描述文本</label>
+                                    <textarea class="form-control" id="jobTextSuccess" rows="4" placeholder="请输入职位描述文本">招聘产品经理，要求有3年以上互联网产品经验，熟悉产品设计流程，具备良好的数据分析能力和用户思维，有成功产品案例者优先。</textarea>
+                                </div>
+                                <button class="btn btn-primary api-test-btn" id="btnUserJobTextSuccess">分析成功率</button>
+                                <div class="loading-spinner" id="spinner8"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 大学生活规划标签页 -->
+            <div class="tab-pane fade" id="university" role="tabpanel">
+                <div class="row">
+                    <!-- PDF + 职位ID大学生活规划 -->
+                    <div class="col-lg-6">
+                        <div class="card">
+                            <div class="card-header">PDF + 职位ID大学生活规划</div>
+                            <div class="card-body">
+                                <div class="mb-3">
+                                    <label for="pdfFileUni1" class="form-label">上传PDF简历</label>
+                                    <div class="file-input-wrapper">
+                                        <input type="file" class="form-control" id="pdfFileUni1" accept=".pdf">
+                                        <div class="file-input-label">点击选择PDF文件</div>
+                                    </div>
+                                    <div class="file-name" id="fileNameUni1">未选择文件</div>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="jobIdUni1" class="form-label">职位ID</label>
+                                    <input type="text" class="form-control" id="jobIdUni1" placeholder="请输入职位ID" value="4">
+                                </div>
+                                <div class="mb-3">
+                                    <label for="userGrade1" class="form-label">学生年级</label>
+                                    <select class="form-select" id="userGrade1">
+                                        <option value="大一">大一</option>
+                                        <option value="大二" selected>大二</option>
+                                        <option value="大三">大三</option>
+                                        <option value="大四">大四</option>
+                                        <option value="研究生">研究生</option>
+                                    </select>
+                                </div>
+                                <button class="btn btn-primary api-test-btn" id="btnPdfJobIdUni">生成大学生活规划</button>
+                                <div class="loading-spinner" id="spinner9"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 用户ID + 职位文本大学生活规划 -->
+                    <div class="col-lg-6">
+                        <div class="card">
+                            <div class="card-header">用户ID + 职位文本大学生活规划</div>
+                            <div class="card-body">
+                                <div class="mb-3">
+                                    <label for="userIdUni" class="form-label">用户ID (自动从Token获取)</label>
+                                    <input type="text" class="form-control" id="userIdUni" placeholder="从Token自动获取" disabled>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="jobTextUni" class="form-label">职位描述文本</label>
+                                    <textarea class="form-control" id="jobTextUni" rows="3" placeholder="请输入职位描述文本">招聘人工智能工程师，要求掌握机器学习、深度学习算法，熟悉Python和TensorFlow/PyTorch，有相关项目经验，具备良好的数学基础。</textarea>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="userGrade2" class="form-label">学生年级</label>
+                                    <select class="form-select" id="userGrade2">
+                                        <option value="大一" selected>大一</option>
+                                        <option value="大二">大二</option>
+                                        <option value="大三">大三</option>
+                                        <option value="大四">大四</option>
+                                        <option value="研究生">研究生</option>
+                                    </select>
+                                </div>
+                                <button class="btn btn-primary api-test-btn" id="btnUserJobTextUni">生成大学生活规划</button>
+                                <div class="loading-spinner" id="spinner10"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- AI对话标签页 -->
+            <div class="tab-pane fade" id="chat" role="tabpanel">
+                <div class="row">
+                    <div class="col-lg-12">
+                        <div class="card">
+                            <div class="card-header">AI对话</div>
+                            <div class="card-body">
+                                <div class="mb-3">
+                                    <label for="chatMessage" class="form-label">对话内容</label>
+                                    <textarea class="form-control" id="chatMessage" rows="4" placeholder="请输入您想对话的内容">你好，请帮我分析一下前端开发工程师的职业发展路径。</textarea>
+                                </div>
+                                <button class="btn btn-primary api-test-btn" id="btnChat">发送消息</button>
+                                <div class="loading-spinner" id="spinner11"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 结果展示区域 -->
+        <div class="api-section">
+            <h3 class="section-title">测试结果</h3>
+            <div class="result-container">
+                <div class="result-title">API响应结果:</div>
+                <pre id="apiResult">等待测试结果...</pre>
+                <div class="response-time" id="responseTime"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 底部信息 -->
+    <footer class="mt-5 py-3 text-center text-muted border-top">
+        <div class="container">
+            <p>AI接口测试平台 &copy; 2023 | 后端地址: <span id="backendUrl">http://localhost:5000</span></p>
+            <p class="small">注意：部分接口需要有效的JWT Token，请先登录获取Token</p>
+        </div>
+    </footer>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- 主JavaScript代码 -->
+    <script>
+        // 基础配置
+        const BASE_URL = 'http://localhost:5000';
+        let currentToken = localStorage.getItem('ai_test_token') || '';
+
+        // 页面加载时初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            // 更新后端地址显示
+            document.getElementById('backendUrl').textContent = BASE_URL;
+
+            // 初始化时间显示
+            updateCurrentTime();
+            setInterval(updateCurrentTime, 1000);
+
+            // 检查服务器状态
+            checkServerStatus();
+
+            // 如果已有Token，显示它
+            if (currentToken) {
+                updateTokenDisplay();
+            }
+
+            // 初始化事件监听器
+            initEventListeners();
+
+            // 初始化文件选择器
+            initFileSelectors();
+        });
+
+        // 更新当前时间
+        function updateCurrentTime() {
+            const now = new Date();
+            const timeString = now.toLocaleString('zh-CN', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            });
+            document.getElementById('currentTime').textContent = timeString;
+        }
+
+        // 检查服务器状态
+        async function checkServerStatus() {
+            const statusIndicator = document.getElementById('serverStatus');
+            const statusText = document.getElementById('serverStatusText');
+
+            try {
+                const response = await fetch(`${BASE_URL}/api/health`);
+                if (response.ok) {
+                    statusIndicator.className = 'status-indicator status-online';
+                    statusText.textContent = '服务器在线';
+                    statusText.style.color = '#28a745';
+                } else {
+                    statusIndicator.className = 'status-indicator status-offline';
+                    statusText.textContent = '服务器异常';
+                    statusText.style.color = '#dc3545';
+                }
+            } catch (error) {
+                statusIndicator.className = 'status-indicator status-offline';
+                statusText.textContent = '服务器连接失败';
+                statusText.style.color = '#dc3545';
+                console.error('服务器连接失败:', error);
+            }
+        }
+
+        // 初始化事件监听器
+        function initEventListeners() {
+            // 登录按钮
+            document.getElementById('btnLogin').addEventListener('click', loginUser);
+
+            // 测试Token按钮
+            document.getElementById('btnTestToken').addEventListener('click', testToken);
+
+            // 清除Token按钮
+            document.getElementById('btnClearToken').addEventListener('click', clearToken);
+
+            // AI接口测试按钮
+            document.getElementById('btnPdfJobId').addEventListener('click', () => testApi('pdfJobId'));
+            document.getElementById('btnPdfJobText').addEventListener('click', () => testApi('pdfJobText'));
+            document.getElementById('btnUserJobText').addEventListener('click', () => testApi('userJobText'));
+            document.getElementById('btnUserJobId').addEventListener('click', () => testApi('userJobId'));
+            document.getElementById('btnUserEval').addEventListener('click', () => testApi('userEval'));
+            document.getElementById('btnPdfEval').addEventListener('click', () => testApi('pdfEval'));
+            document.getElementById('btnPdfJobIdSuccess').addEventListener('click', () => testApi('pdfJobIdSuccess'));
+            document.getElementById('btnUserJobTextSuccess').addEventListener('click', () => testApi('userJobTextSuccess'));
+            document.getElementById('btnPdfJobIdUni').addEventListener('click', () => testApi('pdfJobIdUni'));
+            document.getElementById('btnUserJobTextUni').addEventListener('click', () => testApi('userJobTextUni'));
+            document.getElementById('btnChat').addEventListener('click', () => testApi('chat'));
+        }
+
+        // 初始化文件选择器
+        function initFileSelectors() {
+            // 为所有文件输入添加事件监听
+            const fileInputs = document.querySelectorAll('input[type="file"]');
+            fileInputs.forEach(input => {
+                input.addEventListener('change', function() {
+                    const fileNameElement = document.getElementById(this.id + 'Name') ||
+                                           document.getElementById('fileName' + this.id.slice(-1));
+
+                    if (this.files && this.files.length > 0) {
+                        fileNameElement.textContent = `已选择: ${this.files[0].name} (${formatFileSize(this.files[0].size)})`;
+                        fileNameElement.style.color = '#28a745';
+                    } else {
+                        fileNameElement.textContent = '未选择文件';
+                        fileNameElement.style.color = '#6c757d';
+                    }
+                });
+            });
+        }
+
+        // 格式化文件大小
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+
+        // 登录用户
+        async function loginUser() {
+            const mobile = document.getElementById('mobile').value.trim();
+            const password = document.getElementById('password').value.trim();
+
+            if (!mobile || !password) {
+                showResult('请输入手机号和密码', false);
+                return;
+            }
+
+            try {
+                const response = await fetch(`${BASE_URL}/api/user/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        mobile: mobile,
+                        password: password
+                    })
+                });
+
+                const result = await response.json();
+
+                if (response.ok && result.code === 200) {
+                    currentToken = result.data.token;
+                    localStorage.setItem('ai_test_token', currentToken);
+                    updateTokenDisplay();
+                    showResult(`登录成功！用户ID: ${result.data.user_info.user_id}`, true);
+
+                    // 更新用户ID显示
+                    updateUserIdDisplay(result.data.user_info.user_id);
+                } else {
+                    showResult(`登录失败: ${result.message || '未知错误'}`, false);
+                }
+            } catch (error) {
+                showResult(`登录请求失败: ${error.message}`, false);
+            }
+        }
+
+        // 测试Token有效性
+        async function testToken() {
+            if (!currentToken) {
+                showResult('请先登录获取Token', false);
+                return;
+            }
+
+            try {
+                const response = await fetch(`${BASE_URL}/api/user/profile`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${currentToken}`
+                    }
+                });
+
+                const result = await response.json();
+
+                if (response.ok && result.code === 200) {
+                    showResult(`Token有效！用户信息: ${JSON.stringify(result.data, null, 2)}`, true);
+                } else {
+                    showResult(`Token无效: ${result.message || '未知错误'}`, false);
+                }
+            } catch (error) {
+                showResult(`Token测试失败: ${error.message}`, false);
+            }
+        }
+
+        // 清除Token
+        function clearToken() {
+            currentToken = '';
+            localStorage.removeItem('ai_test_token');
+            updateTokenDisplay();
+            showResult('Token已清除', true);
+        }
+
+        // 更新Token显示
+        function updateTokenDisplay() {
+            const tokenDisplay = document.getElementById('currentToken');
+            if (currentToken) {
+                // 显示前20个字符和最后10个字符，中间用...代替
+                const displayToken = currentToken.length > 50
+                    ? `${currentToken.substring(0, 20)}...${currentToken.substring(currentToken.length - 10)}`
+                    : currentToken;
+                tokenDisplay.textContent = displayToken;
+                tokenDisplay.title = currentToken; // 鼠标悬停显示完整Token
+                tokenDisplay.style.color = '#28a745';
+            } else {
+                tokenDisplay.textContent = '未获取Token';
+                tokenDisplay.style.color = '#dc3545';
+            }
+        }
+
+        // 更新用户ID显示
+        function updateUserIdDisplay(userId) {
+            // 更新所有用户ID输入框
+            const userIdInputs = document.querySelectorAll('input[id^="userId"]');
+            userIdInputs.forEach(input => {
+                input.value = userId;
+            });
+        }
+
+        // 测试API
+        async function testApi(apiType) {
+            // 检查Token
+            if (apiType !== 'chat' && !currentToken) {
+                showResult('请先登录获取Token', false);
+                return;
+            }
+
+            // 显示加载中
+            const spinnerId = `spinner${getSpinnerId(apiType)}`;
+            const spinner = document.getElementById(spinnerId);
+            spinner.style.display = 'block';
+
+            const startTime = Date.now();
+
+            try {
+                let result;
+                switch (apiType) {
+                    case 'pdfJobId':
+                        result = await testPdfJobIdApi();
+                        break;
+                    case 'pdfJobText':
+                        result = await testPdfJobTextApi();
+                        break;
+                    case 'userJobText':
+                        result = await testUserJobTextApi();
+                        break;
+                    case 'userJobId':
+                        result = await testUserJobIdApi();
+                        break;
+                    case 'userEval':
+                        result = await testUserEvalApi();
+                        break;
+                    case 'pdfEval':
+                        result = await testPdfEvalApi();
+                        break;
+                    case 'pdfJobIdSuccess':
+                        result = await testPdfJobIdSuccessApi();
+                        break;
+                    case 'userJobTextSuccess':
+                        result = await testUserJobTextSuccessApi();
+                        break;
+                    case 'pdfJobIdUni':
+                        result = await testPdfJobIdUniApi();
+                        break;
+                    case 'userJobTextUni':
+                        result = await testUserJobTextUniApi();
+                        break;
+                    case 'chat':
+                        result = await testChatApi();
+                        break;
+                    default:
+                        result = { success: false, message: '未知的API类型' };
+                }
+
+                const endTime = Date.now();
+                const responseTime = endTime - startTime;
+
+                // 显示响应时间
+                document.getElementById('responseTime').textContent = `响应时间: ${responseTime}ms`;
+
+                if (result.success) {
+                    showResult(result.data, true);
+                } else {
+                    showResult(`API调用失败: ${result.message}`, false);
+                }
+            } catch (error) {
+                showResult(`API调用异常: ${error.message}`, false);
+            } finally {
+                // 隐藏加载中
+                spinner.style.display = 'none';
+            }
+        }
+
+        // 获取spinner ID
+        function getSpinnerId(apiType) {
+            const spinnerMap = {
+                'pdfJobId': 1,
+                'pdfJobText': 2,
+                'userJobText': 3,
+                'userJobId': 4,
+                'userEval': 5,
+                'pdfEval': 6,
+                'pdfJobIdSuccess': 7,
+                'userJobTextSuccess': 8,
+                'pdfJobIdUni': 9,
+                'userJobTextUni': 10,
+                'chat': 11
+            };
+            return spinnerMap[apiType] || 1;
+        }
+
+        // 测试PDF + 职位ID分析API
+        async function testPdfJobIdApi() {
+            const pdfFile = document.getElementById('pdfFile1').files[0];
+            const jobId = document.getElementById('jobId1').value.trim();
+
+            if (!pdfFile) {
+                return { success: false, message: '请选择PDF文件' };
+            }
+
+            if (!jobId) {
+                return { success: false, message: '请输入职位ID' };
+            }
+
+            const formData = new FormData();
+            formData.append('pdf_file', pdfFile);
+            formData.append('job_id', jobId);
+
+            const response = await fetch(`${BASE_URL}/api/ai/ask_by_pdf_job_id`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${currentToken}`
+                },
+                body: formData
+            });
+
+            return await handleApiResponse(response);
+        }
+
+        // 测试PDF + 职位文本分析API
+        async function testPdfJobTextApi() {
+            const pdfFile = document.getElementById('pdfFile2').files[0];
+            const jobText = document.getElementById('jobText1').value.trim();
+
+            if (!pdfFile) {
+                return { success: false, message: '请选择PDF文件' };
+            }
+
+            if (!jobText) {
+                return { success: false, message: '请输入职位描述文本' };
+            }
+
+            const formData = new FormData();
+            formData.append('pdf_file', pdfFile);
+            formData.append('job_text', jobText);
+
+            const response = await fetch(`${BASE_URL}/api/ai/ask_by_pdf_job_text`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${currentToken}`
+                },
+                body: formData
+            });
+
+            return await handleApiResponse(response);
+        }
+
+        // 测试用户ID + 职位文本分析API
+        async function testUserJobTextApi() {
+            const jobText = document.getElementById('jobText2').value.trim();
+
+            if (!jobText) {
+                return { success: false, message: '请输入职位描述文本' };
+            }
+
+            const response = await fetch(`${BASE_URL}/api/ai/ask_by_user_job_text`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${currentToken}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    job_text: jobText
+                })
+            });
+
+            return await handleApiResponse(response);
+        }
+
+        // 测试用户ID + 职位ID分析API
+        async function testUserJobIdApi() {
+            const jobId = document.getElementById('jobId2').value.trim();
+
+            if (!jobId) {
+                return { success: false, message: '请输入职位ID' };
+            }
+
+            const response = await fetch(`${BASE_URL}/api/ai/ask_by_user_job_id?job_id=${jobId}`, {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${currentToken}`
+                }
+            });
+
+            return await handleApiResponse(response);
+        }
+
+        // 测试用户ID简历评估API
+        async function testUserEvalApi() {
+            const response = await fetch(`${BASE_URL}/api/ai/resume_evaluation`, {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${currentToken}`
+                }
+            });
+
+            return await handleApiResponse(response);
+        }
+
+        // 测试PDF简历评估API
+        async function testPdfEvalApi() {
+            const pdfFile = document.getElementById('pdfFileEval').files[0];
+
+            if (!pdfFile) {
+                return { success: false, message: '请选择PDF文件' };
+            }
+
+            const formData = new FormData();
+            formData.append('pdf_file', pdfFile);
+
+            const response = await fetch(`${BASE_URL}/api/ai/resume_evaluation_text`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${currentToken}`
+                },
+                body: formData
+            });
+
+            return await handleApiResponse(response);
+        }
+
+        // 测试PDF + 职位ID成功率分析API
+        async function testPdfJobIdSuccessApi() {
+            const pdfFile = document.getElementById('pdfFileSuccess1').files[0];
+            const jobId = document.getElementById('jobIdSuccess1').value.trim();
+
+            if (!pdfFile) {
+                return { success: false, message: '请选择PDF文件' };
+            }
+
+            if (!jobId) {
+                return { success: false, message: '请输入职位ID' };
+            }
+
+            const formData = new FormData();
+            formData.append('pdf_file', pdfFile);
+            formData.append('job_id', jobId);
+
+            const response = await fetch(`${BASE_URL}/api/ai/success_rate_pdf_job_id`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${currentToken}`
+                },
+                body: formData
+            });
+
+            return await handleApiResponse(response);
+        }
+
+        // 测试用户ID + 职位文本成功率分析API
+        async function testUserJobTextSuccessApi() {
+            const jobText = document.getElementById('jobTextSuccess').value.trim();
+
+            if (!jobText) {
+                return { success: false, message: '请输入职位描述文本' };
+            }
+
+            const response = await fetch(`${BASE_URL}/api/ai/success_rate_user_job_text`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${currentToken}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    job_text: jobText
+                })
+            });
+
+            return await handleApiResponse(response);
+        }
+
+        // 测试PDF + 职位ID大学生活规划API
+        async function testPdfJobIdUniApi() {
+            const pdfFile = document.getElementById('pdfFileUni1').files[0];
+            const jobId = document.getElementById('jobIdUni1').value.trim();
+            const userGrade = document.getElementById('userGrade1').value;
+
+            if (!pdfFile) {
+                return { success: false, message: '请选择PDF文件' };
+            }
+
+            if (!jobId) {
+                return { success: false, message: '请输入职位ID' };
+            }
+
+            const formData = new FormData();
+            formData.append('pdf_file', pdfFile);
+            formData.append('job_id', jobId);
+            formData.append('user_grade', userGrade);
+
+            const response = await fetch(`${BASE_URL}/api/ai/university_plan_pdf_job_id`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${currentToken}`
+                },
+                body: formData
+            });
+
+            return await handleApiResponse(response);
+        }
+
+        // 测试用户ID + 职位文本大学生活规划API
+        async function testUserJobTextUniApi() {
+            const jobText = document.getElementById('jobTextUni').value.trim();
+            const userGrade = document.getElementById('userGrade2').value;
+
+            if (!jobText) {
+                return { success: false, message: '请输入职位描述文本' };
+            }
+
+            const response = await fetch(`${BASE_URL}/api/ai/university_plan_user_job_text`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${currentToken}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    job_text: jobText,
+                    user_grade: userGrade
+                })
+            });
+
+            return await handleApiResponse(response);
+        }
+
+        // 测试AI对话API
+        async function testChatApi() {
+            const message = document.getElementById('chatMessage').value.trim();
+
+            if (!message) {
+                return { success: false, message: '请输入对话内容' };
+            }
+
+            const response = await fetch(`${BASE_URL}/api/ai/chat`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': currentToken ? `Bearer ${currentToken}` : '',
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    message: message
+                })
+            });
+
+            return await handleApiResponse(response);
+        }
+
+        // 处理API响应
+        async function handleApiResponse(response) {
+            const result = await response.json();
+
+            if (response.ok && result.code === 200) {
+                return {
+                    success: true,
+                    data: JSON.stringify(result, null, 2)
+                };
+            } else {
+                return {
+                    success: false,
+                    message: result.message || `HTTP ${response.status}`
+                };
+            }
+        }
+
+        // 显示结果
+        function showResult(message, isSuccess) {
+            const resultElement = document.getElementById('apiResult');
+
+            // 尝试格式化JSON
+            try {
+                const parsed = JSON.parse(message);
+                resultElement.textContent = JSON.stringify(parsed, null, 2);
+            } catch (e) {
+                resultElement.textContent = message;
+            }
+
+            // 根据成功/失败设置样式
+            if (isSuccess) {
+                resultElement.style.color = '#28a745';
+                resultElement.style.borderLeftColor = '#28a745';
+            } else {
+                resultElement.style.color = '#dc3545';
+                resultElement.style.borderLeftColor = '#dc3545';
+            }
+
+            // 滚动到结果区域
+            document.querySelector('.result-container').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // 模拟文件上传（用于演示）
+        function simulateFileUpload(fileInputId, fileName) {
+            const fileInput = document.getElementById(fileInputId);
+            const fileNameElement = document.getElementById(fileInputId + 'Name') ||
+                                   document.getElementById('fileName' + fileInputId.slice(-1));
+
+            // 创建一个模拟的File对象（实际应用中不需要）
+            fileNameElement.textContent = `已选择: ${fileName} (模拟文件)`;
+            fileNameElement.style.color = '#28a745';
+
+            // 在实际应用中，这里应该处理真实的文件上传
+            console.log(`模拟上传文件: ${fileName} 到输入框 ${fileInputId}`);
+        }
+    </script>
+</body>
+</html>
