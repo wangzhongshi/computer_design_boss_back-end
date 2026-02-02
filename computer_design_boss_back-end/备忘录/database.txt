@@ -3,8 +3,8 @@ CREATE TABLE job_post (
     id              BIGINT AUTO_INCREMENT PRIMARY KEY COMMENT '主键',
     boss_job_id     VARCHAR(64) NOT NULL COMMENT 'Boss 直聘平台原始ID',
     title           VARCHAR(200) NOT NULL COMMENT '岗位名称',
-    company_id      BIGINT NOT NULL COMMENT '所属公司（关联 company 表）',
-    city_id         INT NOT NULL COMMENT '城市ID（关联 city 表）',
+    company         VARCHAR(200) NOT NULL COMMENT '所属公司名称',
+    city            VARCHAR(100) NOT NULL COMMENT '城市名称',
     district        VARCHAR(100) DEFAULT NULL COMMENT '区县/商圈',
     address         VARCHAR(500) DEFAULT NULL COMMENT '详细工作地址',
     category_id     INT NOT NULL COMMENT '职位类别ID',
@@ -24,8 +24,8 @@ CREATE TABLE job_post (
     created_at      DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at      DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     UNIQUE KEY uk_boss_job_id (boss_job_id),
-    KEY idx_company (company_id),
-    KEY idx_city (city_id),
+    KEY idx_company (company),
+    KEY idx_city (city),
     KEY idx_category (category_id),
     KEY idx_publish (publish_time)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='岗位主表';
