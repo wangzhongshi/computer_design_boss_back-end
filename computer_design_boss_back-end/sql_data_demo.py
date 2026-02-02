@@ -227,12 +227,41 @@ class Job_category_simple:
     def __init__(self, db_connection):
         self.connection = db_connection
 
+    def find_name_by_id(self,target_id):
+        """根据ID查找名称"""
+
+        categories = [
+            {"id": 100, "name": "技术开发类", "parent_id": None, "level": 1},
+            {"id": 101, "name": "前端", "parent_id": 100, "level": 2},
+            {"id": 102, "name": "后端", "parent_id": 100, "level": 2},
+            {"id": 103, "name": "移动端", "parent_id": 100, "level": 2},
+            {"id": 104, "name": "数据与AI", "parent_id": 100, "level": 2},
+            {"id": 105, "name": "测试", "parent_id": 100, "level": 2},
+            {"id": 106, "name": "运维/DevOps", "parent_id": 100, "level": 2},
+            {"id": 107, "name": "网络安全", "parent_id": 100, "level": 2},
+            {"id": 108, "name": "嵌入式/硬件", "parent_id": 100, "level": 2},
+            {"id": 200, "name": "产品与设计类", "parent_id": None, "level": 1},
+            {"id": 300, "name": "技术管理类", "parent_id": None, "level": 1}
+        ]
+
+        for category in categories:
+            if category["id"] == target_id:
+                return category["name"]
+        return None  # 未找到返回None
+
     def job_intro_list(self):
         try:
             with self.connection.cursor(DictCursor) as cursor:
-                sql = f"SELECT name, parent_id, intro FROM job_category_simple"
+                sql = "SELECT name, parent_id, intro FROM job_category_simple"
                 cursor.execute(sql)
                 result = cursor.fetchall()
+
+                # 修正：遍历每一行数据，修改的是 line（字典），而不是 result（列表）
+                for line in result:
+                    parent_name = self.find_name_by_id(line['parent_id'])
+                    if '10' in  str(line['parent_id']):
+                        line['parent_id_all'] = '技术开发类-'+str(parent_name)
+                    line['parent_id'] = parent_name  # 修改当前行的 parent_id 为名称
                 print(result)
                 return result
         except Exception as e:

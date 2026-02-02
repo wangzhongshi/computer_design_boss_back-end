@@ -1102,57 +1102,65 @@ class ResumeDebugger:
 #     else:
 #         print("无效选择")
 
-from sql_data_demo import ComplaintFeedbackManager
+# from sql_data_demo import ComplaintFeedbackManager
+#
+# def example_usage():
+#     # 创建数据库连接
+#     connection = pymysql.connect(
+#         host='localhost',
+#         user='root',
+#         password='123456',
+#         database='boss_job',
+#         charset='utf8mb4',
+#         cursorclass=pymysql.cursors.DictCursor
+#     )
+#
+#     # 创建管理器实例
+#     manager = ComplaintFeedbackManager(connection)
+#
+#     try:
+#         # 示例1: 获取所有投诉类型
+#         complaint_types = manager.get_all_complaint_types()
+#         print(f"投诉类型: {complaint_types}")
+#
+#         # 示例2: 用户提交投诉
+#         complaint_id = manager.submit_complaint(
+#             user_id=1,
+#             complaint_type=1,
+#             description="测试投诉描述",
+#             image_urls=["http://example.com/image1.jpg"],
+#             priority=2
+#         )
+#         print(f"创建的投诉ID: {complaint_id}")
+#
+#         # 示例3: 获取用户投诉
+#         user_complaints = manager.get_user_complaints(user_id=1)
+#         print(f"用户投诉: {user_complaints}")
+#
+#         # 示例4: 获取投诉列表
+#         complaints, total = manager.get_complaint_list(
+#             filters={'is_resolved': 0},
+#             page=1,
+#             page_size=10
+#         )
+#         print(f"未解决投诉: {complaints}, 总数: {total}")
+#
+#         # 示例5: 获取统计信息
+#         stats = manager.get_complaint_statistics()
+#         print(f"统计信息: {stats}")
+#
+#     finally:
+#         # 关闭连接
+#         manager.close_connection()
+#
+#
+# if __name__ == "__main__":
+#     example_usage()
+from sql_data_demo import Job_category_simple
 
-def example_usage():
-    # 创建数据库连接
-    connection = pymysql.connect(
-        host='localhost',
-        user='root',
-        password='123456',
-        database='boss_job',
-        charset='utf8mb4',
-        cursorclass=pymysql.cursors.DictCursor
-    )
 
-    # 创建管理器实例
-    manager = ComplaintFeedbackManager(connection)
-
-    try:
-        # 示例1: 获取所有投诉类型
-        complaint_types = manager.get_all_complaint_types()
-        print(f"投诉类型: {complaint_types}")
-
-        # 示例2: 用户提交投诉
-        complaint_id = manager.submit_complaint(
-            user_id=1,
-            complaint_type=1,
-            description="测试投诉描述",
-            image_urls=["http://example.com/image1.jpg"],
-            priority=2
-        )
-        print(f"创建的投诉ID: {complaint_id}")
-
-        # 示例3: 获取用户投诉
-        user_complaints = manager.get_user_complaints(user_id=1)
-        print(f"用户投诉: {user_complaints}")
-
-        # 示例4: 获取投诉列表
-        complaints, total = manager.get_complaint_list(
-            filters={'is_resolved': 0},
-            page=1,
-            page_size=10
-        )
-        print(f"未解决投诉: {complaints}, 总数: {total}")
-
-        # 示例5: 获取统计信息
-        stats = manager.get_complaint_statistics()
-        print(f"统计信息: {stats}")
-
-    finally:
-        # 关闭连接
-        manager.close_connection()
+job_category_simple = Job_category_simple(db.connection)
+job_category_simple.job_intro_list()
 
 
-if __name__ == "__main__":
-    example_usage()
+
