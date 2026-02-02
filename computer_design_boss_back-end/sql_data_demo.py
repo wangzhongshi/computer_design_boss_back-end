@@ -77,6 +77,36 @@ class Job_prot:
             print('全部职位列表信息表查询失败:',e)
             return None
 
+    def fetch_one_big_type_job_posts(self, category_ids=None):
+        '''
+        用于获取某一类工作的信息
+        :param category_ids: 分类ID列表，如 [101, 102, ...] 整数列表
+        '''
+        try:
+            with self.connection.cursor(DictCursor) as cursor:
+                columns = ['id', 'title', 'salary_min', 'salary_max',
+                           'edu_req', 'exp_req', 'emp_type']
+                select_clause = ", ".join(f"`{c}`" for c in columns)
+                category_ids = [101, 102, 103, 104, 105, 106, 108, 200, 300]
+                if isinstance(category_ids, (int, str)):
+                    category_ids = [category_ids]
+                category_ids = [int(cid) for cid in category_ids]
+                placeholders = ', '.join(['%s'] * len(category_ids))
+                sql = f"""SELECT {select_clause} 
+                          FROM job_post 
+                          WHERE category_id IN ({placeholders})
+                            AND status = 1"""
+                cursor.execute(sql, tuple(category_ids))
+                result = cursor.fetchall()
+                return result
+
+        except Exception as e:
+            print('某一类工作列表查询失败:', e)
+            print(f'SQL: {locals().get("sql", "未生成")}')
+            print(f'参数: {locals().get("category_ids", "未设置")}')
+            return None
+
+
     def fetch_some_job_posts_some(self, category_id):
         '''
         用于获取某一类工作的信息

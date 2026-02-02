@@ -269,8 +269,12 @@ def update_one_type_job_list():
                 'code':500,
                 'message':'服务器内部错误'
             }),500
+
         category_id = data.get('category_id', '').strip()
-        list_data = job_prot.fetch_some_job_posts_some(category_id=category_id)
+        if category_id == '100':
+            list_data = job_prot.fetch_one_big_type_job_posts(category_id)
+        else:
+            list_data = job_prot.fetch_some_job_posts_some(category_id=category_id)
         return jsonify(list_data), 200
     except Exception as e:
         app.logger.error(f'获取一类列表信息失败: {str(e)}')
