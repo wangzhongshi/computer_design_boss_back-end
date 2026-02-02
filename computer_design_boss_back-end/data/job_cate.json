@@ -1,0 +1,15 @@
+{
+  "categories": [
+    {"id": 100, "name": "技术开发类", "parent_id": null, "level": 1},
+    {"id": 101, "name": "前端", "parent_id": 100, "level": 2},
+    {"id": 102, "name": "后端", "parent_id": 100, "level": 2},
+    {"id": 103, "name": "移动端", "parent_id": 100, "level": 2},
+    {"id": 104, "name": "数据与AI", "parent_id": 100, "level": 2},
+    {"id": 105, "name": "测试", "parent_id": 100, "level": 2},
+    {"id": 106, "name": "运维/DevOps", "parent_id": 100, "level": 2},
+    {"id": 107, "name": "网络安全", "parent_id": 100, "level": 2},
+    {"id": 108, "name": "嵌入式/硬件", "parent_id": 100, "level": 2},
+    {"id": 200, "name": "产品与设计类", "parent_id": null, "level": 1},
+    {"id": 300, "name": "技术管理类", "parent_id": null, "level": 1}
+  ]
+}
