@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API调试 - 岗位分类列表</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            opacity: 0.9;
+            font-size: 14px;
+        }
+
+        .content {
+            padding: 30px;
+        }
+
+        .api-info {
+            background: #f8f9fa;
+            border-left: 4px solid #667eea;
+            padding: 15px;
+            margin-bottom: 25px;
+            border-radius: 4px;
+        }
+
+        .api-info h3 {
+            color: #333;
+            margin-bottom: 8px;
+            font-size: 16px;
+        }
+
+        .api-info code {
+            background: #e9ecef;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+            color: #d63384;
+        }
+
+        .control-panel {
+            margin-bottom: 25px;
+        }
+
+        .input-group {
+            margin-bottom: 15px;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #555;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+
+        .input-group input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 14px 32px;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .spinner {
+            display: none;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .result-panel {
+            margin-top: 25px;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .result-header {
+            background: #f8f9fa;
+            padding: 12px 20px;
+            border-bottom: 1px solid #e0e0e0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .result-header h3 {
+            font-size: 16px;
+            color: #333;
+        }
+
+        .status-badge {
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .status-success {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .status-pending {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .result-body {
+            background: #f8f9fa;
+            padding: 20px;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+
+        .result-body pre {
+            margin: 0;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            line-height: 1.5;
+        }
+
+        .result-body .json-key {
+            color: #d63384;
+        }
+
+        .result-body .json-string {
+            color: #198754;
+        }
+
+        .result-body .json-number {
+            color: #0d6efd;
+        }
+
+        .result-body .json-boolean {
+            color: #fd7e14;
+        }
+
+        .result-body .json-null {
+            color: #6c757d;
+        }
+
+        .empty-state {
+            text-align: center;
+            color: #6c757d;
+            padding: 40px;
+        }
+
+        .empty-state svg {
+            width: 64px;
+            height: 64px;
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
+
+        .error-message {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+            border-left: 4px solid #dc3545;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #6c757d;
+            margin-top: 5px;
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .data-table th,
+        .data-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .data-table th {
+            background: #f8f9fa;
+            font-weight: 600;
+            color: #495057;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .data-table tr:hover {
+            background: #f8f9fa;
+        }
+
+        .data-table td {
+            font-size: 14px;
+            color: #333;
+        }
+
+        .tag {
+            display: inline-block;
+            padding: 4px 8px;
+            background: #e9ecef;
+            border-radius: 4px;
+            font-size: 12px;
+            color: #495057;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔧 API 调试工具</h1>
+            <p>岗位分类列表接口测试</p>
+        </div>
+
+        <div class="content">
+            <div class="api-info">
+                <h3>接口信息</h3>
+                <p><strong>Method:</strong> <code>GET</code></p>
+                <p><strong>URL:</strong> <code>/api/job_intro/job_intro_list</code></p>
+                <p><strong>描述:</strong> 查询所有岗位分类，返回岗位分类列表</p>
+            </div>
+
+            <div class="control-panel">
+                <div class="input-group">
+                    <label for="baseUrl">基础 URL（可选）</label>
+                    <input type="text" id="baseUrl" placeholder="http://localhost:5000" value="http://localhost:5000">
+                </div>
+
+                <button class="btn" id="sendBtn" onclick="sendRequest()">
+                    <span class="spinner" id="spinner"></span>
+                    <span id="btnText">发送请求</span>
+                </button>
+            </div>
+
+            <div id="errorContainer"></div>
+
+            <div class="result-panel" id="resultPanel" style="display: none;">
+                <div class="result-header">
+                    <h3>响应结果</h3>
+                    <span class="status-badge status-pending" id="statusBadge">等待请求</span>
+                </div>
+                <div class="result-body" id="resultBody">
+                    <div class="empty-state">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                        </svg>
+                        <p>点击"发送请求"查看结果</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 语法高亮函数
+        function syntaxHighlight(json) {
+            if (typeof json !== 'string') {
+                json = JSON.stringify(json, undefined, 2);
+            }
+            json = json.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+            return json.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, function (match) {
+                let cls = 'json-number';
+                if (/^"/.test(match)) {
+                    if (/:$/.test(match)) {
+                        cls = 'json-key';
+                    } else {
+                        cls = 'json-string';
+                    }
+                } else if (/true|false/.test(match)) {
+                    cls = 'json-boolean';
+                } else if (/null/.test(match)) {
+                    cls = 'json-null';
+                }
+                return '<span class="' + cls + '">' + match + '</span>';
+            });
+        }
+
+        // 格式化日期
+        function formatDate(dateStr) {
+            if (!dateStr) return '-';
+            const date = new Date(dateStr);
+            return date.toLocaleString('zh-CN');
+        }
+
+        // 发送请求
+        async function sendRequest() {
+            const baseUrl = document.getElementById('baseUrl').value.trim() || 'http://localhost:5000';
+            const btn = document.getElementById('sendBtn');
+            const spinner = document.getElementById('spinner');
+            const btnText = document.getElementById('btnText');
+            const resultPanel = document.getElementById('resultPanel');
+            const resultBody = document.getElementById('resultBody');
+            const statusBadge = document.getElementById('statusBadge');
+            const errorContainer = document.getElementById('errorContainer');
+
+            // 重置状态
+            errorContainer.innerHTML = '';
+            resultPanel.style.display = 'block';
+            statusBadge.className = 'status-badge status-pending';
+            statusBadge.textContent = '请求中...';
+
+            // 禁用按钮
+            btn.disabled = true;
+            spinner.style.display = 'block';
+            btnText.textContent = '请求中...';
+
+            const startTime = performance.now();
+
+            try {
+                const response = await fetch(`${baseUrl}/api/job_intro/job_intro_list`, {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                const endTime = performance.now();
+                const duration = (endTime - startTime).toFixed(2);
+
+                const data = await response.json();
+
+                // 更新状态徽章
+                if (response.ok && data.code === 200) {
+                    statusBadge.className = 'status-badge status-success';
+                    statusBadge.textContent = `成功 (${response.status}) - ${duration}ms`;
+                } else {
+                    statusBadge.className = 'status-badge status-error';
+                    statusBadge.textContent = `错误 (${response.status}) - ${duration}ms`;
+                }
+
+                // 构建结果展示
+                let html = '';
+
+                // 添加统计卡片
+                if (data.data && Array.isArray(data.data)) {
+                    html += `
+                        <div class="stats">
+                            <div class="stat-card">
+                                <div class="stat-value">${data.data.length}</div>
+                                <div class="stat-label">总记录数</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-value">${response.status}</div>
+                                <div class="stat-label">HTTP状态</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-value">${duration}ms</div>
+                                <div class="stat-label">响应时间</div>
+                            </div>
+                        </div>
+                    `;
+
+                    // 添加数据表格
+                    if (data.data.length > 0) {
+                        html += `
+                            <h4 style="margin: 20px 0 10px 0; color: #333;">数据预览</h4>
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>分类名称</th>
+                                        <th>描述</th>
+                                        <th>状态</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                        `;
+
+                        data.data.forEach(item => {
+                            html += `
+                                <tr>
+                                    <td>${item.id || '-'}</td>
+                                    <td>${item.category_name || item.name || '-'}</td>
+                                    <td>${item.description || '-'}</td>
+                                    <td><span class="tag">${item.status === 1 ? '启用' : '禁用'}</span></td>
+                                </tr>
+                            `;
+                        });
+
+                        html += '</tbody></table>';
+                    }
+                }
+
+                // 添加原始JSON
+                html += `
+                    <h4 style="margin: 25px 0 10px 0; color: #333;">原始响应 JSON</h4>
+                    <pre>${syntaxHighlight(data)}</pre>
+                `;
+
+                resultBody.innerHTML = html;
+
+            } catch (error) {
+                statusBadge.className = 'status-badge status-error';
+                statusBadge.textContent = '请求失败';
+
+                errorContainer.innerHTML = `
+                    <div class="error-message">
+                        <strong>请求错误：</strong>${error.message}<br>
+                        <small>请检查：1. 服务器是否运行 2. 基础URL是否正确 3. 跨域配置是否正确</small>
+                    </div>
+                `;
+
+                resultBody.innerHTML = `
+                    <div class="empty-state">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <line x1="12" y1="8" x2="12" y2="12"></line>
+                            <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                        </svg>
+                        <p>请求失败，请查看上方错误信息</p>
+                    </div>
+                `;
+            } finally {
+                // 恢复按钮
+                btn.disabled = false;
+                spinner.style.display = 'none';
+                btnText.textContent = '发送请求';
+            }
+        }
+
+        // 页面加载时自动发送一次请求（可选）
+        // window.addEventListener('load', sendRequest);
+    </script>
+</body>
+</html>
