@@ -88,7 +88,6 @@ class Job_prot:
         '''
         try:
             with self.connection.cursor(DictCursor) as cursor:
-<<<<<<< HEAD
                 columns = ['id',
                            "title",
                            "salary_min",
@@ -96,10 +95,6 @@ class Job_prot:
                            "edu_req",
                            "exp_req",
                            'emp_type',
-=======
-                columns = ['id', 'title', 'salary_min', 'salary_max',
-                           'edu_req', 'exp_req', 'emp_type',
->>>>>>> 62c273aec5481f694c7f8a6e143f3b899fa6d58d
                            'company', 'city', 'welfare_list', 'publish_time']
                 select_clause = ", ".join(f"`{c}`" for c in columns)
                 category_ids = [101, 102, 103, 104, 105, 106, 108, 200, 300]
@@ -135,11 +130,8 @@ class Job_prot:
                            "edu_req",
                            "exp_req",
                            'emp_type',
-<<<<<<< HEAD
                            'company', 'city', 'welfare_list', 'publish_time']
-=======
-                           'company_id', 'city_id', 'welfare_list', 'publish_time']
->>>>>>> 62c273aec5481f694c7f8a6e143f3b899fa6d58d
+
                 select_clause = ", ".join(f"`{c}`" for c in columns)
                 sql = f"SELECT {select_clause} FROM job_post where category_id='{category_id}'"
                 cursor.execute(sql)
@@ -187,11 +179,8 @@ class Job_prot:
                            "edu_req",
                            "exp_req",
                            'emp_type',
-<<<<<<< HEAD
                            'company', 'city', 'welfare_list', 'publish_time']
-=======
-                           'company_id', 'city_id', 'welfare_list', 'publish_time']
->>>>>>> 62c273aec5481f694c7f8a6e143f3b899fa6d58d
+
                 select_clause = ", ".join(f"`{c}`" for c in columns)
                 sql = f"SELECT {select_clause} FROM job_post where title like '%{user_input}%'"
                 cursor.execute(sql)
