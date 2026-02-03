@@ -84,8 +84,14 @@ class Job_prot:
         '''
         try:
             with self.connection.cursor(DictCursor) as cursor:
-                columns = ['id', 'title', 'salary_min', 'salary_max',
-                           'edu_req', 'exp_req', 'emp_type']
+                columns = ['id',
+                           "title",
+                           "salary_min",
+                           "salary_max",
+                           "edu_req",
+                           "exp_req",
+                           'emp_type',
+                           'company', 'city', 'welfare_list', 'publish_time']
                 select_clause = ", ".join(f"`{c}`" for c in columns)
                 category_ids = [101, 102, 103, 104, 105, 106, 108, 200, 300]
                 if isinstance(category_ids, (int, str)):
@@ -119,7 +125,8 @@ class Job_prot:
                            "salary_max",
                            "edu_req",
                            "exp_req",
-                           'emp_type']
+                           'emp_type',
+                           'company', 'city', 'welfare_list', 'publish_time']
                 select_clause = ", ".join(f"`{c}`" for c in columns)
                 sql = f"SELECT {select_clause} FROM job_post where category_id='{category_id}'"
                 cursor.execute(sql)
@@ -165,7 +172,8 @@ class Job_prot:
                            "salary_max",
                            "edu_req",
                            "exp_req",
-                           'emp_type']
+                           'emp_type',
+                           'company', 'city', 'welfare_list', 'publish_time']
                 select_clause = ", ".join(f"`{c}`" for c in columns)
                 sql = f"SELECT {select_clause} FROM job_post where title like '%{user_input}%'"
                 cursor.execute(sql)

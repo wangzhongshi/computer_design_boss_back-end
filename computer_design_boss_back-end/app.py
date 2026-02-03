@@ -271,6 +271,8 @@ def update_one_type_job_list():
             }),500
 
         category_id = data.get('category_id', '').strip()
+        print(type(category_id))
+        print(category_id)
         if category_id == '100':
             list_data = job_prot.fetch_one_big_type_job_posts(category_id)
         else:
