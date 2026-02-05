@@ -1,0 +1,50 @@
+{
+  "session_id": "8835270b-9f8f-42a7-91a6-0cc7d12743c6",
+  "interview_info": {
+    "start_time": "2026-02-05T17:28:17.078667",
+    "end_time": "2026-02-05T17:30:20.092946",
+    "duration_minutes": 2,
+    "total_questions": 2
+  },
+  "evaluation": {
+    "overall_score": 75,
+    "result": "待定",
+    "summary": "你好，张三，请先简单介绍一下自己吧。（点头示意）感谢你的介绍。我看到你提到有2年Java开发经验，能否具体展开说一下，在这两年里你主要负责哪些核心模块的开发？使用了哪些关键技术栈？```json\n{\n    \"overall_score\": 65,\n    \"dimension_scores\": {\n        \"专业匹配度\": 70,\n        \"项目经验\": 60,\n        \"表达能力\": 50,\n        \"逻辑思维\": 70,\n        \"综合素质\": 60\n    },\n    \"result\": \"待定\",\n    \"strengths\": [\"具备基础的技术栈（Spring Boot/MySQL）\", \"有实际项目参与经历\"],\n    \"weaknesses\": [\"项目细节阐述不足\", \"应答过于简略缺乏延展性\", \"未主动提及分布式系统相关经验\"],\n    \"improvement_suggestions\": [\n        \"下次面试需提前准备完整的项目案例拆解，包含业务场景、技术选型依据及难点解决方案\",\n        \"针对简历中的技术关键词（如Redis），准备至少3个具体应用场景的实践说明\",\n        \"练习结构化表达，采用STAR法则（情境-任务-行动-结果）组织项目经历叙述\",\n        \"主动补充分布式系统相关知识储备，可结合现有项目延伸讨论微服务架构改造方案\"\n    ],\n    \"summary\": \"候选人虽满足基础任职条件，但在项目深度挖掘、技术原理阐释及成果量化方面存在明显短板。建议后续重点考察其复杂问题解决能力和系统设计思维，若涉及高并发场景需重新评估适配度。\"\n}\n```",
+    "improvement_suggestions": [
+      "请优化简历内容",
+      "加强项目描述"
+    ]
+  },
+  "transcript": [
+    {
+      "timestamp": "2026-02-05T17:28:22.263062",
+      "role": "interviewer",
+      "content": "你好，张三，请先简单介绍一下自己吧。",
+      "audio_url": null,
+      "stage": "intro"
+    },
+    {
+      "timestamp": "2026-02-05T17:28:46.411414",
+      "role": "candidate",
+      "content": "年后面试官",
+      "audio_url": null,
+      "stage": "intro"
+    },
+    {
+      "timestamp": "2026-02-05T17:29:09.152910",
+      "role": "interviewer",
+      "content": "你好，张三，请先简单介绍一下自己吧。（点头示意）感谢你的介绍。我看到你提到有2年Java开发经验，能否具体展开说一下，在这两年里你主要负责哪些核心模块的开发？使用了哪些关键技术栈？",
+      "audio_url": null,
+      "stage": "intro"
+    },
+    {
+      "timestamp": "2026-02-05T17:29:51.408154",
+      "role": "candidate",
+      "content": "面试结束",
+      "audio_url": null,
+      "stage": "intro"
+    }
+  ],
+  "resume_snapshot": "我是张三，计算机科学专业本科毕业生，有2年Java开发经验，熟悉Spring Boot、MySQL、Redis等技术，参与过电商系统开发......",
+  "job_snapshot": "招聘Java开发工程师，要求熟悉Java基础、Spring Boot框架、MySQL数据库，有分布式系统开发经验者优先。岗位职责包括参与系统设计、编码实现、代码审查和系统优化。..."
+}

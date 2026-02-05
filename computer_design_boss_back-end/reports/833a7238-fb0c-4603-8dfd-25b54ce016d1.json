@@ -1,0 +1,66 @@
+{
+  "session_id": "833a7238-fb0c-4603-8dfd-25b54ce016d1",
+  "interview_info": {
+    "start_time": "2026-02-05T17:48:05.650795",
+    "end_time": "2026-02-05T17:50:15.309892",
+    "duration_minutes": 2,
+    "total_questions": 2
+  },
+  "evaluation": {
+    "overall_score": 50,
+    "dimension_scores": {
+      "专业匹配度": 60,
+      "项目经验": 50,
+      "表达能力": 40,
+      "逻辑思维": 40,
+      "综合素质": 40
+    },
+    "result": "不通过",
+    "strengths": [
+      "具备基础Java开发技能"
+    ],
+    "weaknesses": [
+      "项目描述过于简略",
+      "缺乏分布式系统经验",
+      "沟通能力不足"
+    ],
+    "improvement_suggestions": [
+      "建议1: 详细拆解电商系统中负责的核心模块（如订单/支付/库存），说明具体技术实现方案",
+      "建议2: 补充分布式系统实践案例，即使非直接经验也可展示学习路径（如研究过Redis缓存穿透解决方案）",
+      "建议3: 提前准备STAR法则结构化回答，避免问答中断导致印象分降低"
+    ],
+    "summary": "候选人虽满足基础技术栈要求，但未能有效证明项目复杂度处理能力和分布式系统知识储备，需针对性强化实战案例阐述能力"
+  },
+  "transcript": [
+    {
+      "timestamp": "2026-02-05T17:48:12.878813",
+      "role": "interviewer",
+      "content": "你好，张三，请先简单介绍一下自己，重点可以讲讲你的技术背景和相关项目经验。",
+      "audio_url": null,
+      "stage": "intro"
+    },
+    {
+      "timestamp": "2026-02-05T17:48:31.972890",
+      "role": "candidate",
+      "content": "你好面试官",
+      "audio_url": null,
+      "stage": "intro"
+    },
+    {
+      "timestamp": "2026-02-05T17:48:42.949469",
+      "role": "interviewer",
+      "content": "那你在之前参与的电商系统开发中，主要承担了哪些具体的开发任务呢？",
+      "audio_url": null,
+      "stage": "intro"
+    },
+    {
+      "timestamp": "2026-02-05T17:49:41.887194",
+      "role": "candidate",
+      "content": "面试结束",
+      "audio_url": null,
+      "stage": "intro"
+    }
+  ],
+  "resume_snapshot": "我是张三，计算机科学专业本科毕业生，有2年Java开发经验，熟悉Spring Boot、MySQL、Redis等技术，参与过电商系统开发......",
+  "job_snapshot": "招聘Java开发工程师，要求熟悉Java基础、Spring Boot框架、MySQL数据库，有分布式系统开发经验者优先。岗位职责包括参与系统设计、编码实现、代码审查和系统优化。..."
+}
