@@ -177,6 +177,8 @@ def checklen(text):
     return text
 
 def main_answer(appid, api_key, api_secret, Spark_url, domain, Input):
+    global answer
+    answer = ""
     question = checklen(getText("user", Input))
     print("星火:", end="")
     main(appid, api_key, api_secret, Spark_url, domain, question)
