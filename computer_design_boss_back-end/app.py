@@ -2,43 +2,30 @@ from flask_jwt_extended import JWTManager, create_access_token, verify_jwt_in_re
 from flask_jwt_extended.exceptions import NoAuthorizationError, InvalidHeaderError, JWTDecodeError
 from flask_sqlalchemy import SQLAlchemy
 from datetime import  timedelta
-import bcrypt
 from dotenv import load_dotenv
 from sqlalchemy import text, func
-from flask import Flask, request, jsonify
-from flask_cors import CORS
-from werkzeug.utils import secure_filename
-from datetime import datetime
-import json
-import os
 from X1_ws import think_speaker
-from demo_boss import Ai_job_demo
+from demo_boss import Ai_job_demo, InterviewManager
 import logging
 from pathlib import Path
 from sql_data_demo import EndDemoDatabase, Job_prot, Job_category_simple, Forum_comments, Sys_user, ResumeManager, ComplaintTypeManager,UserFeedbackManager,UserDeliverJobs,UserFavoriteJobs
-from flask import jsonify, request, g
-from datetime import datetime
 from sqlalchemy import text
 import hashlib
-# import jwt as pyjwt
 import re
-from functools import wraps
-from flask import Blueprint, request, jsonify, current_app
-from flask_jwt_extended import jwt_required, get_jwt_identity
-from typing import Dict, List, Optional, Any
-import json
 from datetime import datetime
-
 from flask import request, jsonify, g
 from functools import wraps
-
 from flask import Flask, request, jsonify, current_app
 from flask_cors import CORS
 from flask_jwt_extended import jwt_required, get_jwt_identity
-import os
-from werkzeug.utils import secure_filename
-import tempfile
 import json
+import time
+import base64
+import tempfile
+import os
+from flask import Flask, request, jsonify
+from werkzeug.utils import secure_filename
+
 
 
 db = EndDemoDatabase(host='localhost', user='root', password='123456')
@@ -53,6 +40,8 @@ deliver_jobs = UserDeliverJobs(db.connection)
 favorite_jobs = UserFavoriteJobs(db.connection)
 
 ai_job_demo = Ai_job_demo()
+manager = InterviewManager()
+
 
 think_speaker = think_speaker()
 
@@ -62,6 +51,9 @@ JWT_ALGORITHM = 'HS256'
 
 app = Flask(__name__)
 CORS(app)  # 允许跨域
+UPLOAD_FOLDER = 'static/audio'
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+
 
 # 存储聊天记录
 chat_history = []
@@ -3832,6 +3824,472 @@ def api_university_plan_by_user_id_and_job_id():
             'data': None
         }), 500
 
+# ==================== 1. 文本 + 文本（原有功能保留）====================
+
+@app.route('/api/ai/interview/start/text', methods=['POST'])
+def start_interview_text():
+    """
+    方式1：简历文本 + 岗位文本
+    POST /api/ai/interview/start/text
+
+    Body: {
+        "resume_text": "简历内容...",
+        "job_text": "岗位描述..."
+    }
+    """
+    try:
+        data = request.get_json() or {}
+        resume_text = data.get('resume_text', '').strip()
+        job_text = data.get('job_text', '').strip()
+
+        if not resume_text or not job_text:
+            return jsonify({'error': 'resume_text 和 job_text 不能为空'}), 400
+
+        return _create_interview_session(resume_text, job_text, 'text', 'text')
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+# ==================== 2. PDF 文件 + 岗位文本 ====================
+
+@app.route('/api/ai/interview/start/pdf-text', methods=['POST'])
+def start_interview_pdf_text():
+    """
+    方式2：PDF简历 + 岗位文本
+    POST /api/ai/interview/start/pdf-text
+
+    Body: {
+        "resume_file": "base64编码的PDF",
+        "job_text": "岗位描述..."
+    }
+    """
+    try:
+        data = request.get_json() or {}
+
+        # 解析PDF
+        resume_text, error = _parse_pdf_base64(data.get('resume_file'))
+        if error:
+            return jsonify({'error': error}), 400
+
+        job_text = data.get('job_text', '').strip()
+        if not job_text:
+            return jsonify({'error': 'job_text 不能为空'}), 400
+
+        return _create_interview_session(resume_text, job_text, 'pdf', 'text')
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+# ==================== 3. PDF 文件 + 岗位ID ====================
+
+@app.route('/api/ai/interview/start/pdf-jobid', methods=['POST'])
+def start_interview_pdf_jobid():
+    """
+    方式3：PDF简历 + 岗位ID
+    POST /api/ai/interview/start/pdf-jobid
+
+    Body: {
+        "resume_file": "base64编码的PDF",
+        "job_id": "123"
+    }
+    """
+    try:
+        data = request.get_json() or {}
+
+        # 解析PDF
+        resume_text, error = _parse_pdf_base64(data.get('resume_file'))
+        if error:
+            return jsonify({'error': error}), 400
+
+        # 从数据库获取岗位
+        job_id = data.get('job_id')
+        job_text, error = _get_job_from_db(job_id)
+        if error:
+            return jsonify({'error': error}), 400
+
+        return _create_interview_session(resume_text, job_text, 'pdf', 'database', job_id=job_id)
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+# ==================== 4. 用户ID + 岗位ID（全数据库） ====================
+
+@app.route('/api/ai/interview/start/userid-jobid', methods=['POST'])
+def start_interview_userid_jobid():
+    """
+    方式4：用户ID + 岗位ID（全部从数据库获取）
+    POST /api/ai/interview/start/userid-jobid
+
+    Body: {
+        "user_id": "user_123",
+        "job_id": "job_456"
+    }
+    """
+    try:
+        data = request.get_json() or {}
+
+        # 从数据库获取简历
+        user_id = data.get('user_id')
+        resume_text, error = _get_resume_from_db(user_id)
+        if error:
+            return jsonify({'error': error}), 400
+
+        # 从数据库获取岗位
+        job_id = data.get('job_id')
+        job_text, error = _get_job_from_db(job_id)
+        if error:
+            return jsonify({'error': error}), 400
+
+        return _create_interview_session(
+            resume_text, job_text, 'database', 'database',
+            user_id=user_id, job_id=job_id
+        )
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+# ==================== 5. 用户ID + 岗位文本 ====================
+
+@app.route('/api/ai/interview/start/userid-text', methods=['POST'])
+def start_interview_userid_text():
+    """
+    方式5：用户ID（数据库简历） + 岗位文本
+    POST /api/ai/interview/start/userid-text
+
+    Body: {
+        "user_id": "user_123",
+        "job_text": "岗位描述..."
+    }
+    """
+    try:
+        data = request.get_json() or {}
+
+        # 从数据库获取简历
+        user_id = data.get('user_id')
+        resume_text, error = _get_resume_from_db(user_id)
+        if error:
+            return jsonify({'error': error}), 400
+
+        job_text = data.get('job_text', '').strip()
+        if not job_text:
+            return jsonify({'error': 'job_text 不能为空'}), 400
+
+        return _create_interview_session(
+            resume_text, job_text, 'database', 'text',
+            user_id=user_id
+        )
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+# ==================== 6. 简历文本 + 岗位ID ====================
+
+@app.route('/api/ai/interview/start/text-jobid', methods=['POST'])
+def start_interview_text_jobid():
+    """
+    方式6：简历文本 + 岗位ID
+    POST /api/ai/interview/start/text-jobid
+
+    Body: {
+        "resume_text": "简历内容...",
+        "job_id": "123"
+    }
+    """
+    try:
+        data = request.get_json() or {}
+
+        resume_text = data.get('resume_text', '').strip()
+        if not resume_text:
+            return jsonify({'error': 'resume_text 不能为空'}), 400
+
+        # 从数据库获取岗位
+        job_id = data.get('job_id')
+        job_text, error = _get_job_from_db(job_id)
+        if error:
+            return jsonify({'error': error}), 400
+
+        return _create_interview_session(resume_text, job_text, 'text', 'database', job_id=job_id)
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+# ==================== 私有工具函数 ====================
+
+def _parse_pdf_base64(base64_data):
+    """
+    解析base64 PDF文件，返回 (text, error)
+    """
+    if not base64_data:
+        return None, 'resume_file 不能为空'
+
+    try:
+        # 解码base64
+        pdf_bytes = base64.b64decode(base64_data)
+
+        # 保存临时文件
+        with tempfile.NamedTemporaryFile(delete=False, suffix='.pdf') as tmp:
+            tmp.write(pdf_bytes)
+            tmp_path = tmp.name
+
+        # 提取文本
+        text = manager.Ai_job.extract_pdf_text(tmp_path)
+
+        # 清理
+        try:
+            os.unlink(tmp_path)
+        except:
+            pass
+
+        if not text or not text.strip():
+            return None, 'PDF内容为空或解析失败'
+
+        return text, None
+
+    except Exception as e:
+        return None, f'PDF解析失败: {str(e)}'
+
+
+def _get_resume_from_db(user_id):
+    """
+    从数据库获取简历文本，返回 (text, error)
+    """
+    if not user_id:
+        return None, 'user_id 不能为空'
+
+    try:
+        text = manager.Ai_job.get_user_app_text(user_id)
+        if not text or not text.strip():
+            return None, '数据库中未找到该用户的简历'
+        return text, None
+    except Exception as e:
+        return None, f'获取简历失败: {str(e)}'
+
+
+def _get_job_from_db(job_id):
+    """
+    从数据库获取岗位文本，返回 (text, error)
+    """
+    if not job_id:
+        return None, 'job_id 不能为空'
+
+    try:
+        text = manager.Ai_job.get_job_text_in_db(job_id)
+        if not text or not text.strip():
+            return None, '数据库中未找到该岗位信息'
+        return text, None
+    except Exception as e:
+        return None, f'获取岗位信息失败: {str(e)}'
+
+
+def _create_interview_session(resume_text, job_text, resume_source, job_source,
+                              user_id=None, job_id=None):
+    """
+    统一创建面试会话的核心逻辑
+    """
+    # 创建会话
+    session_id = manager.create_session(resume_text, job_text)
+    session = manager.get_session(session_id)
+
+    # 记录来源信息
+    session['resume_source'] = resume_source
+    session['job_source'] = job_source
+    session['user_id'] = user_id
+    session['job_id'] = job_id
+
+    # 获取AI第一个问题
+    ai_response = manager.only_chat(session['messages'])
+    first_question = manager.extract_ai_text(ai_response)
+
+    if not first_question:
+        return jsonify({'error': 'AI生成问题失败'}), 500
+
+    # 更新会话
+    manager.append_message(session_id, f"面试官：{first_question}")
+    manager.add_to_history(session_id, 'interviewer', first_question)
+    manager.increment_question(session_id)
+
+    # 生成语音
+    audio_url = _generate_audio(session_id, first_question)
+
+    return jsonify({
+        'code': 200,
+        'session_id': session_id,
+        'question': first_question,
+        'audio_url': audio_url,
+        'stage': session['stage'],
+        'question_number': 1,
+        'resume_source': resume_source,
+        'job_source': job_source,
+        'user_id': user_id,
+        'job_id': job_id
+    }), 200
+
+
+def _generate_audio(session_id, text):
+    """
+    生成TTS音频，返回URL或None
+    """
+    try:
+        filename = f"question_{session_id}_{int(time.time())}.mp3"
+        audio_dir = os.path.join('static', 'audio')
+        audio_path = os.path.join(audio_dir, filename)
+        os.makedirs(audio_dir, exist_ok=True)
+
+        manager.generate_tts(text, audio_path)
+        return f'/static/audio/{filename}'
+    except Exception as e:
+        print(f"TTS生成失败: {e}")
+        return None
+
+@app.route('/api/ai/interview/<session_id>/transcribe', methods=['POST'])
+def transcribe_audio(session_id):
+    """
+    语音听写接口 - 将用户音频转为文本
+    POST /api/interview/{session_id}/transcribe
+    Content-Type: multipart/form-data
+    Body: audio_file (MP3/PCM, max 60s)
+    Response: {
+        "text": "识别的文本内容",
+        "confidence": 0.95
+    }
+    """
+    try:
+        # 验证会话
+        session = manager.get_session(session_id)
+        if not session:
+            return jsonify({'error': '会话不存在或已过期'}), 404
+
+        if session['stage'] == 'ended':
+            return jsonify({'error': '面试已结束'}), 400
+
+        # 获取上传的音频文件
+        if 'audio_file' not in request.files:
+            return jsonify({'error': '未找到音频文件'}), 400
+
+        audio_file = request.files['audio_file']
+        print(f'audio_file:{audio_file}')
+
+        # 保存临时文件
+        temp_filename = f"temp_{session_id}_{int(time.time())}.wav"
+        temp_path = os.path.join('temp', temp_filename)
+        os.makedirs('temp', exist_ok=True)
+        audio_file.save(temp_path)
+
+        # 调用语音识别（demo_microphone_recognition 的替代）
+        # 这里需要实现一个接收文件路径的语音识别函数
+        recognized_text = manager.speech_to_text(temp_path)
+
+        # 清理临时文件
+        os.remove(temp_path)
+
+        return jsonify({
+            'code':200,
+            'text': recognized_text,
+            'confidence': 0.95,  # 置信度，根据实际ASR返回
+            'session_id': session_id
+        }),200
+
+    except Exception as e:
+        app.logger.error(f'出错：{e}')
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/ai/interview/<session_id>/answer', methods=['POST'])
+def process_answer(session_id):
+    """
+    处理用户回答并返回AI追问
+    POST /api/ai/interview/{session_id}/answer
+    Body: {
+        "user_text": "用户回答文本",
+        "end_interview": false  // 是否结束面试
+    }
+    Response: {
+        "question": "AI的下一个问题",
+        "audio_url": "语音合成音频URL",
+        "stage": "current_stage",
+        "is_ended": false
+    }
+    """
+    try:
+        session = manager.get_session(session_id)
+        if not session:
+            return jsonify({'error': '会话不存在'}), 404
+
+        data = request.get_json()
+        user_text = data.get('user_text', '')
+        end_interview = data.get('end_interview', False)
+
+        # 检查结束条件
+        if end_interview or "面试结束" in user_text or "我没有问题了" in user_text:
+            return manager.end_interview_session(session_id, user_text)
+
+        # 记录用户回答
+        manager.append_message(session_id, f"候选人：{user_text}")
+        manager.add_to_history(session_id, 'candidate', user_text)
+
+        # 构建追问提示
+        current_stage = manager.update_stage(session_id)
+        prompt_suffix = f"\n\n当前处于{current_stage}，请继续提问。记住：只问一个问题，自然且有针对性。"
+
+        full_context = session['messages'] + prompt_suffix
+
+        # 调用AI
+        ai_response = manager.only_chat(full_context)
+
+        next_question = manager.extract_ai_text(ai_response)
+
+        # 更新状态
+        manager.append_message(session_id, f"面试官：{next_question}")
+        manager.add_to_history(session_id, 'interviewer', next_question)
+        manager.increment_question(session_id)
+
+        # 语音合成（同步执行）
+        audio_filename = f"question_{session_id}_{int(time.time())}.mp3"
+        audio_path = os.path.join('static', 'audio', audio_filename)
+        manager.generate_tts(next_question, audio_path)  # 改为同步调用
+        print(f'next_question:{next_question}')
+
+        return jsonify({
+            'question': next_question,
+            'audio_url': f'/static/audio/{audio_filename}',
+            'stage': session['stage'],
+            'question_number': session['question_count'],
+            'is_ended': False
+        })
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/ai/interview/<session_id>/report', methods=['GET'])
+def download_report(session_id):
+    """下载面试报告"""
+    report_path = os.path.join('reports', f'{session_id}.json')
+    if os.path.exists(report_path):
+        with open(report_path, 'r', encoding='utf-8') as f:
+            return jsonify(json.load(f))
+    return jsonify({'error': '报告不存在'}), 404
+
+
+@app.route('/api/ai/interview/<session_id>/history', methods=['GET'])
+def get_history(session_id):
+    """获取面试聊天记录"""
+    session = manager.get_session(session_id)
+    if not session:
+        return jsonify({'error': '会话不存在'}), 404
+
+    return jsonify({
+        'session_id': session_id,
+        'current_stage': session['stage'],
+        'history': session['history']
+    })
+
+
 
 @app.route('/api/health', methods=['GET'])
 def health_check():
@@ -3856,6 +4314,9 @@ def health_check():
 
 if __name__ == '__main__':
     if __name__ == '__main__':
+        os.makedirs('static/audio', exist_ok=True)
+        os.makedirs('temp', exist_ok=True)
+        os.makedirs('reports', exist_ok=True)
         # 在启动时创建数据库表
         with app.app_context():
             try:
