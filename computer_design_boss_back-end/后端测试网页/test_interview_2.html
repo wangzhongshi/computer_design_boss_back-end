@@ -1,0 +1,719 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI面试系统 - API调试控制台</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- WaveSurfer.js for audio visualization -->
+    <script src="https://unpkg.com/wavesurfer.js@7/dist/wavesurfer.min.js"></script>
+    <!-- Record plugin for recording -->
+    <script src="https://unpkg.com/wavesurfer.js@7/dist/plugins/record.min.js"></script>
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Noto+Sans+SC:wght@300;400;500;700&display=swap');
+
+        body {
+            font-family: 'Inter', 'Noto Sans SC', sans-serif;
+            background: #0f172a;
+            background-image:
+                radial-gradient(at 0% 0%, rgba(56, 189, 248, 0.15) 0px, transparent 50%),
+                radial-gradient(at 100% 0%, rgba(168, 85, 247, 0.15) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(56, 189, 248, 0.15) 0px, transparent 50%),
+                radial-gradient(at 0% 100%, rgba(168, 85, 247, 0.15) 0px, transparent 50%);
+            background-attachment: fixed;
+        }
+
+        .glass-panel {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .terminal-scroll::-webkit-scrollbar {
+            width: 8px;
+        }
+        .terminal-scroll::-webkit-scrollbar-track {
+            background: #1e293b;
+        }
+        .terminal-scroll::-webkit-scrollbar-thumb {
+            background: #475569;
+            border-radius: 4px;
+        }
+
+        .waveform-container {
+            position: relative;
+            height: 128px;
+            background: rgba(15, 23, 42, 0.5);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        .btn-glow:hover {
+            box-shadow: 0 0 20px rgba(56, 189, 248, 0.5);
+        }
+
+        .status-dot {
+            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: .5; }
+        }
+
+        .typing-cursor::after {
+            content: '|';
+            animation: blink 1s infinite;
+        }
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0; }
+        }
+    </style>
+</head>
+<body class="text-slate-200 min-h-screen p-4 md:p-6">
+
+    <!-- Header -->
+    <header class="max-w-7xl mx-auto mb-8">
+        <div class="flex items-center justify-between glass-panel rounded-2xl p-6">
+            <div class="flex items-center gap-4">
+                <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center text-white text-2xl font-bold shadow-lg shadow-cyan-500/30">
+                    <i class="fa-solid fa-robot"></i>
+                </div>
+                <div>
+                    <h1 class="text-2xl font-bold bg-gradient-to-r from-cyan-400 to-purple-400 bg-clip-text text-transparent">
+                        AI面试系统调试台
+                    </h1>
+                    <p class="text-slate-400 text-sm mt-1">Flask API 测试与调试工具</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-3">
+                <div id="serverStatus" class="flex items-center gap-2 px-4 py-2 rounded-full bg-slate-800/50 border border-slate-700">
+                    <div class="w-2 h-2 rounded-full bg-emerald-500 status-dot"></div>
+                    <span class="text-sm text-slate-300">检测中...</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+        <!-- Left Panel: Configuration & Input -->
+        <div class="lg:col-span-5 space-y-6">
+
+            <!-- Server Config -->
+            <section class="glass-panel rounded-2xl p-6">
+                <h2 class="text-lg font-semibold mb-4 flex items-center gap-2 text-cyan-400">
+                    <i class="fa-solid fa-server"></i>
+                    服务器配置
+                </h2>
+                <div class="space-y-3">
+                    <div>
+                        <label class="block text-sm text-slate-400 mb-1">Base URL</label>
+                        <input type="text" id="baseUrl" value="http://localhost:5000"
+                               class="w-full bg-slate-800/50 border border-slate-600 rounded-lg px-4 py-2 text-sm focus:outline-none focus:border-cyan-500 transition-colors">
+                    </div>
+                    <button onclick="checkHealth()" class="w-full bg-slate-700 hover:bg-slate-600 text-white py-2 rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-heart-pulse"></i>
+                        健康检查
+                    </button>
+                </div>
+            </section>
+
+            <!-- Resume & Job Input -->
+            <section class="glass-panel rounded-2xl p-6">
+                <h2 class="text-lg font-semibold mb-4 flex items-center gap-2 text-purple-400">
+                    <i class="fa-solid fa-file-lines"></i>
+                    面试配置
+                </h2>
+
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm text-slate-400 mb-1">简历内容</label>
+                        <textarea id="resumeText" rows="4" placeholder="请输入简历内容..."
+                                  class="w-full bg-slate-800/50 border border-slate-600 rounded-lg px-4 py-2 text-sm focus:outline-none focus:border-purple-500 transition-colors resize-none">张三，5年后端开发经验，精通Python、Flask、Docker，有微服务架构设计经验。</textarea>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm text-slate-400 mb-1">岗位描述</label>
+                        <textarea id="jobText" rows="4" placeholder="请输入岗位描述..."
+                                  class="w-full bg-slate-800/50 border border-slate-600 rounded-lg px-4 py-2 text-sm focus:outline-none focus:border-purple-500 transition-colors resize-none">高级Python后端工程师，要求熟悉Flask/FastAPI，有AI项目经验，负责设计高并发系统架构。</textarea>
+                    </div>
+
+                    <button onclick="startInterview()" id="startBtn"
+                            class="w-full bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white py-3 rounded-xl font-medium transition-all btn-glow flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
+                        <i class="fa-solid fa-play"></i>
+                        开始面试
+                    </button>
+                </div>
+            </section>
+
+            <!-- Voice Recorder -->
+            <section class="glass-panel rounded-2xl p-6 opacity-50 pointer-events-none" id="recorderPanel">
+                <h2 class="text-lg font-semibold mb-4 flex items-center gap-2 text-emerald-400">
+                    <i class="fa-solid fa-microphone"></i>
+                    语音回答
+                </h2>
+
+                <div class="space-y-4">
+                    <div class="waveform-container border border-slate-700" id="waveform"></div>
+
+                    <div class="flex gap-3">
+                        <button onclick="toggleRecording()" id="recordBtn"
+                                class="flex-1 bg-slate-700 hover:bg-emerald-600/20 hover:border-emerald-500/50 border border-slate-600 text-white py-3 rounded-xl font-medium transition-all flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-microphone"></i>
+                            <span>开始录音</span>
+                        </button>
+                        <button onclick="submitTextAnswer()" id="textAnswerBtn"
+                                class="flex-1 bg-slate-700 hover:bg-blue-600/20 hover:border-blue-500/50 border border-slate-600 text-white py-3 rounded-xl font-medium transition-all flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-keyboard"></i>
+                            文字回答
+                        </button>
+                    </div>
+
+                    <div id="textInputArea" class="hidden space-y-3">
+                        <textarea id="manualText" rows="3" placeholder="输入文字回答..."
+                                  class="w-full bg-slate-800/50 border border-slate-600 rounded-lg px-4 py-2 text-sm focus:outline-none focus:border-emerald-500 transition-colors resize-none"></textarea>
+                        <button onclick="submitManualText()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white py-2 rounded-lg font-medium transition-colors">
+                            提交回答
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+        </div>
+
+        <!-- Right Panel: Interview Session -->
+        <div class="lg:col-span-7 space-y-6">
+
+            <!-- Session Info -->
+            <section class="glass-panel rounded-2xl p-6" id="sessionPanel" style="display: none;">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-lg font-semibold flex items-center gap-2 text-amber-400">
+                        <i class="fa-solid fa-id-card"></i>
+                        会话状态
+                    </h2>
+                    <div class="flex gap-2">
+                        <button onclick="endInterview()" class="px-4 py-2 rounded-lg bg-red-500/20 text-red-400 hover:bg-red-500/30 border border-red-500/30 text-sm transition-colors">
+                            结束面试
+                        </button>
+                        <button onclick="getHistory()" class="px-4 py-2 rounded-lg bg-slate-700 hover:bg-slate-600 text-sm transition-colors">
+                            查看历史
+                        </button>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4 mb-4">
+                    <div class="bg-slate-800/50 rounded-lg p-3 border border-slate-700">
+                        <div class="text-xs text-slate-400 mb-1">Session ID</div>
+                        <div id="sessionId" class="text-sm font-mono text-cyan-400 truncate">-</div>
+                    </div>
+                    <div class="bg-slate-800/50 rounded-lg p-3 border border-slate-700">
+                        <div class="text-xs text-slate-400 mb-1">当前阶段</div>
+                        <div id="currentStage" class="text-sm font-medium text-purple-400">-</div>
+                    </div>
+                </div>
+
+                <div class="flex items-center justify-between text-sm text-slate-400">
+                    <span>问题计数: <span id="questionCount" class="text-white font-medium">0</span></span>
+                    <span class="flex items-center gap-2">
+                        <div id="audioIndicator" class="hidden w-2 h-2 rounded-full bg-cyan-500 animate-pulse"></div>
+                        <span id="audioStatus">等待语音...</span>
+                    </span>
+                </div>
+            </section>
+
+            <!-- Chat Display -->
+            <section class="glass-panel rounded-2xl p-6 min-h-[400px] flex flex-col">
+                <h2 class="text-lg font-semibold mb-4 flex items-center gap-2 text-pink-400">
+                    <i class="fa-solid fa-comments"></i>
+                    面试对话
+                </h2>
+
+                <div id="chatContainer" class="flex-1 space-y-4 max-h-[500px] overflow-y-auto terminal-scroll pr-2">
+                    <div class="text-center text-slate-500 py-8 italic" id="emptyState">
+                        点击"开始面试"启动会话
+                    </div>
+                </div>
+            </section>
+
+            <!-- Report Panel -->
+            <section class="glass-panel rounded-2xl p-6" id="reportPanel" style="display: none;">
+                <h2 class="text-lg font-semibold mb-4 flex items-center gap-2 text-emerald-400">
+                    <i class="fa-solid fa-chart-pie"></i>
+                    面试报告
+                </h2>
+                <pre id="reportContent" class="bg-slate-900 rounded-lg p-4 text-xs text-slate-300 overflow-x-auto terminal-scroll max-h-[300px]"></pre>
+            </section>
+
+        </div>
+    </main>
+
+    <!-- Console Log -->
+    <div class="max-w-7xl mx-auto mt-6">
+        <section class="glass-panel rounded-2xl p-6">
+            <h2 class="text-sm font-semibold mb-3 flex items-center gap-2 text-slate-400 uppercase tracking-wider">
+                <i class="fa-solid fa-terminal"></i>
+                调试日志
+            </h2>
+            <div id="consoleLog" class="bg-slate-950 rounded-lg p-4 text-xs font-mono text-slate-400 h-48 overflow-y-auto terminal-scroll space-y-1">
+                <div class="text-slate-500">// 系统就绪，等待操作...</div>
+            </div>
+        </section>
+    </div>
+
+    <script>
+        // Global State
+        let currentSession = null;
+        let wavesurfer = null;
+        let recordPlugin = null;
+        let isRecording = false;
+        let mediaRecorder = null;
+        let audioChunks = [];
+
+        // Utility: Logger
+        function log(message, type = 'info') {
+            const consoleEl = document.getElementById('consoleLog');
+            const time = new Date().toLocaleTimeString();
+            const colors = {
+                info: 'text-cyan-400',
+                success: 'text-emerald-400',
+                error: 'text-red-400',
+                warning: 'text-amber-400',
+                request: 'text-blue-400'
+            };
+
+            const line = document.createElement('div');
+            line.className = `flex gap-2 ${colors[type] || 'text-slate-400'}`;
+            line.innerHTML = `<span class="opacity-50">[${time}]</span> <span>${message}</span>`;
+
+            consoleEl.appendChild(line);
+            consoleEl.scrollTop = consoleEl.scrollHeight;
+        }
+
+        // Utility: Get Base URL
+        function getBaseUrl() {
+            return document.getElementById('baseUrl').value.trim();
+        }
+
+        // Initialize WaveSurfer for visualization
+        function initWaveSurfer() {
+            if (wavesurfer) return;
+
+            wavesurfer = WaveSurfer.create({
+                container: '#waveform',
+                waveColor: '#64748b',
+                progressColor: '#10b981',
+                cursorColor: '#10b981',
+                barWidth: 2,
+                barGap: 1,
+                height: 128,
+                plugins: []
+            });
+
+            // Initialize Record plugin
+            if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+                recordPlugin = wavesurfer.registerPlugin(WaveSurfer.record.create({
+                    renderRecordedAudio: false
+                }));
+            }
+        }
+
+        // Check Health
+        async function checkHealth() {
+            try {
+                log('正在检查服务器健康状态...', 'request');
+                const response = await fetch(`${getBaseUrl()}/api/health`);
+                const data = await response.json();
+
+                const statusEl = document.getElementById('serverStatus');
+                if (data.code === 200) {
+                    statusEl.innerHTML = `
+                        <div class="w-2 h-2 rounded-full bg-emerald-500 status-dot"></div>
+                        <span class="text-sm text-emerald-400">服务正常</span>
+                    `;
+                    log(`健康检查通过: ${data.message}`, 'success');
+                    log(`数据库状态: ${data.data?.database || 'unknown'}`, 'info');
+                } else {
+                    throw new Error('服务异常');
+                }
+            } catch (error) {
+                const statusEl = document.getElementById('serverStatus');
+                statusEl.innerHTML = `
+                    <div class="w-2 h-2 rounded-full bg-red-500 status-dot"></div>
+                    <span class="text-sm text-red-400">连接失败</span>
+                `;
+                log(`健康检查失败: ${error.message}`, 'error');
+            }
+        }
+
+        // Start Interview
+        async function startInterview() {
+            const resume = document.getElementById('resumeText').value.trim();
+            const job = document.getElementById('jobText').value.trim();
+
+            if (!resume || !job) {
+                log('错误: 简历和岗位描述不能为空', 'error');
+                return;
+            }
+
+            const btn = document.getElementById('startBtn');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> 初始化中...';
+
+            try {
+                log('发起开始面试请求...', 'request');
+                const response = await fetch(`${getBaseUrl()}/api/ai/interview/start`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ resume_text: resume, job_text: job })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) throw new Error(data.error || '请求失败');
+
+                currentSession = {
+                    session_id: data.session_id,
+                    stage: data.stage,
+                    question_number: data.question_number
+                };
+
+                // Update UI
+                document.getElementById('sessionPanel').style.display = 'block';
+                document.getElementById('recorderPanel').classList.remove('opacity-50', 'pointer-events-none');
+                document.getElementById('sessionId').textContent = data.session_id;
+                document.getElementById('currentStage').textContent = data.stage;
+                document.getElementById('questionCount').textContent = data.question_number;
+
+                // Add to chat
+                addMessage('ai', data.question, data.audio_url);
+
+                // Init waveform
+                initWaveSurfer();
+
+                log(`面试已开始 | Session: ${data.session_id}`, 'success');
+                log(`第1题: ${data.question.substring(0, 50)}...`, 'info');
+
+                // Auto play audio
+                if (data.audio_url) {
+                    playAudio(`${getBaseUrl()}${data.audio_url}`);
+                }
+
+            } catch (error) {
+                log(`开始面试失败: ${error.message}`, 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fa-solid fa-play"></i> 开始面试';
+            }
+        }
+
+        // Add message to chat
+        function addMessage(type, content, audioUrl = null) {
+            const container = document.getElementById('chatContainer');
+            document.getElementById('emptyState')?.remove();
+
+            const div = document.createElement('div');
+            const isAI = type === 'ai';
+
+            div.className = `flex gap-4 ${isAI ? '' : 'flex-row-reverse'}`;
+            div.innerHTML = `
+                <div class="w-10 h-10 rounded-full flex-shrink-0 flex items-center justify-center ${isAI ? 'bg-gradient-to-br from-cyan-500 to-blue-600' : 'bg-gradient-to-br from-emerald-500 to-teal-600'} text-white">
+                    <i class="fa-solid ${isAI ? 'fa-robot' : 'fa-user'}"></i>
+                </div>
+                <div class="flex-1 ${isAI ? '' : 'text-right'}">
+                    <div class="inline-block max-w-[80%] ${isAI ? 'bg-slate-800 border-l-4 border-cyan-500' : 'bg-slate-800 border-r-4 border-emerald-500'} rounded-2xl px-5 py-3 text-left">
+                        <div class="text-xs text-slate-400 mb-1">${isAI ? '面试官' : '候选人'} ${new Date().toLocaleTimeString()}</div>
+                        <div class="text-slate-200 leading-relaxed typing-cursor">${content}</div>
+                        ${audioUrl ? `
+                            <div class="mt-3 pt-3 border-t border-slate-700">
+                                <audio controls class="w-full h-8 opacity-70 hover:opacity-100 transition-opacity" src="${getBaseUrl()}${audioUrl}"></audio>
+                            </div>
+                        ` : ''}
+                    </div>
+                </div>
+            `;
+
+            container.appendChild(div);
+            container.scrollTop = container.scrollHeight;
+
+            // Remove typing cursor after animation
+            setTimeout(() => {
+                div.querySelector('.typing-cursor')?.classList.remove('typing-cursor');
+            }, 1000);
+        }
+
+        // Recording Functions
+        async function toggleRecording() {
+            if (!isRecording) {
+                startRecording();
+            } else {
+                stopRecording();
+            }
+        }
+
+        async function startRecording() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                mediaRecorder = new MediaRecorder(stream);
+                audioChunks = [];
+
+                mediaRecorder.ondataavailable = (event) => {
+                    audioChunks.push(event.data);
+                };
+
+                mediaRecorder.onstop = async () => {
+                    const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+                    await sendAudio(audioBlob);
+                };
+
+                mediaRecorder.start();
+                isRecording = true;
+
+                // Update UI
+                const btn = document.getElementById('recordBtn');
+                btn.innerHTML = '<i class="fa-solid fa-stop text-red-400"></i> <span class="text-red-400">停止录音</span>';
+                btn.classList.add('border-red-500/50', 'bg-red-500/10');
+
+                // Start waveform visualization
+                if (recordPlugin) {
+                    recordPlugin.startRecording();
+                }
+
+                log('开始录音...', 'info');
+
+            } catch (error) {
+                log(`录音启动失败: ${error.message}`, 'error');
+            }
+        }
+
+        function stopRecording() {
+            if (mediaRecorder && isRecording) {
+                mediaRecorder.stop();
+                isRecording = false;
+
+                // Update UI
+                const btn = document.getElementById('recordBtn');
+                btn.innerHTML = '<i class="fa-solid fa-microphone"></i> <span>开始录音</span>';
+                btn.classList.remove('border-red-500/50', 'bg-red-500/10');
+
+                if (recordPlugin) {
+                    recordPlugin.stopRecording();
+                }
+
+                log('录音停止，正在处理...', 'warning');
+            }
+        }
+
+        // Send Audio for Transcription
+        async function sendAudio(audioBlob) {
+            if (!currentSession) return;
+
+            try {
+                log('正在发送音频进行语音识别...', 'request');
+
+                const formData = new FormData();
+                formData.append('audio_file', audioBlob, 'recording.wav');
+
+                const response = await fetch(`${getBaseUrl()}/api/ai/interview/${currentSession.session_id}/transcribe`, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) throw new Error(data.error || '识别失败');
+
+                log(`语音识别结果: "${data.text}"`, 'success');
+                addMessage('user', data.text);
+
+                // Auto send answer
+                await processAnswer(data.text);
+
+            } catch (error) {
+                log(`语音识别失败: ${error.message}`, 'error');
+            }
+        }
+
+        // Text Answer Functions
+        function submitTextAnswer() {
+            const area = document.getElementById('textInputArea');
+            area.classList.toggle('hidden');
+        }
+
+        async function submitManualText() {
+            const text = document.getElementById('manualText').value.trim();
+            if (!text) return;
+
+            addMessage('user', text);
+            document.getElementById('textInputArea').classList.add('hidden');
+            document.getElementById('manualText').value = '';
+
+            await processAnswer(text);
+        }
+
+        // Process Answer and Get Next Question
+        async function processAnswer(userText) {
+            if (!currentSession) return;
+
+            try {
+                log('正在提交回答并获取下一个问题...', 'request');
+
+                const response = await fetch(`${getBaseUrl()}/api/ai/interview/${currentSession.session_id}/answer`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        user_text: userText,
+                        end_interview: false
+                    })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) throw new Error(data.error || '请求失败');
+
+                if (data.is_ended) {
+                    log('面试已结束', 'warning');
+                    addMessage('ai', '面试已结束，感谢参与！');
+                    showReport();
+                } else {
+                    currentSession.question_number = data.question_number;
+                    currentSession.stage = data.stage;
+
+                    document.getElementById('questionCount').textContent = data.question_number;
+                    document.getElementById('currentStage').textContent = data.stage;
+
+                    addMessage('ai', data.question, data.audio_url);
+
+                    log(`第${data.question_number}题: ${data.question.substring(0, 50)}...`, 'info');
+
+                    if (data.audio_url) {
+                        playAudio(`${getBaseUrl()}${data.audio_url}`);
+                    }
+                }
+
+            } catch (error) {
+                log(`提交回答失败: ${error.message}`, 'error');
+            }
+        }
+
+        // Play Audio with Visual Feedback
+        function playAudio(url) {
+            const audio = new Audio(url);
+            const indicator = document.getElementById('audioIndicator');
+            const status = document.getElementById('audioStatus');
+
+            audio.onplay = () => {
+                indicator.classList.remove('hidden');
+                status.textContent = '正在播放...';
+                log('播放语音中...', 'info');
+            };
+
+            audio.onended = () => {
+                indicator.classList.add('hidden');
+                status.textContent = '等待语音...';
+            };
+
+            audio.play();
+        }
+
+        // End Interview
+        async function endInterview() {
+            if (!currentSession) return;
+
+            try {
+                log('正在结束面试...', 'request');
+
+                const response = await fetch(`${getBaseUrl()}/api/ai/interview/${currentSession.session_id}/answer`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        user_text: '面试结束',
+                        end_interview: true
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.is_ended || response.ok) {
+                    addMessage('ai', '面试已手动结束');
+                    await showReport();
+                }
+
+            } catch (error) {
+                log(`结束面试失败: ${error.message}`, 'error');
+            }
+        }
+
+        // Get History
+        async function getHistory() {
+            if (!currentSession) return;
+
+            try {
+                log('正在获取历史记录...', 'request');
+
+                const response = await fetch(`${getBaseUrl()}/api/ai/interview/${currentSession.session_id}/history`);
+                const data = await response.json();
+
+                if (!response.ok) throw new Error(data.error || '获取失败');
+
+                log(`历史记录加载完成，共 ${data.history?.length || 0} 条消息`, 'success');
+
+                // Show in modal or console
+                console.log('Interview History:', data);
+
+            } catch (error) {
+                log(`获取历史失败: ${error.message}`, 'error');
+            }
+        }
+
+        // Show Report
+        async function showReport() {
+            if (!currentSession) return;
+
+            try {
+                log('正在获取面试报告...', 'request');
+
+                const response = await fetch(`${getBaseUrl()}/api/ai/interview/${currentSession.session_id}/report`);
+                const data = await response.json();
+
+                if (!response.ok) {
+                    log('报告尚未生成，请稍后重试', 'warning');
+                    return;
+                }
+
+                const panel = document.getElementById('reportPanel');
+                const content = document.getElementById('reportContent');
+
+                panel.style.display = 'block';
+                content.textContent = JSON.stringify(data, null, 2);
+
+                log('面试报告加载完成', 'success');
+
+            } catch (error) {
+                log(`获取报告失败: ${error.message}`, 'error');
+            }
+        }
+
+        // Initial check
+        window.onload = () => {
+            checkHealth();
+            log('调试控制台已加载', 'success');
+            log('提示: 请确保 Flask 服务器运行在 localhost:5000', 'info');
+        };
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            if (e.ctrlKey && e.key === 'Enter') {
+                if (currentSession) {
+                    submitTextAnswer();
+                } else {
+                    startInterview();
+                }
+            }
+        });
+    </script>
+</body>
+</html>

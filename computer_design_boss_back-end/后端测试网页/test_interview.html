@@ -1,0 +1,1361 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI面试接口测试平台</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .header p {
+            opacity: 0.9;
+            font-size: 1.1em;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 16px;
+            padding: 25px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            backdrop-filter: blur(10px);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            border: 1px solid rgba(255,255,255,0.3);
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .card-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            margin-right: 15px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+
+        .card-title {
+            font-size: 1.3em;
+            font-weight: 600;
+            color: #2d3748;
+        }
+
+        .card-subtitle {
+            font-size: 0.9em;
+            color: #718096;
+            margin-top: 4px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 500;
+            color: #4a5568;
+            font-size: 0.95em;
+        }
+
+        input[type="text"],
+        input[type="number"],
+        textarea,
+        select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            font-size: 14px;
+            transition: all 0.3s;
+            font-family: inherit;
+        }
+
+        input[type="text"]:focus,
+        input[type="number"]:focus,
+        textarea:focus,
+        select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        .file-input-wrapper {
+            position: relative;
+            overflow: hidden;
+            display: inline-block;
+            width: 100%;
+        }
+
+        .file-input-wrapper input[type=file] {
+            position: absolute;
+            left: -9999px;
+        }
+
+        .file-input-label {
+            display: block;
+            padding: 12px 15px;
+            background: #f7fafc;
+            border: 2px dashed #cbd5e0;
+            border-radius: 10px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            color: #4a5568;
+        }
+
+        .file-input-label:hover {
+            border-color: #667eea;
+            background: #edf2f7;
+        }
+
+        .file-input-label.has-file {
+            border-color: #48bb78;
+            background: #f0fff4;
+            color: #22543d;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 15px;
+            font-weight: 600;
+            width: 100%;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .btn::after {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: rgba(255,255,255,0.1);
+            transform: rotate(30deg);
+            transition: all 0.6s;
+        }
+
+        .btn:hover::after {
+            transform: rotate(30deg) translate(20%, 20%);
+        }
+
+        .response-panel {
+            background: #1a202c;
+            color: #68d391;
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 20px;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 13px;
+            max-height: 300px;
+            overflow-y: auto;
+            position: relative;
+            border: 1px solid #2d3748;
+        }
+
+        .response-panel.error {
+            color: #fc8181;
+        }
+
+        .response-panel.loading {
+            color: #63b3ed;
+        }
+
+        .response-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #2d3748;
+        }
+
+        .response-title {
+            color: #a0aec0;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .response-time {
+            color: #718096;
+            font-size: 11px;
+        }
+
+        .chat-section {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 16px;
+            padding: 25px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            margin-bottom: 20px;
+        }
+
+        .chat-container {
+            height: 400px;
+            overflow-y: auto;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 20px;
+            background: #f7fafc;
+            margin-bottom: 20px;
+        }
+
+        .message {
+            margin-bottom: 15px;
+            max-width: 80%;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .message.interviewer {
+            margin-left: auto;
+            text-align: right;
+        }
+
+        .message-bubble {
+            display: inline-block;
+            padding: 12px 18px;
+            border-radius: 18px;
+            line-height: 1.5;
+            word-wrap: break-word;
+        }
+
+        .message.candidate .message-bubble {
+            background: #667eea;
+            color: white;
+            border-bottom-left-radius: 4px;
+        }
+
+        .message.interviewer .message-bubble {
+            background: white;
+            color: #2d3748;
+            border: 1px solid #e2e8f0;
+            border-bottom-right-radius: 4px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+
+        .message-meta {
+            font-size: 11px;
+            color: #a0aec0;
+            margin-top: 5px;
+        }
+
+        .chat-input-area {
+            display: flex;
+            gap: 10px;
+        }
+
+        .chat-input {
+            flex: 1;
+            padding: 15px;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            font-size: 15px;
+        }
+
+        .chat-input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .audio-controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+
+        .audio-btn {
+            background: #edf2f7;
+            border: 2px solid #e2e8f0;
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 13px;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .audio-btn:hover {
+            background: #e2e8f0;
+            border-color: #cbd5e0;
+        }
+
+        .audio-btn.active {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-left: 10px;
+        }
+
+        .status-badge.success {
+            background: #c6f6d5;
+            color: #22543d;
+        }
+
+        .status-badge.error {
+            background: #fed7d7;
+            color: #742a2a;
+        }
+
+        .status-badge.pending {
+            background: #feebc8;
+            color: #744210;
+        }
+
+        .session-info {
+            background: linear-gradient(135deg, #667eea15, #764ba215);
+            border: 1px solid #667eea30;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .session-id {
+            font-family: monospace;
+            background: white;
+            padding: 5px 10px;
+            border-radius: 6px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .config-panel {
+            background: #f7fafc;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 20px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .config-row {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .config-row:last-child {
+            margin-bottom: 0;
+        }
+
+        .checkbox-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+        }
+
+        input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+            accent-color: #667eea;
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+            margin-right: 8px;
+            vertical-align: middle;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .endpoint-tag {
+            display: inline-block;
+            background: #2d3748;
+            color: #68d391;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-family: monospace;
+            margin-left: 10px;
+        }
+
+        .clear-btn {
+            background: transparent;
+            border: 1px solid #e53e3e;
+            color: #e53e3e;
+            padding: 6px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.3s;
+        }
+
+        .clear-btn:hover {
+            background: #e53e3e;
+            color: white;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        @media (max-width: 768px) {
+            .grid {
+                grid-template-columns: 1fr;
+            }
+
+            .header h1 {
+                font-size: 1.8em;
+            }
+
+            .chat-input-area {
+                flex-direction: column;
+            }
+        }
+
+        /* 滚动条样式 */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e0;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #a0aec0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🤖 AI面试接口测试平台</h1>
+            <p>验证 /api/ai/interview 系列接口的可用性与稳定性</p>
+        </div>
+
+        <!-- 全局配置 -->
+        <div class="card" style="margin-bottom: 20px;">
+            <div class="card-header">
+                <div class="card-icon">⚙️</div>
+                <div>
+                    <div class="card-title">全局配置</div>
+                    <div class="card-subtitle">配置API基础地址与认证信息</div>
+                </div>
+            </div>
+            <div class="config-row">
+                <div class="form-group" style="flex: 2; margin-bottom: 0;">
+                    <label>API基础地址</label>
+                    <input type="text" id="baseUrl" value="http://localhost:5000" placeholder="http://localhost:5000">
+                </div>
+                <div class="form-group" style="flex: 1; margin-bottom: 0;">
+                    <label>JWT Token (可选)</label>
+                    <input type="text" id="jwtToken" placeholder="输入JWT Token">
+                </div>
+                <div class="checkbox-wrapper" style="margin-top: 20px;">
+                    <input type="checkbox" id="useJwt" checked>
+                    <label for="useJwt" style="margin: 0;">启用JWT</label>
+                </div>
+            </div>
+        </div>
+
+        <!-- 启动面试接口测试区 -->
+        <div class="grid">
+            <!-- 方式1: 文本+文本 -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon">📝</div>
+                    <div>
+                        <div class="card-title">方式1: 纯文本模式</div>
+                        <div class="card-subtitle">简历文本 + 岗位文本 <span class="endpoint-tag">POST /text</span></div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>简历文本</label>
+                    <textarea id="resumeText1" placeholder="请输入简历内容...">张三，北京大学计算机科学硕士，5年Java开发经验，熟悉Spring Boot、微服务架构...</textarea>
+                </div>
+                <div class="form-group">
+                    <label>岗位描述</label>
+                    <textarea id="jobText1" placeholder="请输入岗位描述...">高级Java工程师，要求5年以上经验，熟悉分布式系统，薪资30-50K...</textarea>
+                </div>
+                <button class="btn" onclick="startInterview('text')">
+                    <span id="btnText1">启动面试</span>
+                </button>
+                <div id="response1" class="response-panel hidden">
+                    <div class="response-header">
+                        <span class="response-title">响应结果</span>
+                        <span class="response-time" id="time1"></span>
+                    </div>
+                    <pre id="content1"></pre>
+                </div>
+            </div>
+
+            <!-- 方式2: PDF+文本 -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon">📄</div>
+                    <div>
+                        <div class="card-title">方式2: PDF简历 + 文本岗位</div>
+                        <div class="card-subtitle">上传PDF简历 + 岗位文本 <span class="endpoint-tag">POST /pdf-text</span></div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>上传PDF简历</label>
+                    <div class="file-input-wrapper">
+                        <input type="file" id="pdfFile2" accept=".pdf" onchange="handleFileSelect(this, 'fileLabel2')">
+                        <label for="pdfFile2" class="file-input-label" id="fileLabel2">
+                            📎 点击选择PDF文件
+                        </label>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>岗位描述</label>
+                    <textarea id="jobText2" placeholder="请输入岗位描述...">Python后端工程师，要求熟悉Django/Flask，有AI项目经验优先...</textarea>
+                </div>
+                <button class="btn" onclick="startInterview('pdf-text')">
+                    <span id="btnText2">启动面试</span>
+                </button>
+                <div id="response2" class="response-panel hidden">
+                    <div class="response-header">
+                        <span class="response-title">响应结果</span>
+                        <span class="response-time" id="time2"></span>
+                    </div>
+                    <pre id="content2"></pre>
+                </div>
+            </div>
+
+            <!-- 方式3: PDF+JobID -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon">🆔</div>
+                    <div>
+                        <div class="card-title">方式3: PDF简历 + 岗位ID</div>
+                        <div class="card-subtitle">上传PDF + 数据库岗位ID <span class="endpoint-tag">POST /pdf-jobid</span></div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>上传PDF简历</label>
+                    <div class="file-input-wrapper">
+                        <input type="file" id="pdfFile3" accept=".pdf" onchange="handleFileSelect(this, 'fileLabel3')">
+                        <label for="pdfFile3" class="file-input-label" id="fileLabel3">
+                            📎 点击选择PDF文件
+                        </label>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>岗位ID (Job ID)</label>
+                    <input type="text" id="jobId3" placeholder="例如: 1001" value="1001">
+                </div>
+                <button class="btn" onclick="startInterview('pdf-jobid')">
+                    <span id="btnText3">启动面试</span>
+                </button>
+                <div id="response3" class="response-panel hidden">
+                    <div class="response-header">
+                        <span class="response-title">响应结果</span>
+                        <span class="response-time" id="time3"></span>
+                    </div>
+                    <pre id="content3"></pre>
+                </div>
+            </div>
+
+            <!-- 方式4: UserID+JobID (全数据库) -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon">🗄️</div>
+                    <div>
+                        <div class="card-title">方式4: 全数据库模式</div>
+                        <div class="card-subtitle">用户ID + 岗位ID (DB) <span class="endpoint-tag">POST /userid-jobid</span></div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>用户ID (User ID)</label>
+                    <input type="text" id="userId4" placeholder="例如: user_123" value="1">
+                </div>
+                <div class="form-group">
+                    <label>岗位ID (Job ID)</label>
+                    <input type="text" id="jobId4" placeholder="例如: job_456" value="1001">
+                </div>
+                <button class="btn" onclick="startInterview('userid-jobid')">
+                    <span id="btnText4">启动面试</span>
+                </button>
+                <div id="response4" class="response-panel hidden">
+                    <div class="response-header">
+                        <span class="response-title">响应结果</span>
+                        <span class="response-time" id="time4"></span>
+                    </div>
+                    <pre id="content4"></pre>
+                </div>
+            </div>
+
+            <!-- 方式5: UserID+文本 -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon">👤</div>
+                    <div>
+                        <div class="card-title">方式5: 数据库简历 + 文本岗位</div>
+                        <div class="card-subtitle">用户ID + 岗位文本 <span class="endpoint-tag">POST /userid-text</span></div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>用户ID (User ID)</label>
+                    <input type="text" id="userId5" placeholder="例如: user_123" value="1">
+                </div>
+                <div class="form-group">
+                    <label>岗位描述</label>
+                    <textarea id="jobText5" placeholder="请输入岗位描述...">前端开发工程师，要求精通Vue/React，有3年以上经验...</textarea>
+                </div>
+                <button class="btn" onclick="startInterview('userid-text')">
+                    <span id="btnText5">启动面试</span>
+                </button>
+                <div id="response5" class="response-panel hidden">
+                    <div class="response-header">
+                        <span class="response-title">响应结果</span>
+                        <span class="response-time" id="time5"></span>
+                    </div>
+                    <pre id="content5"></pre>
+                </div>
+            </div>
+
+            <!-- 方式6: 文本+JobID -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon">🔗</div>
+                    <div>
+                        <div class="card-title">方式6: 文本简历 + 数据库岗位</div>
+                        <div class="card-subtitle">简历文本 + 岗位ID <span class="endpoint-tag">POST /text-jobid</span></div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>简历文本</label>
+                    <textarea id="resumeText6" placeholder="请输入简历内容...">李四，清华大学软件工程本科，3年前端开发经验，精通Vue.js、Webpack...</textarea>
+                </div>
+                <div class="form-group">
+                    <label>岗位ID (Job ID)</label>
+                    <input type="text" id="jobId6" placeholder="例如: 123" value="1002">
+                </div>
+                <button class="btn" onclick="startInterview('text-jobid')">
+                    <span id="btnText6">启动面试</span>
+                </button>
+                <div id="response6" class="response-panel hidden">
+                    <div class="response-header">
+                        <span class="response-title">响应结果</span>
+                        <span class="response-time" id="time6"></span>
+                    </div>
+                    <pre id="content6"></pre>
+                </div>
+            </div>
+        </div>
+
+        <!-- 面试对话测试区 -->
+        <div class="chat-section" id="chatSection" style="display: none;">
+            <div class="card-header" style="margin-bottom: 20px;">
+                <div class="card-icon">💬</div>
+                <div>
+                    <div class="card-title">面试对话测试 <span class="endpoint-tag">POST /{session_id}/answer</span></div>
+                    <div class="card-subtitle">与AI面试官进行实时对话</div>
+                </div>
+            </div>
+
+            <div class="session-info">
+                <div>
+                    当前会话ID: <span class="session-id" id="currentSessionId">-</span>
+                    <span class="status-badge pending" id="sessionStatus">进行中</span>
+                </div>
+                <button class="clear-btn" onclick="endInterview()">结束面试</button>
+            </div>
+
+            <div class="audio-controls">
+                <button class="audio-btn active" onclick="toggleAudio(this)" id="audioToggle">
+                    🔊 启用语音播放
+                </button>
+                <button class="audio-btn" onclick="downloadReport()">
+                    📊 下载面试报告
+                </button>
+                <button class="audio-btn" onclick="viewHistory()">
+                    📜 查看聊天记录
+                </button>
+            </div>
+
+            <div class="chat-container" id="chatContainer">
+                <div class="message interviewer">
+                    <div class="message-bubble">欢迎使用AI面试系统，请点击上方"启动面试"开始...</div>
+                    <div class="message-meta">系统</div>
+                </div>
+            </div>
+
+            <div class="chat-input-area">
+                <input type="text" class="chat-input" id="chatInput" placeholder="输入您的回答..." onkeypress="handleEnter(event)">
+                <button class="btn" style="width: 120px;" onclick="sendAnswer()">发送</button>
+            </div>
+        </div>
+
+        <!-- 其他功能测试 -->
+        <div class="grid">
+            <!-- 语音听写测试 -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon">🎤</div>
+                    <div>
+                        <div class="card-title">语音听写测试</div>
+                        <div class="card-subtitle">POST /{session_id}/transcribe</div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>会话ID</label>
+                    <input type="text" id="transcribeSessionId" placeholder="输入会话ID">
+                </div>
+                <div class="form-group">
+                    <label>上传音频文件 (MP3/WAV)</label>
+                    <div class="file-input-wrapper">
+                        <input type="file" id="audioFile" accept="audio/*" onchange="handleFileSelect(this, 'audioFileLabel')">
+                        <label for="audioFile" class="file-input-label" id="audioFileLabel">
+                            🎵 选择音频文件
+                        </label>
+                    </div>
+                </div>
+                <button class="btn" onclick="testTranscribe()">测试语音识别</button>
+                <div id="responseTranscribe" class="response-panel hidden">
+                    <div class="response-header">
+                        <span class="response-title">识别结果</span>
+                        <span class="response-time" id="timeTranscribe"></span>
+                    </div>
+                    <pre id="contentTranscribe"></pre>
+                </div>
+            </div>
+
+            <!-- 获取历史记录 -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon">📚</div>
+                    <div>
+                        <div class="card-title">获取面试历史</div>
+                        <div class="card-subtitle">GET /{session_id}/history</div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>会话ID</label>
+                    <input type="text" id="historySessionId" placeholder="输入会话ID">
+                </div>
+                <button class="btn" onclick="getHistory()">查询历史</button>
+                <div id="responseHistory" class="response-panel hidden">
+                    <div class="response-header">
+                        <span class="response-title">历史记录</span>
+                        <span class="response-time" id="timeHistory"></span>
+                    </div>
+                    <pre id="contentHistory"></pre>
+                </div>
+            </div>
+
+            <!-- 下载报告 -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon">📈</div>
+                    <div>
+                        <div class="card-title">下载面试报告</div>
+                        <div class="card-subtitle">GET /{session_id}/report</div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>会话ID</label>
+                    <input type="text" id="reportSessionId" placeholder="输入会话ID">
+                </div>
+                <button class="btn" onclick="downloadReportManual()">下载报告</button>
+                <div id="responseReport" class="response-panel hidden">
+                    <div class="response-header">
+                        <span class="response-title">报告内容</span>
+                        <span class="response-time" id="timeReport"></span>
+                    </div>
+                    <pre id="contentReport"></pre>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 全局状态
+        let currentSession = null;
+        let audioEnabled = true;
+        let messageHistory = [];
+
+        // 工具函数：获取基础URL
+        function getBaseUrl() {
+            return document.getElementById('baseUrl').value.trim() || 'http://localhost:5000';
+        }
+
+        // 工具函数：获取请求头
+        function getHeaders() {
+            const headers = {
+                'Content-Type': 'application/json'
+            };
+
+            if (document.getElementById('useJwt').checked) {
+                const token = document.getElementById('jwtToken').value.trim();
+                if (token) {
+                    headers['Authorization'] = `Bearer ${token}`;
+                }
+            }
+
+            return headers;
+        }
+
+        // 文件选择处理
+        function handleFileSelect(input, labelId) {
+            const label = document.getElementById(labelId);
+            if (input.files && input.files[0]) {
+                label.textContent = `✅ ${input.files[0].name}`;
+                label.classList.add('has-file');
+            } else {
+                label.textContent = input.accept.includes('pdf') ? '📎 点击选择PDF文件' : '🎵 选择音频文件';
+                label.classList.remove('has-file');
+            }
+        }
+
+        // 显示响应
+        function showResponse(index, data, isError = false) {
+            const panel = document.getElementById(`response${index}`);
+            const content = document.getElementById(`content${index}`);
+            const time = document.getElementById(`time${index}`);
+
+            panel.classList.remove('hidden', 'error', 'loading');
+            if (isError) panel.classList.add('error');
+
+            content.textContent = typeof data === 'string' ? data : JSON.stringify(data, null, 2);
+            time.textContent = new Date().toLocaleTimeString();
+        }
+
+        // 显示加载状态
+        function showLoading(index) {
+            const panel = document.getElementById(`response${index}`);
+            const content = document.getElementById(`content${index}`);
+            panel.classList.remove('hidden');
+            panel.classList.add('loading');
+            content.textContent = '请求中...';
+        }
+
+        // 启动面试主函数
+        async function startInterview(type) {
+            const baseUrl = getBaseUrl();
+            let endpoint = '';
+            let body = {};
+            let fileInput = null;
+
+            // 根据类型准备数据
+            switch(type) {
+                case 'text':
+                    endpoint = '/api/ai/interview/start/text';
+                    body = {
+                        resume_text: document.getElementById('resumeText1').value,
+                        job_text: document.getElementById('jobText1').value
+                    };
+                    if (!body.resume_text || !body.job_text) {
+                        alert('请填写简历文本和岗位描述');
+                        return;
+                    }
+                    break;
+
+                case 'pdf-text':
+                    endpoint = '/api/ai/interview/start/pdf-text';
+                    fileInput = document.getElementById('pdfFile2');
+                    const jobText2 = document.getElementById('jobText2').value;
+                    if (!fileInput.files[0] || !jobText2) {
+                        alert('请上传PDF文件并填写岗位描述');
+                        return;
+                    }
+                    body = {
+                        resume_file: await fileToBase64(fileInput.files[0]),
+                        job_text: jobText2
+                    };
+                    break;
+
+                case 'pdf-jobid':
+                    endpoint = '/api/ai/interview/start/pdf-jobid';
+                    fileInput = document.getElementById('pdfFile3');
+                    const jobId3 = document.getElementById('jobId3').value;
+                    if (!fileInput.files[0] || !jobId3) {
+                        alert('请上传PDF文件并填写岗位ID');
+                        return;
+                    }
+                    body = {
+                        resume_file: await fileToBase64(fileInput.files[0]),
+                        job_id: jobId3
+                    };
+                    break;
+
+                case 'userid-jobid':
+                    endpoint = '/api/ai/interview/start/userid-jobid';
+                    body = {
+                        user_id: document.getElementById('userId4').value,
+                        job_id: document.getElementById('jobId4').value
+                    };
+                    if (!body.user_id || !body.job_id) {
+                        alert('请填写用户ID和岗位ID');
+                        return;
+                    }
+                    break;
+
+                case 'userid-text':
+                    endpoint = '/api/ai/interview/start/userid-text';
+                    body = {
+                        user_id: document.getElementById('userId5').value,
+                        job_text: document.getElementById('jobText5').value
+                    };
+                    if (!body.user_id || !body.job_text) {
+                        alert('请填写用户ID和岗位描述');
+                        return;
+                    }
+                    break;
+
+                case 'text-jobid':
+                    endpoint = '/api/ai/interview/start/text-jobid';
+                    body = {
+                        resume_text: document.getElementById('resumeText6').value,
+                        job_id: document.getElementById('jobId6').value
+                    };
+                    if (!body.resume_text || !body.job_id) {
+                        alert('请填写简历文本和岗位ID');
+                        return;
+                    }
+                    break;
+            }
+
+            // 获取对应的序号用于显示
+            const indexMap = {
+                'text': '1', 'pdf-text': '2', 'pdf-jobid': '3',
+                'userid-jobid': '4', 'userid-text': '5', 'text-jobid': '6'
+            };
+            const index = indexMap[type];
+
+            // 禁用按钮
+            const btn = document.querySelector(`#btnText${index}`).parentElement;
+            btn.disabled = true;
+            document.querySelector(`#btnText${index}`).innerHTML = '<span class="loading-spinner"></span>启动中...';
+
+            showLoading(index);
+
+            try {
+                const response = await fetch(`${baseUrl}${endpoint}`, {
+                    method: 'POST',
+                    headers: getHeaders(),
+                    body: JSON.stringify(body)
+                });
+
+                const data = await response.json();
+                showResponse(index, data, !response.ok);
+
+                // 如果成功，初始化会话
+                if (response.ok && data.session_id) {
+                    initChatSession(data);
+                }
+
+            } catch (error) {
+                showResponse(index, `请求失败: ${error.message}`, true);
+            } finally {
+                btn.disabled = false;
+                document.querySelector(`#btnText${index}`).textContent = '启动面试';
+            }
+        }
+
+        // 文件转Base64
+        function fileToBase64(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = () => {
+                    // 移除Data URL前缀，只保留base64数据
+                    const base64 = reader.result.split(',')[1];
+                    resolve(base64);
+                };
+                reader.onerror = error => reject(error);
+            });
+        }
+
+        // 初始化聊天会话
+        function initChatSession(data) {
+            currentSession = data;
+            messageHistory = [];
+
+            // 显示聊天区域
+            document.getElementById('chatSection').style.display = 'block';
+            document.getElementById('currentSessionId').textContent = data.session_id;
+            document.getElementById('sessionStatus').textContent = '进行中';
+            document.getElementById('sessionStatus').className = 'status-badge pending';
+
+            // 清空并初始化聊天记录
+            const container = document.getElementById('chatContainer');
+            container.innerHTML = '';
+
+            // 添加面试官的第一个问题
+            if (data.question) {
+                addMessage('interviewer', data.question, data.audio_url);
+            }
+
+            // 滚动到聊天区域
+            document.getElementById('chatSection').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // 添加消息到聊天窗口
+        function addMessage(role, content, audioUrl = null) {
+            const container = document.getElementById('chatContainer');
+            const div = document.createElement('div');
+            div.className = `message ${role}`;
+
+            let html = `<div class="message-bubble">${escapeHtml(content)}</div>`;
+            html += `<div class="message-meta">${role === 'interviewer' ? 'AI面试官' : '候选人'} · ${new Date().toLocaleTimeString()}</div>`;
+
+            div.innerHTML = html;
+            container.appendChild(div);
+            container.scrollTop = container.scrollHeight;
+
+            // 播放语音
+            if (audioEnabled && audioUrl && role === 'interviewer') {
+                playAudio(audioUrl);
+            }
+
+            // 保存历史
+            messageHistory.push({
+                role: role,
+                content: content,
+                time: new Date().toISOString()
+            });
+        }
+
+        // 转义HTML
+        function escapeHtml(text) {
+            const map = {
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#039;'
+            };
+            return text.replace(/[&<>"']/g, m => map[m]);
+        }
+
+        // 播放音频
+        function playAudio(url) {
+            const baseUrl = getBaseUrl();
+            const fullUrl = url.startsWith('http') ? url : `${baseUrl}${url}`;
+            const audio = new Audio(fullUrl);
+            audio.play().catch(e => console.log('音频播放失败:', e));
+        }
+
+        // 发送回答
+        async function sendAnswer() {
+            if (!currentSession) {
+                alert('请先启动一个面试会话');
+                return;
+            }
+
+            const input = document.getElementById('chatInput');
+            const text = input.value.trim();
+            if (!text) return;
+
+            // 添加用户消息
+            addMessage('candidate', text);
+            input.value = '';
+
+            // 禁用输入
+            input.disabled = true;
+            const btn = document.querySelector('#chatInput').nextElementSibling;
+            btn.disabled = true;
+            btn.innerHTML = '<span class="loading-spinner"></span>';
+
+            try {
+                const baseUrl = getBaseUrl();
+                const response = await fetch(`${baseUrl}/api/ai/interview/${currentSession.session_id}/answer`, {
+                    method: 'POST',
+                    headers: getHeaders(),
+                    body: JSON.stringify({
+                        user_text: text,
+                        end_interview: false
+                    })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.error || '请求失败');
+                }
+
+                if (data.is_ended) {
+                    document.getElementById('sessionStatus').textContent = '已结束';
+                    document.getElementById('sessionStatus').className = 'status-badge success';
+                    addMessage('system', '面试已结束，请查看报告');
+                } else {
+                    addMessage('interviewer', data.question, data.audio_url);
+                }
+
+            } catch (error) {
+                addMessage('system', `错误: ${error.message}`);
+            } finally {
+                input.disabled = false;
+                btn.disabled = false;
+                btn.textContent = '发送';
+                input.focus();
+            }
+        }
+
+        // 处理回车键
+        function handleEnter(event) {
+            if (event.key === 'Enter') {
+                sendAnswer();
+            }
+        }
+
+        // 结束面试
+        async function endInterview() {
+            if (!currentSession) return;
+
+            const baseUrl = getBaseUrl();
+            try {
+                await fetch(`${baseUrl}/api/ai/interview/${currentSession.session_id}/answer`, {
+                    method: 'POST',
+                    headers: getHeaders(),
+                    body: JSON.stringify({
+                        user_text: '结束面试',
+                        end_interview: true
+                    })
+                });
+
+                document.getElementById('sessionStatus').textContent = '已结束';
+                document.getElementById('sessionStatus').className = 'status-badge success';
+                addMessage('system', '面试已手动结束');
+            } catch (error) {
+                alert('结束面试失败: ' + error.message);
+            }
+        }
+
+        // 切换音频
+        function toggleAudio(btn) {
+            audioEnabled = !audioEnabled;
+            btn.classList.toggle('active');
+            btn.textContent = audioEnabled ? '🔊 启用语音播放' : '🔇 禁用语音播放';
+        }
+
+        // 下载报告
+        async function downloadReport() {
+            if (!currentSession) {
+                alert('请先启动面试');
+                return;
+            }
+            window.open(`${getBaseUrl()}/api/ai/interview/${currentSession.session_id}/report`, '_blank');
+        }
+
+        // 查看历史
+        async function viewHistory() {
+            if (!currentSession) {
+                alert('请先启动面试');
+                return;
+            }
+
+            const baseUrl = getBaseUrl();
+            try {
+                const response = await fetch(`${baseUrl}/api/ai/interview/${currentSession.session_id}/history`, {
+                    headers: getHeaders()
+                });
+                const data = await response.json();
+                console.log('历史记录:', data);
+                alert(JSON.stringify(data, null, 2));
+            } catch (error) {
+                alert('获取历史失败: ' + error.message);
+            }
+        }
+
+        // 测试语音识别
+        async function testTranscribe() {
+            const sessionId = document.getElementById('transcribeSessionId').value;
+            const fileInput = document.getElementById('audioFile');
+
+            if (!sessionId || !fileInput.files[0]) {
+                alert('请输入会话ID并选择音频文件');
+                return;
+            }
+
+            showLoading('Transcribe');
+            const baseUrl = getBaseUrl();
+
+            try {
+                const formData = new FormData();
+                formData.append('audio_file', fileInput.files[0]);
+
+                const response = await fetch(`${baseUrl}/api/ai/interview/${sessionId}/transcribe`, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+                showResponse('Transcribe', data, !response.ok);
+            } catch (error) {
+                showResponse('Transcribe', `请求失败: ${error.message}`, true);
+            }
+        }
+
+        // 获取历史记录
+        async function getHistory() {
+            const sessionId = document.getElementById('historySessionId').value;
+            if (!sessionId) {
+                alert('请输入会话ID');
+                return;
+            }
+
+            showLoading('History');
+            const baseUrl = getBaseUrl();
+
+            try {
+                const response = await fetch(`${baseUrl}/api/ai/interview/${sessionId}/history`, {
+                    headers: getHeaders()
+                });
+
+                const data = await response.json();
+                showResponse('History', data, !response.ok);
+            } catch (error) {
+                showResponse('History', `请求失败: ${error.message}`, true);
+            }
+        }
+
+        // 手动下载报告
+        async function downloadReportManual() {
+            const sessionId = document.getElementById('reportSessionId').value;
+            if (!sessionId) {
+                alert('请输入会话ID');
+                return;
+            }
+
+            showLoading('Report');
+            const baseUrl = getBaseUrl();
+
+            try {
+                const response = await fetch(`${baseUrl}/api/ai/interview/${sessionId}/report`, {
+                    headers: getHeaders()
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    showResponse('Report', data);
+                } else {
+                    const text = await response.text();
+                    showResponse('Report', text, true);
+                }
+            } catch (error) {
+                showResponse('Report', `请求失败: ${error.message}`, true);
+            }
+        }
+
+        // 页面加载完成提示
+        window.onload = () => {
+            console.log('AI面试接口测试平台已加载');
+            console.log('支持的接口:');
+            console.log('1. POST /api/ai/interview/start/text');
+            console.log('2. POST /api/ai/interview/start/pdf-text');
+            console.log('3. POST /api/ai/interview/start/pdf-jobid');
+            console.log('4. POST /api/ai/interview/start/userid-jobid');
+            console.log('5. POST /api/ai/interview/start/userid-text');
+            console.log('6. POST /api/ai/interview/start/text-jobid');
+            console.log('7. POST /api/ai/interview/{session_id}/transcribe');
+            console.log('8. POST /api/ai/interview/{session_id}/answer');
+            console.log('9. GET  /api/ai/interview/{session_id}/history');
+            console.log('10. GET /api/ai/interview/{session_id}/report');
+        };
+    </script>
+</body>
+</html>
