@@ -847,6 +847,7 @@ def user_login():
         login_ip = request.remote_addr
 
         # 查询用户
+        print(data['mobile'])
         user = sys_user.get_user_by_field('mobile', data['mobile'])
 
         if not user:
@@ -4090,7 +4091,7 @@ def _get_job_from_db(job_id):
 def _create_interview_session(resume_text, job_text, resume_source, job_source,
                               user_id=None, job_id=None):
     """
-    统一创建面试会话的核心逻辑
+    统一创建面试会话的核心逻辑 - 等待语音合成成功后返回
     """
     # 创建会话
     session_id = manager.create_session(resume_text, job_text)
@@ -4107,6 +4108,8 @@ def _create_interview_session(resume_text, job_text, resume_source, job_source,
     first_question = manager.extract_ai_text(ai_response)
 
     if not first_question:
+        # 清理会话
+        manager.delete_session(session_id)
         return jsonify({'error': 'AI生成问题失败'}), 500
 
     # 更新会话
@@ -4114,8 +4117,16 @@ def _create_interview_session(resume_text, job_text, resume_source, job_source,
     manager.add_to_history(session_id, 'interviewer', first_question)
     manager.increment_question(session_id)
 
-    # 生成语音
-    audio_url = _generate_audio(session_id, first_question)
+    # 生成语音 - 必须成功才返回
+    audio_url, error = _generate_audio_sync(session_id, first_question)
+
+    if error:
+        # TTS失败，清理会话并返回错误
+        manager.delete_session(session_id)
+        return jsonify({
+            'error': f'语音合成失败: {error}',
+            'question': first_question  # 可选：返回文本以便调试
+        }), 500
 
     return jsonify({
         'code': 200,
@@ -4131,9 +4142,11 @@ def _create_interview_session(resume_text, job_text, resume_source, job_source,
     }), 200
 
 
-def _generate_audio(session_id, text):
+def _generate_audio_sync(session_id, text):
     """
-    生成TTS音频，返回URL或None
+    同步生成TTS音频，返回 (audio_url, error)
+    成功: (url, None)
+    失败: (None, error_message)
     """
     try:
         filename = f"question_{session_id}_{int(time.time())}.mp3"
@@ -4141,11 +4154,26 @@ def _generate_audio(session_id, text):
         audio_path = os.path.join(audio_dir, filename)
         os.makedirs(audio_dir, exist_ok=True)
 
+        # 调用TTS生成（同步等待完成）
         manager.generate_tts(text, audio_path)
-        return f'/static/audio/{filename}'
+
+        # 验证文件是否成功生成
+        if not os.path.exists(audio_path):
+            return None, "音频文件生成失败"
+
+        # 验证文件大小（避免生成空文件）
+        if os.path.getsize(audio_path) == 0:
+            os.remove(audio_path)  # 清理空文件
+            return None, "音频文件为空"
+
+        audio_url = f'/static/audio/{filename}'
+        return audio_url, None
+
     except Exception as e:
-        print(f"TTS生成失败: {e}")
-        return None
+        error_msg = str(e)
+        print(f"TTS生成失败: {error_msg}")
+        return None, error_msg
+
 
 @app.route('/api/ai/interview/<session_id>/transcribe', methods=['POST'])
 def transcribe_audio(session_id):

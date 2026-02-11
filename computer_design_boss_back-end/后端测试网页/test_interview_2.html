@@ -365,7 +365,7 @@
 
             try {
                 log('发起开始面试请求...', 'request');
-                const response = await fetch(`${getBaseUrl()}/api/ai/interview/start`, {
+                const response = await fetch(`${getBaseUrl()}/api/ai/interview/start/text`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ resume_text: resume, job_text: job })
