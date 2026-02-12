@@ -12,6 +12,8 @@ from urllib.parse import urlencode
 from wsgiref.handlers import format_date_time
 from demo import garbage_classification
 from pathlib import Path
+from set_up import config
+config_data = config()
 
 import websocket  # 使用websocket_client
 answer = ""
@@ -124,8 +126,8 @@ def gen_params(appid, domain,question):
         "parameter": {
             "chat": {
                 "domain": domain,
-                "temperature": 1,
-                "max_tokens": 5000       # 请根据不同模型支持范围，适当调整该值的大小
+                "temperature": config_data.set_LLM_temperature,
+                "max_tokens": config_data.set_LLM_max_tokens       # 请根据不同模型支持范围，适当调整该值的大小
             }
         },
         "payload": {
@@ -177,6 +179,8 @@ def checklen(text):
     return text
 
 def main_answer(appid, api_key, api_secret, Spark_url, domain, Input):
+    global text
+    text = []
     global answer
     answer = ""
     question = checklen(getText("user", Input))

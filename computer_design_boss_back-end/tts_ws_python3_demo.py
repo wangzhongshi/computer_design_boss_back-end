@@ -14,6 +14,8 @@ from time import mktime
 import threading
 import os
 from pydub import AudioSegment
+from set_up import config
+config_data = config()
 
 STATUS_FIRST_FRAME = 0
 STATUS_CONTINUE_FRAME = 1
@@ -210,9 +212,9 @@ def tts_demo(text, output_path = None):
     :return:
     '''
     # 配置你的讯飞开放平台凭证
-    APPID = '2e81dc67'
-    API_SECRET = 'NDcwM2M1OWY0NTQxOWZiZjg4YzZiNzY3'
-    API_KEY = 'fd79a4d97543e35b2881a64b81b8f124'
+    APPID = config_data.set_tts_appid
+    API_SECRET = config_data.set_tts_api_secret
+    API_KEY = config_data.set_tts_api_key
 
     # 初始化 TTS 客户端
     tts = XunfeiTTS(APPID, API_KEY, API_SECRET)

@@ -4,8 +4,6 @@ from sql_data_demo import ResumeManager, Job_prot, EndDemoDatabase
 import json
 from datetime import date, datetime
 from tts_ws_python3_demo import tts_demo
-from iat_ws_python3 import demo_microphone_recognition
-from setter import setter
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 import os
@@ -17,19 +15,21 @@ import time
 from tts_ws_python3_demo import tts_demo
 from iat_ws_python3 import demo_file_recognition
 from X1_ws import main_answer
-class Ai_job_demo(setter):
+from set_up import config
+config_data = config()
+class Ai_job_demo:
     def __init__(self):
-        super().__init__()
         self.db = EndDemoDatabase(host='localhost', user='root', password='123456')
         self.resume_manager = ResumeManager(self.db.connection)
         self.job_prot = Job_prot(self.db.connection)
 
-        self.appid = "9e54e001"  # 填写控制台中获取的 APPID 信息
-        self.api_secret = "MWZlZmE4MzE4YTMxNWUxMDg1ZDI2MDBi"  # 填写控制台中获取的 APISecret 信息
-        self.api_key = "55edcb29ab95c53aad65b95343544821"  # 填写控制台中获取的 APIKey 信息
-        self.domain = "generalv3"  # 控制请求的模型版本
+        self.appid = config_data.set_LLM_appid  # 填写控制台中获取的 APPID 信息
+        self.api_secret = config_data.set_LLM_api_secret  # 填写控制台中获取的 APISecret 信息
+        self.api_key = config_data.set_LLM_api_key  # 填写控制台中获取的 APIKey 信息
+        self.domain = config_data.set_LLM_domain  # 控制请求的模型版本
         # 服务地址
-        self.Spark_url = "wss://spark-api.xf-yun.com/v3.1/chat"  # 查看接口文档  https://www.xfyun.cn/doc/spark/X1ws.html
+        self.Spark_url = config_data.set_LLM_Spark_url  # 查看接口文档  https://www.xfyun.cn/doc/spark/X1ws.html
+        # 无用的辅助数据
         self.user_id = '1143526543212345678'
         self.job_id = '1'
         self.pdf_path = r'C:\Users\lenovo\Desktop\王柄屹简历.pdf'
@@ -199,38 +199,30 @@ class Ai_job_demo(setter):
         user_pdf_text = self.extract_pdf_text(pdf_path)
         print(f'user_pdf_text:{user_pdf_text}')
         job_text = self.get_job_text_in_db(job_id)
-        first_input_qus = f'''\n我：以下是我的简历内容：{user_pdf_text}\n
-                                以下是我的目标岗位的招聘信息：{job_text}\n
-                                请帮我从简历和岗位的角度分析我这次求职经历。
-                            '''
+        first_input_qus = config_data.set_request_str_ask.format(user_pdf_text=user_pdf_text,
+                                                                   job_text=job_text)
         ai_answer = main_answer(self.appid, self.api_key, self.api_secret, self.Spark_url, self.domain, first_input_qus)
         return ai_answer
 
     def ask_by_pdf_and_job_text(self, pdf_path, job_text):
         user_pdf_text = self.extract_pdf_text(pdf_path)
-        first_input_qus = f'''\n我：以下是我的简历内容：{user_pdf_text}\n
-                                以下是我的目标岗位的招聘信息：{job_text}\n
-                                请帮我从简历和岗位的角度分析我这次求职经历。
-                            '''
+        first_input_qus = config_data.set_request_str_ask.format(user_pdf_text=user_pdf_text,
+                                                                   job_text=job_text)
         ai_answer = main_answer(self.appid, self.api_key, self.api_secret, self.Spark_url, self.domain, first_input_qus)
         return ai_answer
 
     def ask_by_user_id_and_job_text(self, user_id, job_text):
         user_text = self.get_user_app_text(user_id)
-        first_input_qus = f'''\n我：以下是我的简历内容：{user_text}\n
-                                以下是我的目标岗位的招聘信息：{job_text}\n
-                                请帮我从简历和岗位的角度分析我这次求职经历。
-                            '''
+        first_input_qus = config_data.set_request_str_ask.format(user_pdf_text=user_text,
+                                                                   job_text=job_text)
         ai_answer = main_answer(self.appid, self.api_key, self.api_secret, self.Spark_url, self.domain, first_input_qus)
         return ai_answer
 
     def ask_by_user_id_and_job_id(self, user_id, job_id):
         user_text = self.get_user_app_text(user_id)
         job_text = self.get_job_text_in_db(job_id)
-        first_input_qus = f'''\n我：以下是我的简历内容：{user_text}\n
-                            以下是我的目标岗位的招聘信息：{job_text}\n
-                            请帮我从简历和岗位的角度分析我这次求职经历。
-                            '''
+        first_input_qus = config_data.set_request_str_ask.format(user_pdf_text=user_text,
+                                                                   job_text=job_text)
         ai_answer = main_answer(self.appid, self.api_key, self.api_secret, self.Spark_url, self.domain, first_input_qus)
         return ai_answer
 
@@ -240,101 +232,77 @@ class Ai_job_demo(setter):
 
     def resume_evalu_by_user_id(self, user_id):
         user_text = self.get_user_app_text(user_id)
-        first_input_qus = f'''\n我：以下是我的简历内容：{user_text}\n
-                                请为我评估我的简历，并为根据难易与匹配度为我推荐一些岗位。
-                                '''
+        first_input_qus = config_data.set_request_str_resume.format(user_text=user_text)
         ai_answer = main_answer(self.appid, self.api_key, self.api_secret, self.Spark_url, self.domain, first_input_qus)
         return ai_answer
 
     def resume_evalu_by_user_pdf(self, pdf_path):
         user_pdf_text = self.extract_pdf_text(pdf_path)
-        first_input_qus = f'''\n我：以下是我的简历内容：{user_pdf_text}\n
-                                请为我评估我的简历，并为根据难易与匹配度为我推荐一些岗位。
-                                '''
+        first_input_qus = config_data.set_request_str_resume.format(user_text=user_pdf_text)
         ai_answer = main_answer(self.appid, self.api_key, self.api_secret, self.Spark_url, self.domain, first_input_qus)
         return ai_answer
 
     def success_rate_by_pdf_and_job_id(self, pdf_path, job_id):
         user_pdf_text = self.extract_pdf_text(pdf_path)
         job_text = self.get_job_text_in_db(job_id)
-        first_input_qus = f'''\n我：以下是我的简历内容：{user_pdf_text}\n
-                                以下是我的目标岗位的招聘信息：{job_text}\n
-                                请帮我从简历和岗位的角度给出我这次求职的成功率。
-                                优先回答成功率，然后再给出得出依据
-                            '''
+        first_input_qus = config_data.set_request_str_success.format(user_pdf_text=user_pdf_text,
+                                                                    job_text=job_text)
         ai_answer = main_answer(self.appid, self.api_key, self.api_secret, self.Spark_url, self.domain, first_input_qus)
         return ai_answer
 
     def success_rate_by_pdf_and_job_text(self, pdf_path, job_text):
         user_pdf_text = self.extract_pdf_text(pdf_path)
-        first_input_qus = f'''\n我：以下是我的简历内容：{user_pdf_text}\n
-                                    以下是我的目标岗位的招聘信息：{job_text}\n
-                                    请帮我从简历和岗位的角度给出我这次求职的成功率。
-                                    优先回答成功率，然后再给出得出依据
-                                '''
+        first_input_qus = config_data.set_request_str_sucess.format(user_pdf_text=user_pdf_text,
+                                                                    job_text=job_text)
         ai_answer = main_answer(self.appid, self.api_key, self.api_secret, self.Spark_url, self.domain, first_input_qus)
         return ai_answer
 
     def success_rate_by_user_id_and_job_text(self, user_id, job_text):
         user_text = self.get_user_app_text(user_id)
-        first_input_qus = f'''\n我：以下是我的简历内容：{user_text}\n
-                                    以下是我的目标岗位的招聘信息：{job_text}\n
-                                    请帮我从简历和岗位的角度给出我这次求职的成功率。
-                                    优先回答成功率，然后再给出得出依据
-                                '''
+        first_input_qus = config_data.set_request_str_success.format(user_pdf_text=user_text,
+                                                                    job_text=job_text)
         ai_answer = main_answer(self.appid, self.api_key, self.api_secret, self.Spark_url, self.domain, first_input_qus)
         return ai_answer
 
     def success_rate_by_user_id_and_job_id(self, user_id, job_id):
         user_text = self.get_user_app_text(user_id)
         job_text = self.get_job_text_in_db(job_id)
-        first_input_qus = f'''\n我：以下是我的简历内容：{user_text}\n
-                                    以下是我的目标岗位的招聘信息：{job_text}\n
-                                    请帮我从简历和岗位的角度给出我这次求职的成功率。
-                                    优先回答成功率，然后再给出得出依据
-                                '''
+        first_input_qus = config_data.set_request_str_success.format(user_pdf_text=user_text,
+                                                                    job_text=job_text)
         ai_answer = main_answer(self.appid, self.api_key, self.api_secret, self.Spark_url, self.domain, first_input_qus)
         return ai_answer
 
     def uni_plan_by_pdf_and_job_id(self, pdf_path, job_id,user_grade):
         user_pdf_text = self.extract_pdf_text(pdf_path)
         job_text = self.get_job_text_in_db(job_id)
-        first_input_qus = f'''\n我：以下是我的简历内容：{user_pdf_text}\n
-                                    以下是我的目标岗位的招聘信息：{job_text}\n
-                                    我现在是一名{user_grade}的学生,
-                                    请为我的大学生活给出一个合理的规划，帮助成功获得目标岗位
-                                '''
+        first_input_qus = config_data.set_request_str_uni.format(user_pdf_text=user_pdf_text,
+                                                                 job_text=job_text,
+                                                                 user_grade=user_grade)
         ai_answer = main_answer(self.appid, self.api_key, self.api_secret, self.Spark_url, self.domain, first_input_qus)
         return ai_answer
 
     def uni_plan_by_pdf_and_job_text(self, pdf_path, job_text,user_grade):
         user_pdf_text = self.extract_pdf_text(pdf_path)
-        first_input_qus = f'''\n我：以下是我的简历内容：{user_pdf_text}\n
-                                    以下是我的目标岗位的招聘信息：{job_text}\n
-                                    我现在是一名{user_grade}的学生,
-                                    请为我的大学生活给出一个合理的规划，帮助成功获得目标岗位
-                                '''
+        first_input_qus = config_data.set_request_str_uni.format(user_pdf_text=user_pdf_text,
+                                                                 job_text=job_text,
+                                                                 user_grade=user_grade)
         ai_answer = main_answer(self.appid, self.api_key, self.api_secret, self.Spark_url, self.domain, first_input_qus)
         return ai_answer
 
     def uni_plan_by_user_id_and_job_text(self, user_id, job_text, user_grade):
         user_text = self.get_user_app_text(user_id)
-        first_input_qus = f'''\n我：以下是我的简历内容：{user_text}\n
-                                    以下是我的目标岗位的招聘信息：{job_text}\n
-                                    我现在是一名{user_grade}的学生,
-                                    请为我的大学生活给出一个合理的规划，帮助成功获得目标岗位
-                                '''
+        first_input_qus = config_data.set_request_str_uni.format(user_pdf_text=user_text,
+                                                                 job_text=job_text,
+                                                                 user_grade=user_grade)
         ai_answer = main_answer(self.appid, self.api_key, self.api_secret, self.Spark_url, self.domain, first_input_qus)
         return ai_answer
 
     def uni_plan_by_user_id_and_job_id(self, user_id, job_id,user_grade):
         user_text = self.get_user_app_text(user_id)
         job_text = self.get_job_text_in_db(job_id)
-        first_input_qus = f'''\n我：以下是我的简历内容：{user_text}\n
-                                    以下是我的目标岗位的招聘信息：{job_text}\n
-                                    我现在是一名{user_grade}的学生,
-                                    请为我的大学生活给出一个合理的规划，帮助成功获得目标岗位
-                                '''
+        first_input_qus =config_data.set_request_str_uni.format(user_pdf_text=user_text,
+                                                                 job_text=job_text,
+                                                                 user_grade=user_grade)
         ai_answer = main_answer(self.appid, self.api_key, self.api_secret, self.Spark_url, self.domain, first_input_qus)
         return ai_answer
 
@@ -368,44 +336,8 @@ class InterviewManager:
         return self.sessions.get(session_id)
 
     def _build_interview_prompt(self, resume_text: str, job_text: str) -> str:
-        return f"""你现在是一名专业且真实的 AI 面试官。
-
-你将基于【候选人简历】和【目标岗位招聘信息】，对候选人进行一场完整的模拟面试。
-
-====================
-【候选人简历】
-{resume_text}
-
-====================
-【目标岗位招聘信息】
-{job_text}
-
-====================
-【面试规则】
-1. 你必须主导面试流程
-2. 每次只问一个问题，问题要有针对性且自然
-3. 根据候选人的回答动态追问，深入挖掘细节
-4. 不要替候选人回答
-5. 不要输出分析过程或评价
-6. 只有在面试结束时才给出总结
-
-====================
-【面试流程】
-第一阶段：自我介绍（1-2个问题）
-第二阶段：专业能力（结合岗位要求，2-3个问题）
-第三阶段：项目/实践经历（2-3个问题，深入追问）
-第四阶段：综合能力与思维（2个问题）
-第五阶段：反问环节（候选人提问）
-
-====================
-【面试结束】
-当候选人说"面试结束"或"我没有问题了"时：
-- 给出综合评分（0-100，要有具体分项得分）
-- 给出是否通过（通过/待定/不通过）
-- 给出至少 3 条具体可执行的改进建议
-
-当前阶段：第一阶段（自我介绍）
-请开始面试，提出第一个问题。"""
+        return config_data.set_interview_start_str.format(resume_text=resume_text,
+                                                          job_text=job_text)
 
     def update_stage(self, session_id):
         """根据问题数量更新面试阶段"""
@@ -472,27 +404,7 @@ class InterviewManager:
         self.close_session(session_id)
 
         # 构建总结提示
-        summary_prompt = session['messages'] + """
-
-        面试已结束，请严格按照以下JSON格式输出最终评价：
-        {
-            "overall_score": 85,
-            "dimension_scores": {
-                "专业匹配度": 90,
-                "项目经验": 85,
-                "表达能力": 80,
-                "逻辑思维": 88,
-                "综合素质": 82
-            },
-            "result": "通过",
-            "strengths": ["优势1", "优势2", "优势3"],
-            "weaknesses": ["不足1", "不足2"],
-            "improvement_suggestions": ["建议1", "建议2", "建议3", "建议4"],
-            "summary": "综合评价总结..."
-        }
-
-        确保输出合法的JSON格式。
-        """
+        summary_prompt = session['messages'] + config_data.set_interview_end_str
 
         # 调用AI生成评价
         ai_result = main_answer(

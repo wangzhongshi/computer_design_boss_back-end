@@ -1,0 +1,76 @@
+{
+  "session_id": "c2470453-dab5-4ad7-9e36-3cd39ed5a1bc",
+  "interview_info": {
+    "start_time": "2026-02-12T14:06:29.809107",
+    "end_time": "2026-02-12T14:08:37.205720",
+    "duration_minutes": 2,
+    "total_questions": 3
+  },
+  "evaluation": {
+    "overall_score": 85,
+    "dimension_scores": {
+      "专业匹配度": 90,
+      "项目经验": 85,
+      "表达能力": 80,
+      "逻辑思维": 88,
+      "综合素质": 82
+    },
+    "result": "待定",
+    "strengths": [
+      "精通Python、Flask、Docker和微服务架构设计"
+    ],
+    "weaknesses": [
+      "缺乏具体的AI项目经验，对高并发系统架构的处理描述不够详细和具体"
+    ],
+    "improvement_suggestions": [
+      "建议张三先生在未来的项目中积极参与并负责AI项目的开发和实施，特别是涉及高并发处理的系统架构。同时，可以在实际工作中加强对这些技术细节的学习和总结，以便在下一次面试中能提供更加深入和具体的解答"
+    ],
+    "summary": "张三先生具备丰富的后端开发经验和技术栈，特别是在Python、Flask、Docker和微服务架构设计方面表现出色。然而，他对于目标岗位所需的AI项目经验和设计高并发系统架构的具体实践经验描述不够明确。建议他在未来的项目中多参与这类项目，积累实战经验，并在面试中更具体地阐述自己的解决方案和思考过程。"
+  },
+  "transcript": [
+    {
+      "timestamp": "2026-02-12T14:06:32.252678",
+      "role": "interviewer",
+      "content": "好的，接下来我们进入面试的第二阶段：专业能力。\n\n首先请问张三先生，您熟悉Flask和FastAPI吗？能否分享一下您在使用这些框架时的一些实践经验或心得？",
+      "audio_url": null,
+      "stage": "intro"
+    },
+    {
+      "timestamp": "2026-02-12T14:07:11.953490",
+      "role": "candidate",
+      "content": "嗯，我熟悉flex和flex api，我认为flash的api他这个非常好用，然后非常简洁，然后主要是他要比Java那些容易部署，然后包括测试啊啥都会比较快一些。",
+      "audio_url": null,
+      "stage": "intro"
+    },
+    {
+      "timestamp": "2026-02-12T14:07:14.596894",
+      "role": "interviewer",
+      "content": "张三先生，您提到熟悉Flask和FastAPI。请问在您过去的项目中，是否曾经设计过需要处理高并发请求的系统架构？能否举例说明一下您是如何应对这种需求的？",
+      "audio_url": null,
+      "stage": "intro"
+    },
+    {
+      "timestamp": "2026-02-12T14:08:08.681953",
+      "role": "candidate",
+      "content": "啊，面对高迸发处理需求呢，就主要是在后端做一个处理，就我在后端的话，也需要把它形成一个高并发这样的一个状态，然后呢同时就是我的某些函数，它如果说这个函数的话，它是就比如说它是执行完之后它才会进行下一步的操作，而这个反倒它执行的速度非常的慢，比如说它是一个音频识别，又或者是它是一个语音合成这么一个过程。又或者说它是api的，这样就就像w现在api的调用。",
+      "audio_url": null,
+      "stage": "intro"
+    },
+    {
+      "timestamp": "2026-02-12T14:08:11.557386",
+      "role": "interviewer",
+      "content": "我注意到您的回答似乎没有完全回答我的问题。请问，在过去的项目中，您是否曾经设计过需要处理高并发请求的系统架构？能否举例说明一下您是如何应对这种需求的？",
+      "audio_url": null,
+      "stage": "intro"
+    },
+    {
+      "timestamp": "2026-02-12T14:08:28.375395",
+      "role": "candidate",
+      "content": "面试结束",
+      "audio_url": null,
+      "stage": "professional"
+    }
+  ],
+  "resume_snapshot": "张三，5年后端开发经验，精通Python、Flask、Docker，有微服务架构设计经验。...",
+  "job_snapshot": "高级Python后端工程师，要求熟悉Flask/FastAPI，有AI项目经验，负责设计高并发系统架构。..."
+}

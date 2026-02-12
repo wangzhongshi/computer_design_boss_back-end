@@ -25,10 +25,11 @@ import tempfile
 import os
 from flask import Flask, request, jsonify
 from werkzeug.utils import secure_filename
+from  set_up import config
 
+config_data = config()
 
-
-db = EndDemoDatabase(host='localhost', user='root', password='123456')
+db = EndDemoDatabase(host=config_data.set_db_host, user=config_data.set_db_user, password=config_data.set_db_password)
 job_prot = Job_prot(db.connection)
 job_category_simple = Job_category_simple(db.connection)
 forum_comments = Forum_comments(db.connection)
@@ -46,12 +47,12 @@ manager = InterviewManager()
 think_speaker = think_speaker()
 
 # 假设的JWT密钥和配置
-JWT_SECRET = 'your-secret-key'
-JWT_ALGORITHM = 'HS256'
+JWT_SECRET = config_data.set_JWT_SECRET
+JWT_ALGORITHM = config_data.set_JWT_ALGORITHM
 
 app = Flask(__name__)
 CORS(app)  # 允许跨域
-UPLOAD_FOLDER = 'static/audio'
+UPLOAD_FOLDER = config_data.set_UPLOAD_FOLDER
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 

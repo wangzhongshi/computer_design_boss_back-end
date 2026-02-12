@@ -16,6 +16,8 @@ import os
 import logging
 from typing import Optional, Callable
 from dataclasses import dataclass
+from set_up import config
+config_data = config()
 
 # 配置日志
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -457,9 +459,9 @@ class AudioConverter:
 def demo_file_recognition(audio_path=None):
     """演示：文件识别"""
     # 直接在函数中设置密钥（后续优化为其他方式）
-    appid = '2e81dc67'
-    api_key = 'fd79a4d97543e35b2881a64b81b8f124'
-    api_secret = 'NDcwM2M1OWY0NTQxOWZiZjg4YzZiNzY3'
+    appid = config_data.set_iat_appid
+    api_key = config_data.set_iat_api_key
+    api_secret = config_data.set_iat_api_secret
 
     asr = XunfeiASR(appid, api_key, api_secret)
 
@@ -488,30 +490,7 @@ def demo_file_recognition(audio_path=None):
     except Exception as e:
         print(f'错误：{e}')
         logger.error(f"识别失败: {e}")
-
-
-def demo_microphone_recognition():
-    """演示：麦克风实时识别"""
-    # 直接在函数中设置密钥（后续优化为其他方式）
-    appid = '2e81dc67'
-    api_key = 'fd79a4d97543e35b2881a64b81b8f124'
-    api_secret = 'NDcwM2M1OWY0NTQxOWZiZjg4YzZiNzY3'
-
-    asr = XunfeiASR(appid, api_key, api_secret)
-
-    def on_progress(text: str):
-        print(f"\r📝 识别中: {text}", end="", flush=True)
-
-    try:
-        result = asr.recognize_microphone(
-            record_seconds=5,
-            on_progress=on_progress
-        )
-        print(f"\n✅ 识别结果: {result}")
-    except Exception as e:
-        logger.error(f"识别失败: {e}")
-
-
-if __name__ == "__main__":
-
-    demo_file_recognition()
+#
+# if __name__ == "__main__":
+#
+#     demo_file_recognition()
