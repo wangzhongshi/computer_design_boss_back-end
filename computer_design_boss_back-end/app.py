@@ -3177,7 +3177,7 @@ def api_ask_by_pdf_and_job_id():
             'data': {
                 'analysis': ai_answer
             }
-        })
+        }),200
 
     except Exception as e:
         current_app.logger.error(f'PDF+职位ID分析异常：{e}')
@@ -3235,7 +3235,7 @@ def api_ask_by_pdf_and_job_text():
             'data': {
                 'analysis': ai_answer
             }
-        })
+        }),200
 
     except Exception as e:
         current_app.logger.error(f'PDF+职位文本分析异常：{e}')
@@ -3273,7 +3273,7 @@ def api_ask_by_user_id_and_job_text():
             'data': {
                 'analysis': ai_answer
             }
-        })
+        }),200
 
     except Exception as e:
         current_app.logger.error(f'用户ID+职位文本分析异常：{e}')
@@ -4217,11 +4217,11 @@ def transcribe_audio(session_id):
         os.remove(temp_path)
 
         return jsonify({
-            'code':200,
+            'code': 200,
             'text': recognized_text,
             'confidence': 0.95,  # 置信度，根据实际ASR返回
             'session_id': session_id
-        }),200
+        }), 200
 
     except Exception as e:
         app.logger.error(f'出错：{e}')
@@ -4284,12 +4284,13 @@ def process_answer(session_id):
         print(f'next_question:{next_question}')
 
         return jsonify({
+            'code': 200,
             'question': next_question,
             'audio_url': f'/static/audio/{audio_filename}',
             'stage': session['stage'],
             'question_number': session['question_count'],
             'is_ended': False
-        })
+        }), 200
 
     except Exception as e:
         return jsonify({'error': str(e)}), 500
@@ -4312,10 +4313,11 @@ def get_history(session_id):
         return jsonify({'error': '会话不存在'}), 404
 
     return jsonify({
+        'code': 200,
         'session_id': session_id,
         'current_stage': session['stage'],
         'history': session['history']
-    })
+    }),200
 
 
 
@@ -4337,7 +4339,7 @@ def health_check():
             'database': db_status,
             'service': '运行正常'
         }
-    })
+    }),200
 
 
 if __name__ == '__main__':

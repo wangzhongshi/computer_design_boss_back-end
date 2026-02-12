@@ -24,12 +24,12 @@ class Ai_job_demo(setter):
         self.resume_manager = ResumeManager(self.db.connection)
         self.job_prot = Job_prot(self.db.connection)
 
-        self.appid = "af5d91f0"  # 填写控制台中获取的 APPID 信息
-        self.api_secret = "OGRhOTVkMGY3ZTA2M2U2OWM2MTEyZmM4"  # 填写控制台中获取的 APISecret 信息
-        self.api_key = "bbc640957c9754ce610385539be4dcdc"  # 填写控制台中获取的 APIKey 信息
-        self.domain = "spark-x"  # 控制请求的模型版本
+        self.appid = "9e54e001"  # 填写控制台中获取的 APPID 信息
+        self.api_secret = "MWZlZmE4MzE4YTMxNWUxMDg1ZDI2MDBi"  # 填写控制台中获取的 APISecret 信息
+        self.api_key = "55edcb29ab95c53aad65b95343544821"  # 填写控制台中获取的 APIKey 信息
+        self.domain = "generalv3"  # 控制请求的模型版本
         # 服务地址
-        self.Spark_url = "wss://spark-api.xf-yun.com/v1/x1"  # 查看接口文档  https://www.xfyun.cn/doc/spark/X1ws.html
+        self.Spark_url = "wss://spark-api.xf-yun.com/v3.1/chat"  # 查看接口文档  https://www.xfyun.cn/doc/spark/X1ws.html
         self.user_id = '1143526543212345678'
         self.job_id = '1'
         self.pdf_path = r'C:\Users\lenovo\Desktop\王柄屹简历.pdf'

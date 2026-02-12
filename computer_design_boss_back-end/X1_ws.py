@@ -124,8 +124,8 @@ def gen_params(appid, domain,question):
         "parameter": {
             "chat": {
                 "domain": domain,
-                "temperature": 1.2,
-                "max_tokens": 32768       # 请根据不同模型支持范围，适当调整该值的大小
+                "temperature": 1,
+                "max_tokens": 5000       # 请根据不同模型支持范围，适当调整该值的大小
             }
         },
         "payload": {
@@ -190,9 +190,11 @@ class think_speaker:
         self.appid = "2e81dc67"  # 填写控制台中获取的 APPID 信息
         self.api_secret = "NDcwM2M1OWY0NTQxOWZiZjg4YzZiNzY3"  # 填写控制台中获取的 APISecret 信息
         self.api_key = "fd79a4d97543e35b2881a64b81b8f124"  # 填写控制台中获取的 APIKey 信息
-        self.domain = "spark-x"  # 控制请求的模型版本
+        # self.domain = "spark-x"  # 控制请求的模型版本
+        self.domain = "generalv3"  # 控制请求的模型版本
+
         # 服务地址
-        self.Spark_url = "wss://spark-api.xf-yun.com/v1/x1"  # 查看接口文档  https://www.xfyun.cn/doc/spark/X1ws.html
+        self.Spark_url = "wss://spark-api.xf-yun.com/v3.1/chat"  # 查看接口文档  https://www.xfyun.cn/doc/spark/X1ws.html
         # self.img_path = r'uploads\img.png'
         self.img_path = r'uploads/images/img.png'
 
@@ -210,22 +212,22 @@ class think_speaker:
 
 
 
-if __name__ == '__main__':
-    # 以下密钥信息从服务管控页面获取：https://console.xfyun.cn/services/bmx1
-    appid = "2e81dc67"  # 填写控制台中获取的 APPID 信息
-    api_secret = "NDcwM2M1OWY0NTQxOWZiZjg4YzZiNzY3"  # 填写控制台中获取的 APISecret 信息
-    api_key = "fd79a4d97543e35b2881a64b81b8f124"  # 填写控制台中获取的 APIKey 信息
-    domain = "spark-x"       #控制请求的模型版本
-    # 服务地址
-    Spark_url = "wss://spark-api.xf-yun.com/v1/x1"  #查看接口文档  https://www.xfyun.cn/doc/spark/X1ws.html
-    img_path = r'img.png'
-
-    while (1):
-        Input = input("\n" + "我:")
-        if '垃圾分类' in Input:
-            g_c_answer = garbage_classification(Path(img_path))
-            print(g_c_answer)
-            Input = Input + g_c_answer
-            main_answer(appid, api_key, api_secret, Spark_url, domain, Input)
-        else:
-            main_answer(appid, api_key, api_secret, Spark_url, domain, Input)
+# if __name__ == '__main__':
+#     # 以下密钥信息从服务管控页面获取：https://console.xfyun.cn/services/bmx1
+#     appid = "9e54e001"  # 填写控制台中获取的 APPID 信息
+#     api_secret = "MWZlZmE4MzE4YTMxNWUxMDg1ZDI2MDBi"  # 填写控制台中获取的 APISecret 信息
+#     api_key = "55edcb29ab95c53aad65b95343544821"  # 填写控制台中获取的 APIKey 信息
+#     domain = "spark-x"       #控制请求的模型版本
+#     # 服务地址
+#     Spark_url = "wss://spark-api.xf-yun.com/v1/x1"  #查看接口文档  https://www.xfyun.cn/doc/spark/X1ws.html
+#     img_path = r'img.png'
+#
+#     while (1):
+#         Input = input("\n" + "我:")
+#         if '垃圾分类' in Input:
+#             g_c_answer = garbage_classification(Path(img_path))
+#             print(g_c_answer)
+#             Input = Input + g_c_answer
+#             main_answer(appid, api_key, api_secret, Spark_url, domain, Input)
+#         else:
+#             main_answer(appid, api_key, api_secret, Spark_url, domain, Input)
