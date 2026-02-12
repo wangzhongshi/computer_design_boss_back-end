@@ -3339,12 +3339,17 @@ def api_chat():
         # 调用AI对话函数
         ai_answer = ai_job_demo.chat(user_message)
 
+        # return jsonify({
+        #     'code': 200,
+        #     'message': '对话成功',
+        #     'data': {
+        #         'response': ai_answer
+        #     }
+        # })
         return jsonify({
             'code': 200,
             'message': '对话成功',
-            'data': {
-                'response': ai_answer
-            }
+            'data': ai_answer
         })
 
     except Exception as e:

@@ -17,6 +17,33 @@ from iat_ws_python3 import demo_file_recognition
 from X1_ws import main_answer
 from set_up import config
 config_data = config()
+
+
+def extract_assistant_content(func):
+    """
+    装饰器：从对话列表中提取 assistant 角色的内容
+    """
+
+    def wrapper(*args, **kwargs):
+        # 调用原始函数获取响应（预期是一个列表）
+        response = func(*args, **kwargs)
+
+        # 确保返回的是列表
+        if isinstance(response, list):
+            # 遍历列表找到 assistant 角色的内容
+            for item in response:
+                if isinstance(item, dict) and item.get("role") == "assistant":
+                    return item.get("content", "")
+
+            # 没找到 assistant，返回空字符串
+            return ""
+
+        # 如果不是列表，返回原始值（或根据需求处理）
+        return response
+
+    return wrapper
+
+
 class Ai_job_demo:
     def __init__(self):
         self.db = EndDemoDatabase(host='localhost', user='root', password='123456')
@@ -195,6 +222,7 @@ class Ai_job_demo:
         job_text = self.generate_job_description(job_text)
         return job_text
 
+    @extract_assistant_content
     def ask_by_pdf_and_job_id(self, pdf_path, job_id):
         user_pdf_text = self.extract_pdf_text(pdf_path)
         print(f'user_pdf_text:{user_pdf_text}')
@@ -204,6 +232,7 @@ class Ai_job_demo:
         ai_answer = main_answer(self.appid, self.api_key, self.api_secret, self.Spark_url, self.domain, first_input_qus)
         return ai_answer
 
+    @extract_assistant_content
     def ask_by_pdf_and_job_text(self, pdf_path, job_text):
         user_pdf_text = self.extract_pdf_text(pdf_path)
         first_input_qus = config_data.set_request_str_ask.format(user_pdf_text=user_pdf_text,
@@ -211,6 +240,7 @@ class Ai_job_demo:
         ai_answer = main_answer(self.appid, self.api_key, self.api_secret, self.Spark_url, self.domain, first_input_qus)
         return ai_answer
 
+    @extract_assistant_content
     def ask_by_user_id_and_job_text(self, user_id, job_text):
         user_text = self.get_user_app_text(user_id)
         first_input_qus = config_data.set_request_str_ask.format(user_pdf_text=user_text,
@@ -218,6 +248,7 @@ class Ai_job_demo:
         ai_answer = main_answer(self.appid, self.api_key, self.api_secret, self.Spark_url, self.domain, first_input_qus)
         return ai_answer
 
+    @extract_assistant_content
     def ask_by_user_id_and_job_id(self, user_id, job_id):
         user_text = self.get_user_app_text(user_id)
         job_text = self.get_job_text_in_db(job_id)
@@ -226,22 +257,27 @@ class Ai_job_demo:
         ai_answer = main_answer(self.appid, self.api_key, self.api_secret, self.Spark_url, self.domain, first_input_qus)
         return ai_answer
 
+    @extract_assistant_content
     def chat(self, user_ask):
         ai_answer = main_answer(self.appid, self.api_key, self.api_secret, self.Spark_url, self.domain, user_ask)
+
         return ai_answer
 
+    @extract_assistant_content
     def resume_evalu_by_user_id(self, user_id):
         user_text = self.get_user_app_text(user_id)
         first_input_qus = config_data.set_request_str_resume.format(user_text=user_text)
         ai_answer = main_answer(self.appid, self.api_key, self.api_secret, self.Spark_url, self.domain, first_input_qus)
         return ai_answer
 
+    @extract_assistant_content
     def resume_evalu_by_user_pdf(self, pdf_path):
         user_pdf_text = self.extract_pdf_text(pdf_path)
         first_input_qus = config_data.set_request_str_resume.format(user_text=user_pdf_text)
         ai_answer = main_answer(self.appid, self.api_key, self.api_secret, self.Spark_url, self.domain, first_input_qus)
         return ai_answer
 
+    @extract_assistant_content
     def success_rate_by_pdf_and_job_id(self, pdf_path, job_id):
         user_pdf_text = self.extract_pdf_text(pdf_path)
         job_text = self.get_job_text_in_db(job_id)
@@ -250,6 +286,7 @@ class Ai_job_demo:
         ai_answer = main_answer(self.appid, self.api_key, self.api_secret, self.Spark_url, self.domain, first_input_qus)
         return ai_answer
 
+    @extract_assistant_content
     def success_rate_by_pdf_and_job_text(self, pdf_path, job_text):
         user_pdf_text = self.extract_pdf_text(pdf_path)
         first_input_qus = config_data.set_request_str_sucess.format(user_pdf_text=user_pdf_text,
@@ -257,6 +294,7 @@ class Ai_job_demo:
         ai_answer = main_answer(self.appid, self.api_key, self.api_secret, self.Spark_url, self.domain, first_input_qus)
         return ai_answer
 
+    @extract_assistant_content
     def success_rate_by_user_id_and_job_text(self, user_id, job_text):
         user_text = self.get_user_app_text(user_id)
         first_input_qus = config_data.set_request_str_success.format(user_pdf_text=user_text,
@@ -264,6 +302,7 @@ class Ai_job_demo:
         ai_answer = main_answer(self.appid, self.api_key, self.api_secret, self.Spark_url, self.domain, first_input_qus)
         return ai_answer
 
+    @extract_assistant_content
     def success_rate_by_user_id_and_job_id(self, user_id, job_id):
         user_text = self.get_user_app_text(user_id)
         job_text = self.get_job_text_in_db(job_id)
@@ -272,6 +311,7 @@ class Ai_job_demo:
         ai_answer = main_answer(self.appid, self.api_key, self.api_secret, self.Spark_url, self.domain, first_input_qus)
         return ai_answer
 
+    @extract_assistant_content
     def uni_plan_by_pdf_and_job_id(self, pdf_path, job_id,user_grade):
         user_pdf_text = self.extract_pdf_text(pdf_path)
         job_text = self.get_job_text_in_db(job_id)
@@ -281,6 +321,7 @@ class Ai_job_demo:
         ai_answer = main_answer(self.appid, self.api_key, self.api_secret, self.Spark_url, self.domain, first_input_qus)
         return ai_answer
 
+    @extract_assistant_content
     def uni_plan_by_pdf_and_job_text(self, pdf_path, job_text,user_grade):
         user_pdf_text = self.extract_pdf_text(pdf_path)
         first_input_qus = config_data.set_request_str_uni.format(user_pdf_text=user_pdf_text,
@@ -289,6 +330,7 @@ class Ai_job_demo:
         ai_answer = main_answer(self.appid, self.api_key, self.api_secret, self.Spark_url, self.domain, first_input_qus)
         return ai_answer
 
+    @extract_assistant_content
     def uni_plan_by_user_id_and_job_text(self, user_id, job_text, user_grade):
         user_text = self.get_user_app_text(user_id)
         first_input_qus = config_data.set_request_str_uni.format(user_pdf_text=user_text,
@@ -297,6 +339,7 @@ class Ai_job_demo:
         ai_answer = main_answer(self.appid, self.api_key, self.api_secret, self.Spark_url, self.domain, first_input_qus)
         return ai_answer
 
+    @extract_assistant_content
     def uni_plan_by_user_id_and_job_id(self, user_id, job_id,user_grade):
         user_text = self.get_user_app_text(user_id)
         job_text = self.get_job_text_in_db(job_id)
