@@ -1,0 +1,1326 @@
+我来为你编写一份完整的API接口文档。这份文档将基于你的Flask代码，涵盖所有功能模块，包括用户管理、岗位管理、简历管理、AI功能、论坛、收藏投递、反馈投诉以及面试模拟等接口。
+
+---
+
+# 招聘平台后端 API 接口文档
+
+**版本**: v1.0
+**基础URL**: `http://localhost:5000`
+**数据格式**: JSON
+**认证方式**: JWT Token (Bearer Token)
+
+---
+
+## 目录
+1. [通用规范](#通用规范)
+2. [认证相关](#认证相关)
+3. [用户管理](#用户管理)
+4. [岗位管理](#岗位管理)
+5. [简历管理](#简历管理)
+6. [收藏与投递](#收藏与投递)
+7. [论坛功能](#论坛功能)
+8. [反馈与投诉](#反馈与投诉)
+9. [AI功能](#ai功能)
+10. [面试模拟](#面试模拟)
+
+---
+
+## 通用规范
+
+### 请求头
+```http
+Content-Type: application/json
+Authorization: Bearer <jwt_token>  # 需要认证的接口
+```
+
+### 响应格式
+```json
+{
+    "code": 200,        // 状态码：200成功，400参数错误，401未授权，403禁止访问，404不存在，500服务器错误
+    "message": "success", // 提示信息
+    "data": {}          // 返回数据
+}
+```
+
+### 公共状态码
+| 状态码 | 说明 |
+|--------|------|
+| 200 | 成功 |
+| 300 | 业务逻辑错误（参数缺失等） |
+| 400 | 请求参数错误 |
+| 401 | 未授权/Token无效 |
+| 403 | 禁止访问（账号禁用等） |
+| 404 | 资源不存在 |
+| 500 | 服务器内部错误 |
+
+---
+
+## 认证相关
+
+### 1. 用户注册
+**POST** `/api/user/register`
+
+**请求参数**:
+```json
+{
+    "mobile": "13800138000",      // 必填，手机号
+    "password": "password123",    // 必填，至少8位
+    "sms_code": "123456",         // 必填，短信验证码
+    "email": "user@example.com"   // 可选，邮箱
+}
+```
+
+**响应示例**:
+```json
+{
+    "code": 200,
+    "message": "注册成功",
+    "data": {
+        "user_id": 1712345678901,
+        "mobile": "13800138000",
+        "register_time": "2024-01-15 10:30:00"
+    }
+}
+```
+
+---
+
+### 2. 用户登录
+**POST** `/api/user/login`
+
+**请求参数**:
+```json
+{
+    "mobile": "13800138000",
+    "password": "password123"
+}
+```
+
+**请求头**:
+```http
+X-Device-Model: iPhone14,2      // 设备型号（可选）
+X-Device-Type: 1                // 设备类型：0未知，1iOS，2Android（可选）
+```
+
+**响应示例**:
+```json
+{
+    "code": 200,
+    "message": "登录成功",
+    "data": {
+        "token": "eyJ0eXAiOiJKV1QiLCJhbGc...",
+        "user_info": {
+            "user_id": 1712345678901,
+            "mobile": "13800138000",
+            "email": "user@example.com",
+            "real_name": "张三",
+            "avatar_url": "https://example.com/avatar.jpg",
+            "status": 1,
+            "job_status": 0,
+            "last_login_time": "2024-01-15 10:30:00"
+        }
+    }
+}
+```
+
+---
+
+### 3. 用户登出
+**POST** `/api/user/logout`
+**认证**: 需要
+
+**响应示例**:
+```json
+{
+    "code": 200,
+    "message": "登出成功",
+    "data": {
+        "logout_time": "2024-01-15 10:30:00"
+    }
+}
+```
+
+---
+
+## 用户管理
+
+### 4. 获取个人信息
+**GET** `/api/user/profile`
+**认证**: 需要
+
+**响应示例**:
+```json
+{
+    "code": 200,
+    "message": "获取成功",
+    "data": {
+        "user_id": 1712345678901,
+        "mobile": "13800138000",
+        "email": "user@example.com",
+        "real_name": "张三",
+        "gender": 1,
+        "birth_date": "1998-05-20",
+        "education_level": "本科",
+        "major": "计算机科学",
+        "enrollment_year": 2016,
+        "graduation_year": 2020,
+        "bio": "个人简介...",
+        "avatar_url": "https://example.com/avatar.jpg",
+        "status": 1,
+        "job_status": 0,
+        "register_time": "2024-01-01 10:00:00",
+        "last_login_time": "2024-01-15 10:30:00"
+    }
+}
+```
+
+---
+
+### 5. 更新个人信息
+**PUT** `/api/user/profile`
+**认证**: 需要
+
+**请求参数**:
+```json
+{
+    "real_name": "张三",
+    "email": "newemail@example.com",
+    "gender": 1,
+    "birth_date": "1998-05-20",
+    "education_level": "本科",
+    "major": "软件工程",
+    "bio": "更新后的简介",
+    "avatar_url": "https://example.com/new_avatar.jpg"
+}
+```
+
+**注意**: 不可更新字段：`user_id`, `mobile`, `password_hash`, `status`, `register_time` 等
+
+---
+
+### 6. 修改密码
+**PUT** `/api/user/password`
+**认证**: 需要
+
+**请求参数**:
+```json
+{
+    "old_password": "oldpass123",
+    "new_password": "newpass123"  // 至少8位
+}
+```
+
+---
+
+### 7. 更新头像
+**POST** `/api/user/avatar`
+**认证**: 需要
+
+**请求参数**:
+```json
+{
+    "avatar_url": "https://example.com/avatar.jpg"
+}
+```
+
+---
+
+### 8. 获取用户状态
+**GET** `/api/user/status`
+**认证**: 需要
+
+**响应示例**:
+```json
+{
+    "code": 200,
+    "data": {
+        "user_id": 1712345678901,
+        "status": 1,
+        "status_text": "正常",
+        "job_status": 0,
+        "job_status_text": "待业",
+        "last_login_time": "2024-01-15 10:30:00",
+        "last_device_type": "iOS"
+    }
+}
+```
+
+**状态说明**:
+- `status`: 0=禁用, 1=正常, 2=未激活, 3=锁定
+- `job_status`: 0=待业, 1=实习中, 2=应届求职
+
+---
+
+### 9. 搜索用户（公开）
+**GET** `/api/user/search`
+
+**查询参数**:
+- `keyword`: 搜索关键词（可选）
+- `page`: 页码，默认1（可选）
+- `page_size`: 每页数量，默认20（可选）
+
+**响应示例**:
+```json
+{
+    "code": 200,
+    "data": {
+        "users": [
+            {
+                "user_id": 1712345678901,
+                "real_name": "张三",
+                "avatar_url": "...",
+                "bio": "简介",
+                "education_level": "本科",
+                "major": "计算机",
+                "graduation_year": 2020,
+                "job_status": 0
+            }
+        ],
+        "total": 100,
+        "page": 1,
+        "page_size": 20,
+        "total_pages": 5
+    }
+}
+```
+
+---
+
+### 10. 获取用户公开信息
+**GET** `/api/user/public/{user_id}`
+
+**响应示例**: 同搜索用户中的用户对象
+
+---
+
+## 岗位管理
+
+### 11. 获取全部岗位列表
+**GET** `/api/job/Job_List_all`
+
+**响应示例**:
+```json
+[
+    {
+        "id": 1,
+        "title": "Java开发工程师",
+        "company_name": "某某科技",
+        "salary_min": 15000,
+        "salary_max": 25000,
+        "city": "北京",
+        "emp_type": 1
+    }
+]
+```
+
+---
+
+### 12. 按类别获取岗位
+**POST** `/api/job/job_lis_one_type`
+
+**请求参数**:
+```json
+{
+    "category_id": "1001"  // 岗位类别编码，100表示全部
+}
+```
+
+---
+
+### 13. 按类别+雇佣类型获取岗位
+**POST** `/api/job/job_list_two_given`
+
+**请求参数**:
+```json
+{
+    "category_id": "1001",  // 岗位类别
+    "emp_type": "1"         // 1=全职, 2=兼职, 3=实习
+}
+```
+
+---
+
+### 14. 搜索岗位
+**POST** `/api/job/job_search`
+
+**请求参数**:
+```json
+{
+    "user_input": "开发工程师"
+}
+```
+
+---
+
+### 15. 获取岗位详情
+**POST** `/api/job/job_details`
+
+**请求参数**:
+```json
+{
+    "id": "1"  // 岗位唯一ID
+}
+```
+
+**响应示例**:
+```json
+{
+    "id": 1,
+    "boss_job_id": "job_123",
+    "title": "Java开发工程师",
+    "company_id": 100,
+    "company_name": "某某科技",
+    "city_id": 110100,
+    "city": "北京",
+    "category_id": 1001,
+    "category_name": "后端开发",
+    "emp_type": 1,
+    "salary_min": 15000,
+    "salary_max": 25000,
+    "salary_desc": "15k-25k·14薪",
+    "edu_req": "本科",
+    "exp_req": "3-5年",
+    "district": "海淀区",
+    "address": "中关村软件园",
+    "description": "岗位职责...",
+    "require_list": ["Java", "Spring", "MySQL"],
+    "welfare_list": ["五险一金", "带薪年假", "股票期权"],
+    "publish_time": "2024-01-10",
+    "status": 1
+}
+```
+
+---
+
+### 16. 发布岗位
+**POST** `/api/job/job_add`
+**认证**: 需要（建议添加管理员权限）
+
+**请求参数**:
+```json
+{
+    "boss_job_id": "job_123",      // 必填，平台岗位ID
+    "title": "Java开发工程师",      // 必填
+    "company_id": 100,             // 必填
+    "city_id": 110100,             // 必填
+    "category_id": 1001,           // 必填
+    "emp_type": 1,                 // 1全职,2兼职,3实习，默认1
+    "salary_min": 15000,
+    "salary_max": 25000,
+    "salary_desc": "15k-25k",
+    "edu_req": "本科",
+    "exp_req": "3-5年",
+    "district": "海淀区",
+    "address": "中关村",
+    "recruiter_id": 1001,
+    "description": "岗位描述...",
+    "require_list": ["Java", "Spring"],
+    "welfare_list": ["五险一金"],
+    "publish_time": "2024-01-15 10:00:00",
+    "refresh_time": "2024-01-15 10:00:00",
+    "status": 1
+}
+```
+
+---
+
+### 17. 获取岗位分类列表
+**GET** `/api/job_intro/job_intro_list`
+
+**响应示例**:
+```json
+[
+    {
+        "id": 1,
+        "category_code": "1001",
+        "category_name": "Java开发",
+        "parent_code": "100",
+        "description": "后端开发岗位"
+    }
+]
+```
+
+---
+
+## 简历管理
+
+### 18. 创建/更新简历基本信息
+**POST** `/api/resume/basic`
+**认证**: 需要
+
+**请求参数**:
+```json
+{
+    "real_name": "张三",
+    "phone": "13800138000",
+    "email": "zhangsan@example.com",
+    "education_level": "本科",
+    "school_name": "清华大学",
+    "major": "计算机科学",
+    "graduation_year": 2020,
+    "gender": 1,
+    "birth_date": "1998-05-20",
+    "city": "北京",
+    "self_evaluation": "自我评价..."
+}
+```
+
+---
+
+### 19. 获取简历基本信息
+**GET** `/api/resume/basic`
+**认证**: 需要
+
+---
+
+### 20. 删除简历
+**DELETE** `/api/resume/basic`
+**认证**: 需要
+
+---
+
+### 21. 添加证书
+**POST** `/api/resume/certificates`
+**认证**: 需要
+
+**请求参数**:
+```json
+{
+    "cert_name": "PMP项目管理",
+    "cert_type": "professional",  // professional职业证书, language语言证书, skill技能证书
+    "cert_org": "PMI",
+    "issue_date": "2023-06-01",
+    "expiry_date": "2026-06-01",
+    "cert_no": "PMP123456",
+    "description": "项目管理专业人士认证"
+}
+```
+
+---
+
+### 22. 获取证书列表
+**GET** `/api/resume/certificates`
+**认证**: 需要
+
+**查询参数**: `cert_type` 可选，过滤证书类型
+
+---
+
+### 23. 更新/创建校园经历
+**POST** `/api/resume/campus-experience`
+**认证**: 需要
+
+**请求参数**:
+```json
+{
+    "org_name": "学生会",
+    "role": "主席",
+    "start_date": "2019-09-01",
+    "end_date": "2020-06-01",
+    "description": "负责组织校园活动...",
+    "achievements": "成功举办10场大型活动"
+}
+```
+
+---
+
+### 24. 获取校园经历
+**GET** `/api/resume/campus-experience`
+**认证**: 需要
+
+---
+
+### 25. 添加实习经历
+**POST** `/api/resume/internships`
+**认证**: 需要
+
+**请求参数**:
+```json
+{
+    "company_name": "字节跳动",
+    "position": "后端开发实习生",
+    "start_date": "2023-07-01",
+    "end_date": "2023-12-01",
+    "department": "基础架构",
+    "description": "负责微服务开发...",
+    "achievements": "优化接口性能提升30%"
+}
+```
+
+---
+
+### 26. 获取实习经历列表
+**GET** `/api/resume/internships`
+**认证**: 需要
+
+---
+
+### 27. 更新实习经历
+**PUT** `/api/resume/internships/{internship_id}`
+**认证**: 需要
+
+---
+
+### 28. 删除实习经历
+**DELETE** `/api/resume/internships/{internship_id}`
+**认证**: 需要
+
+---
+
+### 29. 更新/创建求职意向
+**POST** `/api/resume/job-intention`
+**认证**: 需要
+
+**请求参数**:
+```json
+{
+    "target_industries": ["互联网", "金融科技"],
+    "target_positions": ["Java开发", "后端工程师"],
+    "salary_min": 20000,
+    "salary_max": 35000,
+    "target_cities": ["北京", "上海"],
+    "job_type": 1,  // 1全职,2兼职,3实习
+    "entry_time": "随时"
+}
+```
+
+---
+
+### 30. 获取求职意向
+**GET** `/api/resume/job-intention`
+**认证**: 需要
+
+---
+
+### 31. 更新/创建求职偏好
+**POST** `/api/resume/job-preference`
+**认证**: 需要
+
+**请求参数**:
+```json
+{
+    "company_size": "不限",      // 初创/中型/大型/不限
+    "company_stage": "不限",     // 天使轮/A轮/上市公司/不限
+    "work_style": "结果导向",     // 结果导向/过程导向/不限
+    "team_style": "扁平管理",     // 扁平管理/层级管理/不限
+    "work_life_balance": 3,      // 1-5，工作生活平衡重视程度
+    "growth_space": 4,           // 1-5，成长空间重视程度
+    "tech_stack": ["Java", "Go", "云原生"]
+}
+```
+
+---
+
+### 32. 获取完整简历
+**GET** `/api/resume/complete`
+**认证**: 需要
+
+**响应示例**:
+```json
+{
+    "basic_info": {...},
+    "certificates": [...],
+    "campus_experience": {...},
+    "internships": [...],
+    "job_intention": {...},
+    "job_preference": {...}
+}
+```
+
+---
+
+## 收藏与投递
+
+### 33. 添加收藏
+**POST** `/api/job/favorite/add`
+**认证**: 需要
+
+**请求参数**:
+```json
+{
+    "job_id": 1001,
+    "remarks": "薪资不错，重点关注"
+}
+```
+
+---
+
+### 34. 取消收藏
+**POST** `/api/job/favorite/cancel`
+**认证**: 需要
+
+**请求参数**:
+```json
+{
+    "boss_job_id": 1001
+}
+```
+
+---
+
+### 35. 获取收藏列表
+**GET** `/api/job/favorite/list`
+**认证**: 需要
+
+**查询参数**: `include_canceled` 是否包含已取消，0或1，默认0
+
+---
+
+### 36. 检查是否已收藏
+**GET** `/api/job/favorite/check`
+**认证**: 需要
+
+**查询参数**: `boss_job_id` 岗位ID
+
+**响应示例**:
+```json
+{
+    "code": 200,
+    "data": {
+        "is_favorite": true
+    }
+}
+```
+
+---
+
+### 37. 更新收藏备注
+**POST** `/api/job/favorite/update_remarks`
+**认证**: 需要
+
+**请求参数**:
+```json
+{
+    "boss_job_id": 1001,
+    "remarks": "已面试，等待结果"
+}
+```
+
+---
+
+### 38. 批量取消收藏
+**POST** `/api/job/favorite/batch_cancel`
+**认证**: 需要
+
+**请求参数**:
+```json
+{
+    "boss_job_id_list": [1001, 1002, 1003]
+}
+```
+
+---
+
+### 39. 添加投递
+**POST** `/api/job/deliver/add`
+**认证**: 需要
+
+**请求参数**: 同添加收藏
+
+---
+
+### 40. 取消投递
+**POST** `/api/job/deliver/cancel`
+**认证**: 需要
+
+**请求参数**: 同取消收藏
+
+---
+
+### 41. 获取投递列表
+**GET** `/api/job/deliver/list`
+**认证**: 需要
+
+**查询参数**: `include_canceled` 是否包含已取消
+
+---
+
+### 42. 检查是否已投递
+**GET** `/api/job/deliver/check`
+**认证**: 需要
+
+---
+
+### 43. 更新投递备注
+**POST** `/api/job/deliver/update_remarks`
+**认证**: 需要
+
+---
+
+### 44. 批量取消投递
+**POST** `/api/job/deliver/batch_cancel`
+**认证**: 需要
+
+---
+
+## 论坛功能
+
+### 45. 获取全部评论
+**GET** `/api/forum/all_forum_data`
+
+---
+
+### 46. 获取某类岗位下的评论
+**POST** `/api/forum/forum_one_category`
+
+**请求参数**:
+```json
+{
+    "category_id": "1001"
+}
+```
+
+---
+
+### 47. 获取所有一级评论
+**GET** `/api/forum/forum_all_first_talk`
+
+---
+
+### 48. 获取评论的回复（二级评论）
+**POST** `/api/forum/forums_back`
+
+**请求参数**:
+```json
+{
+    "parent_id": "123"
+}
+```
+
+---
+
+### 49. 发表评论
+**POST** `/api/forum/forums_add`
+**认证**: 需要
+
+**请求参数**:
+```json
+{
+    "category_id": "1001",    // 岗位分类ID
+    "parent_id": "",          // 回复的评论ID，一级评论为空
+    "content": "评论内容",
+    "level": "1",             // 1=一级评论，2=二级评论（回复）
+    "sort_order": "0"         // 展示排序
+}
+```
+
+---
+
+### 50. 删除评论
+**POST** `/api/forum/forum_delete`
+
+**请求参数**:
+```json
+{
+    "id": "123"
+}
+```
+
+---
+
+### 51. 评论计数
+**POST** `/api/forum/forum_count`
+
+**请求参数**:
+```json
+{
+    "switch": "all",          // all=全部, category=某类, back=某评论回复, user=某用户
+    "category_id": "1001",    // switch=category时必填
+    "parent_id": "123"        // switch=back时必填
+}
+```
+
+---
+
+## 反馈与投诉
+
+### 52. 获取投诉类型
+**GET** `/api/complaint/types`
+
+**响应示例**:
+```json
+[
+    {"type_code": 1, "type_name": "功能建议", "sort_order": 0},
+    {"type_code": 2, "type_name": "BUG反馈", "sort_order": 1},
+    {"type_code": 3, "type_name": "账号问题", "sort_order": 2}
+]
+```
+
+---
+
+### 53. 提交反馈
+**POST** `/api/feedback/submit`
+**认证**: 需要
+
+**请求参数**:
+```json
+{
+    "complaint_type": 2,
+    "description": "APP闪退问题，复现步骤：1.打开APP 2.点击我的 3.崩溃",
+    "image_url_1": "https://example.com/bug1.jpg",
+    "image_url_2": "",
+    "image_url_3": "",
+    "priority": 1  // 1低,2中,3高
+}
+```
+
+---
+
+### 54. 获取我的反馈列表
+**GET** `/api/feedback/list`
+**认证**: 需要
+
+**查询参数**:
+- `is_resolved`: 0未解决/1已解决（可选）
+- `page`: 页码，默认1
+- `limit`: 每页数量，默认20
+
+---
+
+### 55. 获取反馈详情
+**GET** `/api/feedback/detail/{feedback_id}`
+**认证**: 需要
+
+---
+
+### 56. 更新未解决的反馈
+**PUT** `/api/feedback/update/{feedback_id}`
+**认证**: 需要
+
+**请求参数**:
+```json
+{
+    "description": "补充描述...",
+    "priority": 2
+}
+```
+
+---
+
+### 57. 管理员获取全部反馈
+**GET** `/api/admin/feedback/list`
+**认证**: 需要 + 管理员权限
+
+**查询参数**:
+- `user_id`: 用户ID（可选）
+- `complaint_type`: 投诉类型（可选）
+- `is_resolved`: 解决状态（可选）
+- `page`, `limit`: 分页
+
+---
+
+### 58. 管理员解决反馈
+**POST** `/api/admin/feedback/resolve/{feedback_id}`
+**认证**: 需要 + 管理员权限
+
+**请求参数**:
+```json
+{
+    "feedback_content": "问题已修复，请更新到最新版本v2.1.0"
+}
+```
+
+---
+
+### 59. 管理员查看反馈详情
+**GET** `/api/admin/feedback/detail/{feedback_id}`
+**认证**: 需要 + 管理员权限
+
+---
+
+## AI功能
+
+### 60. 简历评估（通过用户ID）
+**GET** `/api/ai/resume_evaluation`
+**认证**: 需要
+
+**响应示例**:
+```json
+{
+    "code": 200,
+    "data": {
+        "evaluation": "简历整体评价：技术栈匹配度高...建议：1.补充项目量化指标 2.增加云原生经验..."
+    }
+}
+```
+
+---
+
+### 61. 简历评估（通过PDF）
+**POST** `/api/ai/resume_evaluation_text`
+**认证**: 需要
+**Content-Type**: `multipart/form-data`
+
+**请求参数**: `pdf_file` 简历PDF文件
+
+---
+
+### 62. 岗位匹配分析（PDF+岗位ID）
+**POST** `/api/ai/ask_by_pdf_job_id`
+**认证**: 需要
+**Content-Type**: `multipart/form-data`
+
+**请求参数**:
+- `pdf_file`: 简历PDF
+- `job_id`: 岗位ID
+
+---
+
+### 63. 岗位匹配分析（PDF+岗位文本）
+**POST** `/api/ai/ask_by_pdf_job_text`
+**认证**: 需要
+**Content-Type**: `multipart/form-data`
+
+**请求参数**:
+- `pdf_file`: 简历PDF
+- `job_text`: 岗位描述文本
+
+---
+
+### 64. 岗位匹配分析（用户ID+岗位文本）
+**POST** `/api/ai/ask_by_user_job_text`
+**认证**: 需要
+
+**请求参数**:
+```json
+{
+    "job_text": "岗位职责：1.负责后端开发 2.使用Java/Go..."
+}
+```
+
+---
+
+### 65. 岗位匹配分析（用户ID+岗位ID）
+**GET** `/api/ai/ask_by_user_job_id`
+**认证**: 需要
+
+**查询参数**: `job_id` 岗位ID
+
+---
+
+### 66. 求职成功率分析（PDF+岗位ID）
+**POST** `/api/ai/success_rate_pdf_job_id`
+**认证**: 需要
+**Content-Type**: `multipart/form-data`
+
+**请求参数**: `pdf_file`, `job_id`
+
+---
+
+### 67. 求职成功率分析（PDF+岗位文本）
+**POST** `/api/ai/success_rate_pdf_job_text`
+**认证**: 需要
+**Content-Type**: `multipart/form-data`
+
+**请求参数**: `pdf_file`, `job_text`
+
+---
+
+### 68. 求职成功率分析（用户ID+岗位文本）
+**POST** `/api/ai/success_rate_user_job_text`
+**认证**: 需要
+
+**请求参数**:
+```json
+{
+    "job_text": "岗位描述..."
+}
+```
+
+---
+
+### 69. 求职成功率分析（用户ID+岗位ID）
+**GET** `/api/ai/success_rate_user_job_id`
+**认证**: 需要
+
+**查询参数**: `job_id`
+
+---
+
+### 70. 大学生活规划（PDF+岗位ID）
+**POST** `/api/ai/university_plan_pdf_job_id`
+**认证**: 需要
+**Content-Type**: `multipart/form-data`
+
+**请求参数**: `pdf_file`, `job_id`, `user_grade` (年级：大一/大二/大三/大四)
+
+---
+
+### 71. 大学生活规划（PDF+岗位文本）
+**POST** `/api/ai/university_plan_pdf_job_text`
+**认证**: 需要
+**Content-Type**: `multipart/form-data`
+
+**请求参数**: `pdf_file`, `job_text`, `user_grade`
+
+---
+
+### 72. 大学生活规划（用户ID+岗位文本）
+**POST** `/api/ai/university_plan_user_job_text`
+**认证**: 需要
+
+**请求参数**:
+```json
+{
+    "job_text": "目标岗位要求...",
+    "user_grade": "大三"
+}
+```
+
+---
+
+### 73. 大学生活规划（用户ID+岗位ID）
+**GET** `/api/ai/university_plan_user_job_id`
+**认证**: 需要
+
+**查询参数**: `job_id`, `user_grade`
+
+---
+
+### 74. AI对话
+**POST** `/api/ai/chat`
+**认证**: 需要
+
+**请求参数**:
+```json
+{
+    "message": "我想了解Java开发的前景"
+}
+```
+
+---
+
+## 面试模拟
+
+### 75. 开始面试（文本+文本）
+**POST** `/api/ai/interview/start/text`
+
+**请求参数**:
+```json
+{
+    "resume_text": "简历内容...",
+    "job_text": "岗位描述..."
+}
+```
+
+**响应示例**:
+```json
+{
+    "code": 200,
+    "session_id": "sess_abc123",
+    "question": "请简单介绍一下你自己",
+    "audio_url": "/static/audio/question_sess_abc123_1234567890.mp3",
+    "stage": "basic",
+    "question_number": 1,
+    "resume_source": "text",
+    "job_source": "text"
+}
+```
+
+---
+
+### 76. 开始面试（PDF+岗位文本）
+**POST** `/api/ai/interview/start/pdf-text`
+
+**请求参数**:
+```json
+{
+    "resume_file": "base64编码的PDF",
+    "job_text": "岗位描述..."
+}
+```
+
+---
+
+### 77. 开始面试（PDF+岗位ID）
+**POST** `/api/ai/interview/start/pdf-jobid`
+
+**请求参数**:
+```json
+{
+    "resume_file": "base64编码的PDF",
+    "job_id": "123"
+}
+```
+
+---
+
+### 78. 开始面试（用户ID+岗位ID）
+**POST** `/api/ai/interview/start/userid-jobid`
+**认证**: 需要
+
+**请求参数**:
+```json
+{
+    "job_id": "123"
+}
+```
+
+---
+
+### 79. 开始面试（用户ID+岗位文本）
+**POST** `/api/ai/interview/start/userid-text`
+**认证**: 需要
+
+**请求参数**:
+```json
+{
+    "job_text": "岗位描述..."
+}
+```
+
+---
+
+### 80. 开始面试（简历文本+岗位ID）
+**POST** `/api/ai/interview/start/text-jobid`
+
+**请求参数**:
+```json
+{
+    "resume_text": "简历内容...",
+    "job_id": "123"
+}
+```
+
+---
+
+### 81. 语音听写（ASR）
+**POST** `/api/ai/interview/{session_id}/transcribe`
+**Content-Type**: `multipart/form-data`
+
+**请求参数**: `audio_file` 音频文件（MP3/WAV，最大60秒）
+
+**响应示例**:
+```json
+{
+    "code": 200,
+    "text": "识别出的文本内容",
+    "confidence": 0.95,
+    "session_id": "sess_abc123"
+}
+```
+
+---
+
+### 82. 提交回答并获取追问
+**POST** `/api/ai/interview/{session_id}/answer`
+
+**请求参数**:
+```json
+{
+    "user_text": "我的回答是...",
+    "end_interview": false  // true表示结束面试
+}
+```
+
+**响应示例**:
+```json
+{
+    "code": 200,
+    "question": "针对你的回答，我想深入了解...",
+    "audio_url": "/static/audio/question_sess_abc123_1234567891.mp3",
+    "stage": "deep",
+    "question_number": 2,
+    "is_ended": false
+}
+```
+
+---
+
+### 83. 获取面试历史
+**GET** `/api/ai/interview/{session_id}/history`
+
+**响应示例**:
+```json
+{
+    "code": 200,
+    "session_id": "sess_abc123",
+    "current_stage": "deep",
+    "history": [
+        {"role": "interviewer", "content": "请自我介绍", "timestamp": "..."},
+        {"role": "candidate", "content": "我是...", "timestamp": "..."}
+    ]
+}
+```
+
+---
+
+### 84. 下载面试报告
+**GET** `/api/ai/interview/{session_id}/report`
+
+**响应示例**:
+```json
+{
+    "session_id": "sess_abc123",
+    "overall_score": 85,
+    "dimensions": {
+        "technical": 90,
+        "communication": 80,
+        "logic": 85
+    },
+    "strengths": ["技术扎实", "表达清晰"],
+    "weaknesses": ["项目经验较少"],
+    "suggestions": ["建议补充分布式项目经验"],
+    "full_history": [...]
+}
+```
+
+---
+
+## 系统接口
+
+### 85. 健康检查
+**GET** `/api/health`
+
+**响应示例**:
+```json
+{
+    "code": 200,
+    "message": "服务正常",
+    "data": {
+        "timestamp": "2024-01-15 10:30:00",
+        "database": "正常",
+        "service": "运行正常"
+    }
+}
+```
+
+---
+
+## 附录
+
+### 雇佣类型对照表
+| 代码 | 含义 |
+|------|------|
+| 1 | 全职 |
+| 2 | 兼职 |
+| 3 | 实习 |
+
+### 用户状态对照表
+| 代码 | 含义 |
+|------|------|
+| 0 | 禁用 |
+| 1 | 正常 |
+| 2 | 未激活 |
+| 3 | 锁定 |
+
+### 求职状态对照表
+| 代码 | 含义 |
+|------|------|
+| 0 | 待业 |
+| 1 | 实习中 |
+| 2 | 应届求职 |
+
+### 面试阶段对照表
+| 阶段 | 说明 |
+|------|------|
+| basic | 基础问题 |
+| deep | 深入追问 |
+| scenario | 场景题 |
+| ended | 已结束 |
+
+---
+
+**文档版本**: v1.0
+**最后更新**: 2024-01-15
+**维护者**: 后端开发团队
