@@ -8,7 +8,8 @@ from X1_ws import think_speaker
 from demo_boss import Ai_job_demo, InterviewManager
 import logging
 from pathlib import Path
-from sql_data_demo import EndDemoDatabase, Job_prot, Job_category_simple, Forum_comments, Sys_user, ResumeManager, ComplaintTypeManager,UserFeedbackManager,UserDeliverJobs,UserFavoriteJobs
+# from sql_data_demo import Job_prot, Job_category_simple, Forum_comments, Sys_user, ResumeManager, ComplaintTypeManager,UserFeedbackManager,UserDeliverJobs,UserFavoriteJobs
+from sql_data_demo_poll import Job_prot, Job_category_simple, Forum_comments, Sys_user, ResumeManager, ComplaintTypeManager,UserFeedbackManager,UserDeliverJobs,UserFavoriteJobs
 from sqlalchemy import text
 import hashlib
 import re
@@ -29,16 +30,15 @@ from  set_up import config
 
 config_data = config()
 
-db = EndDemoDatabase(host=config_data.set_db_host, user=config_data.set_db_user, password=config_data.set_db_password)
-job_prot = Job_prot(db.connection)
-job_category_simple = Job_category_simple(db.connection)
-forum_comments = Forum_comments(db.connection)
-sys_user = Sys_user(db.connection)
-resume_manager = ResumeManager(db.connection)
-type_manager = ComplaintTypeManager(db.connection)
-feedback_manager = UserFeedbackManager(db.connection)
-deliver_jobs = UserDeliverJobs(db.connection)
-favorite_jobs = UserFavoriteJobs(db.connection)
+job_prot = Job_prot()
+job_category_simple = Job_category_simple()
+forum_comments = Forum_comments()
+sys_user = Sys_user()
+resume_manager = ResumeManager()
+type_manager = ComplaintTypeManager()
+feedback_manager = UserFeedbackManager()
+deliver_jobs = UserDeliverJobs()
+favorite_jobs = UserFavoriteJobs()
 
 ai_job_demo = Ai_job_demo()
 manager = InterviewManager()
@@ -575,7 +575,7 @@ def forums_back_data():
                 'code': 400,
                 'message': '被回复评论id信息为空'
             }), 400
-        parent_id = data.get('parent_id', '').strip()
+        parent_id = str(data.get('parent_id', '')).strip()
         forum_data = forum_comments.forum_talks_back(parent_id)
         return jsonify(forum_data),200
     except Exception as e:

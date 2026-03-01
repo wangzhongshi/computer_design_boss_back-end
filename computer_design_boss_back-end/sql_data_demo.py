@@ -1,14 +1,54 @@
 from pymysql import Error
 import json
-from typing import Optional, List, Dict, Any
-import pymysql
 from pymysql.cursors import DictCursor
-from pymysql.cursors import DictCursor
-from datetime import datetime
-from typing import Optional, List, Dict, Any
-from pydantic import BaseModel, Field
+from typing import List, Dict, Any
+from pydantic import BaseModel
 from decimal import Decimal
 from typing import Optional
+from flask import g
+from dbutils.pooled_db import PooledDB
+import pymysql
+from pymysql.cursors import DictCursor
+from set_up import config
+config_data = config()
+
+class DatabasePool:
+    """数据库连接池管理器"""
+    _pool = None
+
+    @classmethod
+    def init_pool(cls):
+        """初始化连接池（应用启动时调用一次）"""
+        if cls._pool is None:
+            cls._pool = PooledDB(
+                creator=pymysql,
+                maxconnections=20,
+                mincached=5,
+                maxcached=10,
+                blocking=True,
+                ping=1,
+                host=config_data.set_db_host,
+                port=config_data.set_db_prot,
+                user=config_data.set_db_user,
+                password=config_data.set_db_password,
+                database=getattr(config_data, 'set_db_name', 'boss_job'),
+                charset='utf8mb4',
+                cursorclass=DictCursor,
+                autocommit=True
+            )
+            print("数据库连接池初始化完成")
+        return cls._pool
+
+    @classmethod
+    def get_connection(cls):
+        """从连接池获取连接"""
+        if cls._pool is None:
+            cls.init_pool()
+        return cls._pool.connection()
+
+
+# 初始化连接池
+DatabasePool.init_pool()
 
 
 class EndDemoDatabase:
@@ -331,7 +371,7 @@ class Forum_comments:
                 print(result)
                 return result
         except Exception as e:
-            print('全部评论查询失败:', e)
+            print('全部所有分类评论查询失败:', e)
             return None
 
     def forum_one_category(self, category_id):
@@ -348,7 +388,7 @@ class Forum_comments:
                 print(result)
                 return result
         except Exception as e:
-            print('全部评论查询失败:', e)
+            print('全部某一类评论查询失败:', e)
             return None
 
     def forum_all_first_talk(self):
@@ -364,7 +404,7 @@ class Forum_comments:
                 print(result)
                 return result
         except Exception as e:
-            print('全部评论查询失败:', e)
+            print('全部一级评论查询失败:', e)
             return None
 
     def forum_talks_back(self, parent_id):
@@ -381,7 +421,7 @@ class Forum_comments:
                 print(result)
                 return result
         except Exception as e:
-            print('全部评论查询失败:', e)
+            print(f'评论{parent_id}回复查询失败:', e)
             return None
 
     def forum_add(self, category_id, user_id, parent_id, content, level, sort_order):

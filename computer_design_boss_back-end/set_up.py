@@ -4,6 +4,8 @@ class config:
         self.set_db_host = 'localhost'
         self.set_db_user = 'root'
         self.set_db_password = '123456'
+        self.set_db_prot = 3306
+        self.set_db_name = 'boss_job'
 
         self.set_JWT_SECRET = 'your-secret-key'
         self.set_JWT_ALGORITHM = 'HS256'
