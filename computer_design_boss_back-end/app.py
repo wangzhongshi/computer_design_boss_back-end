@@ -586,6 +586,7 @@ def forums_back_data():
         }), 500
 
 @app.route('/api/forum/forums_add', methods=['POST'])
+@jwt_required()
 def forum_add():
     '''
     发表新的评论，提示该函数执行完后应立刻向后端获取新的怕评论来更新前端的信息
@@ -614,12 +615,12 @@ def forum_add():
                         'message': f'后端接受到的{key}信息为空'
                     }), 300
 
-        category_id = data.get('category_id','').strip()
-        user_id = g.user_id
-        parent_id = data.get('parent_id','').strip()
-        content = data.get('content','').strip()
-        level = data.get('level','').strip()
-        sort_order = data.get('sort_order','').strip()
+        category_id = str(data.get('category_id', '')).strip()
+        user_id = get_jwt_identity()
+        parent_id = str(data.get('parent_id', '')).strip()
+        content = str(data.get('content', '')).strip()
+        level = str(data.get('level', '')).strip()
+        sort_order = str(data.get('sort_order', '')).strip()
         forum_comments.forum_add(category_id=category_id,
                                  user_id=user_id,
                                  parent_id=parent_id,

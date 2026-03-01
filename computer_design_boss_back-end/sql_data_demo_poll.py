@@ -33,9 +33,9 @@ class DatabasePool:
         if cls._pool is None:
             cls._pool = PooledDB(
                 creator=pymysql,
-                maxconnections=20,
+                maxconnections=200,
                 mincached=5,
-                maxcached=10,
+                maxcached=100,
                 blocking=True,
                 ping=1,
                 host=config_data.set_db_host,
