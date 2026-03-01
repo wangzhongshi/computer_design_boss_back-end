@@ -2592,6 +2592,7 @@ def admin_get_feedback_detail(feedback_id):
         }), 500
 
 @app.route('/api/job/favorite/add', methods=['POST'])
+@jwt_required()
 def add_favorite():
     """
     添加岗位收藏
@@ -2607,7 +2608,7 @@ def add_favorite():
             return jsonify({'code': 400, 'message': '请求参数不能为空'}), 400
 
         # user_id = g.user_id
-        user_id = g.user_id
+        user_id = get_jwt_identity()
         job_id = data.get('job_id')
         remarks = data.get('remarks', None)
 
@@ -2635,6 +2636,7 @@ def add_favorite():
 
 
 @app.route('/api/job/favorite/cancel', methods=['POST'])
+@jwt_required()
 def cancel_favorite():
     """
     取消岗位收藏（软删除）
@@ -2649,7 +2651,7 @@ def cancel_favorite():
             return jsonify({'code': 400, 'message': '请求参数不能为空'}), 400
 
         # user_id = g.user_id
-        user_id = g.user_id
+        user_id = get_jwt_identity()
         boss_job_id = data.get('boss_job_id')
 
         if not user_id or not boss_job_id:
@@ -2674,6 +2676,7 @@ def cancel_favorite():
 
 
 @app.route('/api/job/favorite/list', methods=['GET'])
+@jwt_required()
 def get_user_favorites():
     """
     获取用户收藏列表
@@ -2682,7 +2685,8 @@ def get_user_favorites():
         include_canceled: 是否包含已取消的（可选，默认false）0或1
     """
     try:
-        user_id = g.user_id
+        user_id = get_jwt_identity()
+
         include_canceled = request.args.get('include_canceled', '0') == '1'
 
         if not user_id:
@@ -2703,11 +2707,12 @@ def get_user_favorites():
             }), 500
 
     except Exception as e:
-        app.logger.error(f'获取收藏列表失败: {str(e)}')
+        app.logger.error(f'获取收藏列表失败: ',e)
         return jsonify({'code': 500, 'message': '服务器内部错误'}), 500
 
 
 @app.route('/api/job/favorite/check', methods=['GET'])
+@jwt_required()
 def check_is_favorite():
     """
     检查用户是否已收藏某岗位
@@ -2717,7 +2722,7 @@ def check_is_favorite():
     """
     try:
         # #user_id = request.args.get('user_id', type=int) user_id = g.user_id
-        user_id = g.user_id
+        user_id = get_jwt_identity()
         boss_job_id = request.args.get('boss_job_id', type=int)
 
         if not user_id or not boss_job_id:
@@ -2737,6 +2742,7 @@ def check_is_favorite():
 
 
 @app.route('/api/job/favorite/update_remarks', methods=['POST'])
+@jwt_required()
 def update_favorite_remarks():
     """
     更新收藏备注
@@ -2752,7 +2758,7 @@ def update_favorite_remarks():
             return jsonify({'code': 400, 'message': '请求参数不能为空'}), 400
 
         # user_id = g.user_id
-        user_id = g.user_id
+        user_id = get_jwt_identity()
         boss_job_id = data.get('boss_job_id')
         remarks = data.get('remarks', '')
 
@@ -2778,6 +2784,7 @@ def update_favorite_remarks():
 
 
 @app.route('/api/job/favorite/detail', methods=['GET'])
+@jwt_required()
 def get_favorite_detail():
     """
     获取单条收藏详情
@@ -2787,7 +2794,7 @@ def get_favorite_detail():
     """
     try:
         # #user_id = request.args.get('user_id', type=int) user_id = g.user_id
-        user_id = g.user_id
+        user_id = get_jwt_identity()
         boss_job_id = request.args.get('boss_job_id', type=int)
 
         if not user_id or not boss_job_id:
@@ -2813,6 +2820,7 @@ def get_favorite_detail():
 
 
 @app.route('/api/job/favorite/batch_cancel', methods=['POST'])
+@jwt_required()
 def batch_cancel_favorites():
     """
     批量取消收藏
@@ -2827,7 +2835,7 @@ def batch_cancel_favorites():
             return jsonify({'code': 400, 'message': '请求参数不能为空'}), 400
 
         # user_id = g.user_id
-        user_id = g.user_id
+        user_id = get_jwt_identity()
         boss_job_id_list = data.get('boss_job_id_list', [])
 
         if not user_id:
@@ -2858,6 +2866,7 @@ def batch_cancel_favorites():
 # ==================== 投递功能路由 ====================
 
 @app.route('/api/job/deliver/add', methods=['POST'])
+@jwt_required()
 def add_deliver():
     """
     添加岗位投递
@@ -2873,7 +2882,7 @@ def add_deliver():
             return jsonify({'code': 400, 'message': '请求参数不能为空'}), 400
 
         # user_id = g.user_id
-        user_id = g.user_id
+        user_id = get_jwt_identity()
         job_id = data.get('job_id')
         remarks = data.get('remarks', None)
 
@@ -2900,6 +2909,7 @@ def add_deliver():
 
 
 @app.route('/api/job/deliver/cancel', methods=['POST'])
+@jwt_required()
 def cancel_deliver():
     """
     取消岗位投递（软删除）
@@ -2914,7 +2924,7 @@ def cancel_deliver():
             return jsonify({'code': 400, 'message': '请求参数不能为空'}), 400
 
         # user_id = g.user_id
-        user_id = g.user_id
+        user_id = get_jwt_identity()
         boss_job_id = data.get('boss_job_id')
 
         if not user_id or not boss_job_id:
@@ -2939,6 +2949,7 @@ def cancel_deliver():
 
 
 @app.route('/api/job/deliver/list', methods=['GET'])
+@jwt_required()
 def get_user_delivers():
     """
     获取用户投递列表
@@ -2948,7 +2959,7 @@ def get_user_delivers():
     """
     try:
         # #user_id = request.args.get('user_id', type=int) user_id = g.user_id
-        user_id = g.user_id
+        user_id = get_jwt_identity()
         include_canceled = request.args.get('include_canceled', '0') == '1'
 
         if not user_id:
@@ -2974,6 +2985,7 @@ def get_user_delivers():
 
 
 @app.route('/api/job/deliver/check', methods=['GET'])
+@jwt_required()
 def check_is_deliver():
     """
     检查用户是否已投递某岗位
@@ -2983,7 +2995,7 @@ def check_is_deliver():
     """
     try:
         ##user_id = request.args.get('user_id', type=int) 
-        user_id = g.user_id
+        user_id = get_jwt_identity()
         boss_job_id = request.args.get('boss_job_id', type=int)
 
         if not user_id or not boss_job_id:
@@ -3003,6 +3015,7 @@ def check_is_deliver():
 
 
 @app.route('/api/job/deliver/update_remarks', methods=['POST'])
+@jwt_required()
 def update_deliver_remarks():
     """
     更新投递备注
@@ -3017,7 +3030,7 @@ def update_deliver_remarks():
         if not data:
             return jsonify({'code': 400, 'message': '请求参数不能为空'}), 400
 
-        user_id = g.user_id
+        user_id = get_jwt_identity()
         boss_job_id = data.get('boss_job_id')
         remarks = data.get('remarks', '')
 
@@ -3043,6 +3056,7 @@ def update_deliver_remarks():
 
 
 @app.route('/api/job/deliver/detail', methods=['GET'])
+@jwt_required()
 def get_deliver_detail():
     """
     获取单条投递详情
@@ -3052,7 +3066,7 @@ def get_deliver_detail():
     """
     try:
         #user_id = request.args.get('user_id', type=int) 
-        user_id = g.user_id
+        user_id = get_jwt_identity()
         boss_job_id = request.args.get('boss_job_id', type=int)
 
         if not user_id or not boss_job_id:
@@ -3078,6 +3092,7 @@ def get_deliver_detail():
 
 
 @app.route('/api/job/deliver/batch_cancel', methods=['POST'])
+@jwt_required()
 def batch_cancel_delivers():
     """
     批量取消投递
@@ -3091,7 +3106,7 @@ def batch_cancel_delivers():
         if not data:
             return jsonify({'code': 400, 'message': '请求参数不能为空'}), 400
 
-        user_id = g.user_id
+        user_id = get_jwt_identity()
         boss_job_id_list = data.get('boss_job_id_list', [])
 
         if not user_id:
@@ -3937,6 +3952,7 @@ def start_interview_pdf_jobid():
 # ==================== 4. 用户ID + 岗位ID（全数据库） ====================
 
 @app.route('/api/ai/interview/start/userid-jobid', methods=['POST'])
+@jwt_required()
 def start_interview_userid_jobid():
     """
     方式4：用户ID + 岗位ID（全部从数据库获取）
@@ -3951,7 +3967,7 @@ def start_interview_userid_jobid():
         data = request.get_json() or {}
 
         # 从数据库获取简历
-        user_id = g.user_id
+        user_id = get_jwt_identity()
         resume_text, error = _get_resume_from_db(user_id)
         if error:
             return jsonify({'error': error}), 400
@@ -3974,6 +3990,7 @@ def start_interview_userid_jobid():
 # ==================== 5. 用户ID + 岗位文本 ====================
 
 @app.route('/api/ai/interview/start/userid-text', methods=['POST'])
+@jwt_required()
 def start_interview_userid_text():
     """
     方式5：用户ID（数据库简历） + 岗位文本
@@ -3988,7 +4005,7 @@ def start_interview_userid_text():
         data = request.get_json() or {}
 
         # 从数据库获取简历
-        user_id = g.user_id
+        user_id = get_jwt_identity()
         resume_text, error = _get_resume_from_db(user_id)
         if error:
             return jsonify({'error': error}), 400
