@@ -615,7 +615,7 @@ def forum_add():
                     }), 300
 
         category_id = data.get('category_id','').strip()
-        user_id = data.get('user_id','').strip()
+        user_id = g.user_id
         parent_id = data.get('parent_id','').strip()
         content = data.get('content','').strip()
         level = data.get('level','').strip()
@@ -692,7 +692,7 @@ def forum_count_data():
             }), 300
         category_id = data.get('category_id', '').strip()
         parent_id = data.get('parent_id', '').strip()
-        user_id = data.get('user_id', '').strip()
+        user_id = g.user_id
         forum_count_num = forum_comments.forum_count_all(switch=switch,
                                                          category_id=category_id,
                                                          parent_id=parent_id,
@@ -2466,7 +2466,8 @@ def admin_get_feedback_list():
     '''
     try:
         # 获取查询参数
-        user_id = request.args.get('user_id', type=int)
+        #user_id = request.args.get('user_id', type=int)
+        user_id = g.user_id
         complaint_type = request.args.get('complaint_type', type=int)
         is_resolved = request.args.get('is_resolved', type=int)
         page = request.args.get('page', 1, type=int)
@@ -2475,7 +2476,7 @@ def admin_get_feedback_list():
 
        #  feedback_manager = UserFeedbackManager(db.connection)
         list_data = feedback_manager.get_feedback_list(
-            user_id=user_id,
+            user_id=g.user_id,
             complaint_type=complaint_type,
             is_resolved=is_resolved,
             limit=limit,
@@ -2605,7 +2606,8 @@ def add_favorite():
         if not data:
             return jsonify({'code': 400, 'message': '请求参数不能为空'}), 400
 
-        user_id = data.get('user_id')
+        # user_id = g.user_id
+        user_id = g.user_id
         job_id = data.get('job_id')
         remarks = data.get('remarks', None)
 
@@ -2646,7 +2648,8 @@ def cancel_favorite():
         if not data:
             return jsonify({'code': 400, 'message': '请求参数不能为空'}), 400
 
-        user_id = data.get('user_id')
+        # user_id = g.user_id
+        user_id = g.user_id
         boss_job_id = data.get('boss_job_id')
 
         if not user_id or not boss_job_id:
@@ -2679,7 +2682,7 @@ def get_user_favorites():
         include_canceled: 是否包含已取消的（可选，默认false）0或1
     """
     try:
-        user_id = request.args.get('user_id', type=int)
+        user_id = g.user_id
         include_canceled = request.args.get('include_canceled', '0') == '1'
 
         if not user_id:
@@ -2713,7 +2716,8 @@ def check_is_favorite():
         boss_job_id: 岗位ID
     """
     try:
-        user_id = request.args.get('user_id', type=int)
+        # #user_id = request.args.get('user_id', type=int) user_id = g.user_id
+        user_id = g.user_id
         boss_job_id = request.args.get('boss_job_id', type=int)
 
         if not user_id or not boss_job_id:
@@ -2747,7 +2751,8 @@ def update_favorite_remarks():
         if not data:
             return jsonify({'code': 400, 'message': '请求参数不能为空'}), 400
 
-        user_id = data.get('user_id')
+        # user_id = g.user_id
+        user_id = g.user_id
         boss_job_id = data.get('boss_job_id')
         remarks = data.get('remarks', '')
 
@@ -2781,7 +2786,8 @@ def get_favorite_detail():
         boss_job_id: 岗位ID
     """
     try:
-        user_id = request.args.get('user_id', type=int)
+        # #user_id = request.args.get('user_id', type=int) user_id = g.user_id
+        user_id = g.user_id
         boss_job_id = request.args.get('boss_job_id', type=int)
 
         if not user_id or not boss_job_id:
@@ -2820,7 +2826,8 @@ def batch_cancel_favorites():
         if not data:
             return jsonify({'code': 400, 'message': '请求参数不能为空'}), 400
 
-        user_id = data.get('user_id')
+        # user_id = g.user_id
+        user_id = g.user_id
         boss_job_id_list = data.get('boss_job_id_list', [])
 
         if not user_id:
@@ -2865,7 +2872,8 @@ def add_deliver():
         if not data:
             return jsonify({'code': 400, 'message': '请求参数不能为空'}), 400
 
-        user_id = data.get('user_id')
+        # user_id = g.user_id
+        user_id = g.user_id
         job_id = data.get('job_id')
         remarks = data.get('remarks', None)
 
@@ -2905,7 +2913,8 @@ def cancel_deliver():
         if not data:
             return jsonify({'code': 400, 'message': '请求参数不能为空'}), 400
 
-        user_id = data.get('user_id')
+        # user_id = g.user_id
+        user_id = g.user_id
         boss_job_id = data.get('boss_job_id')
 
         if not user_id or not boss_job_id:
@@ -2938,7 +2947,8 @@ def get_user_delivers():
         include_canceled: 是否包含已取消的（可选，默认false）0或1
     """
     try:
-        user_id = request.args.get('user_id', type=int)
+        # #user_id = request.args.get('user_id', type=int) user_id = g.user_id
+        user_id = g.user_id
         include_canceled = request.args.get('include_canceled', '0') == '1'
 
         if not user_id:
@@ -2972,7 +2982,8 @@ def check_is_deliver():
         boss_job_id: 岗位ID
     """
     try:
-        user_id = request.args.get('user_id', type=int)
+        ##user_id = request.args.get('user_id', type=int) 
+        user_id = g.user_id
         boss_job_id = request.args.get('boss_job_id', type=int)
 
         if not user_id or not boss_job_id:
@@ -3006,7 +3017,7 @@ def update_deliver_remarks():
         if not data:
             return jsonify({'code': 400, 'message': '请求参数不能为空'}), 400
 
-        user_id = data.get('user_id')
+        user_id = g.user_id
         boss_job_id = data.get('boss_job_id')
         remarks = data.get('remarks', '')
 
@@ -3040,7 +3051,8 @@ def get_deliver_detail():
         boss_job_id: 岗位ID
     """
     try:
-        user_id = request.args.get('user_id', type=int)
+        #user_id = request.args.get('user_id', type=int) 
+        user_id = g.user_id
         boss_job_id = request.args.get('boss_job_id', type=int)
 
         if not user_id or not boss_job_id:
@@ -3079,7 +3091,7 @@ def batch_cancel_delivers():
         if not data:
             return jsonify({'code': 400, 'message': '请求参数不能为空'}), 400
 
-        user_id = data.get('user_id')
+        user_id = g.user_id
         boss_job_id_list = data.get('boss_job_id_list', [])
 
         if not user_id:
@@ -3939,7 +3951,7 @@ def start_interview_userid_jobid():
         data = request.get_json() or {}
 
         # 从数据库获取简历
-        user_id = data.get('user_id')
+        user_id = g.user_id
         resume_text, error = _get_resume_from_db(user_id)
         if error:
             return jsonify({'error': error}), 400
@@ -3976,7 +3988,7 @@ def start_interview_userid_text():
         data = request.get_json() or {}
 
         # 从数据库获取简历
-        user_id = data.get('user_id')
+        user_id = g.user_id
         resume_text, error = _get_resume_from_db(user_id)
         if error:
             return jsonify({'error': error}), 400
