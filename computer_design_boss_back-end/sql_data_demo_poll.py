@@ -296,6 +296,23 @@ class Job_prot(BaseManager):
                 f"[{datetime.now()}] [ERROR] Job_prot.fetch_one_job_all_data_posts: 查询失败 | 岗位ID: {ones_id} | 错误: {e}")
             return None
 
+    def fetch_one_job_all_data_posts_BJI(self, boss_job_id ) -> Optional[List[Dict]]:
+        """
+        获取单个岗位的详细信息
+        :param ones_id: 岗位ID
+        :return: 岗位详情列表或None
+        """
+        try:
+            sql = "SELECT * FROM job_post WHERE boss_job_id = %s"
+            result = self.execute_query(sql, (boss_job_id,))
+            print(f"[{datetime.now()}] [INFO] Job_prot.fetch_one_job_all_data_posts: 岗位ID {boss_job_id} 查询成功")
+            return result
+
+        except Exception as e:
+            print(
+                f"[{datetime.now()}] [ERROR] Job_prot.fetch_one_job_all_data_posts: 查询失败 | 岗位ID: {boss_job_id} | 错误: {e}")
+            return None
+
     def insert_job_post(self, boss_job_id: str, title: str, company_id: int, city_id: int,
                         category_id: int, emp_type: int = 1, salary_min: Optional[float] = None,
                         salary_max: Optional[float] = None, salary_desc: Optional[str] = None,
@@ -2288,7 +2305,7 @@ class UserFavoriteJobs(BaseManager):
             self._job_prot = Job_prot()
         return self._job_prot
 
-    def add_favorite(self, user_id: int, job_id: int, remarks: Optional[str] = None) -> Dict:
+    def add_favorite(self, user_id: int, boss_job_id, remarks: Optional[str] = None) -> Dict:
         """
         添加岗位收藏（支持软删除后的重新收藏）
         :return: 操作结果字典
@@ -2296,13 +2313,16 @@ class UserFavoriteJobs(BaseManager):
         try:
             # 先查询是否已有记录
             check_sql = """
-                SELECT id, is_canceled FROM user_favorite_jobs 
-                WHERE user_id = %s AND boss_job_id = %s
-            """
-            existing = self.execute_one(check_sql, (user_id, job_id))
+                        SELECT id, is_canceled \
+                        FROM user_favorite_jobs
+                        WHERE user_id = %s \
+                          AND boss_job_id = %s \
+                        """
+            existing = self.execute_one(check_sql, (user_id, boss_job_id))
 
             # 获取职位快照
-            job_data = self.job_prot.fetch_one_job_all_data_posts(job_id)
+            job_data = self.job_prot.fetch_one_job_all_data_posts_BJI(boss_job_id)
+            print(boss_job_id)
             if not job_data:
                 return {'success': False, 'message': '职位不存在'}
 
@@ -2313,38 +2333,38 @@ class UserFavoriteJobs(BaseManager):
                 if existing['is_canceled'] == 1:
                     # 重新激活
                     update_sql = """
-                        UPDATE user_favorite_jobs 
-                        SET is_canceled = 0, 
-                            job_snapshot = %s,
-                            remarks = %s,
-                            updated_at = CURRENT_TIMESTAMP
-                        WHERE id = %s
-                    """
+                                 UPDATE user_favorite_jobs
+                                 SET is_canceled  = 0,
+                                     job_snapshot = %s,
+                                     remarks      = %s,
+                                     updated_at   = CURRENT_TIMESTAMP
+                                 WHERE id = %s \
+                                 """
                     self.execute_update(update_sql, (job_snapshot_json, remarks, existing['id']))
                     print(
-                        f"[{datetime.now()}] [INFO] UserFavoriteJobs.add_favorite: 用户 {user_id} 重新收藏职位 {job_id}")
+                        f"[{datetime.now()}] [INFO] UserFavoriteJobs.add_favorite: 用户 {user_id} 重新收藏职位 {boss_job_id}")
                     return {'success': True, 'message': '重新收藏成功', 'id': existing['id']}
                 else:
                     return {'success': False, 'message': '该岗位已在收藏列表中'}
             else:
                 # 新增收藏
                 insert_sql = """
-                    INSERT INTO user_favorite_jobs 
-                    (user_id, boss_job_id, job_snapshot, remarks) 
-                    VALUES (%s, %s, %s, %s)
-                """
+                             INSERT INTO user_favorite_jobs
+                                 (user_id, boss_job_id, job_snapshot, remarks)
+                             VALUES (%s, %s, %s, %s) \
+                             """
                 with self.get_cursor(cursor_class=None) as cursor:
-                    cursor.execute(insert_sql, (user_id, job_id, job_snapshot_json, remarks))
+                    cursor.execute(insert_sql, (user_id, boss_job_id, job_snapshot_json, remarks))
                     new_id = cursor.lastrowid
                     self.connection.commit()
                     print(
-                        f"[{datetime.now()}] [INFO] UserFavoriteJobs.add_favorite: 用户 {user_id} 收藏职位 {job_id} 成功")
+                        f"[{datetime.now()}] [INFO] UserFavoriteJobs.add_favorite: 用户 {user_id} 收藏职位 {boss_job_id} 成功")
                     return {'success': True, 'message': '收藏成功', 'id': new_id}
 
         except Exception as e:
             self.connection.rollback()
             print(
-                f"[{datetime.now()}] [ERROR] UserFavoriteJobs.add_favorite: 收藏失败 | 用户: {user_id} | 职位: {job_id} | 错误: {e}")
+                f"[{datetime.now()}] [ERROR] UserFavoriteJobs.add_favorite: 收藏失败 | 用户: {user_id} | 职位: {boss_job_id} | 错误: {e}")
             return {'success': False, 'message': f'添加收藏失败: {str(e)}'}
 
     def cancel_favorite(self, user_id: int, boss_job_id: int) -> Dict:
@@ -2522,7 +2542,7 @@ class UserDeliverJobs(BaseManager):
             self._job_prot = Job_prot()
         return self._job_prot
 
-    def add_deliver(self, user_id: int, job_id: int, remarks: Optional[str] = None) -> Dict:
+    def add_deliver(self, user_id: int, boss_job_id, remarks: Optional[str] = None) -> Dict:
         """
         添加岗位投递（支持软删除后的重新投递）
         :return: 操作结果字典
@@ -2533,10 +2553,11 @@ class UserDeliverJobs(BaseManager):
                 SELECT id, is_canceled FROM user_deliver_jobs 
                 WHERE user_id = %s AND boss_job_id = %s
             """
-            existing = self.execute_one(check_sql, (user_id, job_id))
-
+            existing = self.execute_one(check_sql, (user_id, boss_job_id))
+            print(boss_job_id)
             # 获取职位快照
-            job_data = self.job_prot.fetch_one_job_all_data_posts(job_id)
+            job_data = self.job_prot.fetch_one_job_all_data_posts_BJI(boss_job_id)
+            print(job_data)
             if not job_data:
                 return {'success': False, 'message': '职位不存在'}
 
@@ -2556,7 +2577,7 @@ class UserDeliverJobs(BaseManager):
                     """
                     self.execute_update(update_sql, (job_snapshot_json, remarks, existing['id']))
                     print(
-                        f"[{datetime.now()}] [INFO] UserDeliverJobs.add_deliver: 用户 {user_id} 重新投递职位 {job_id}")
+                        f"[{datetime.now()}] [INFO] UserDeliverJobs.add_deliver: 用户 {user_id} 重新投递职位 {boss_job_id}")
                     return {'success': True, 'message': '重新投递成功', 'id': existing['id']}
                 else:
                     return {'success': False, 'message': '该岗位已在投递列表中'}
@@ -2568,17 +2589,17 @@ class UserDeliverJobs(BaseManager):
                     VALUES (%s, %s, %s, %s)
                 """
                 with self.get_cursor(cursor_class=None) as cursor:
-                    cursor.execute(insert_sql, (user_id, job_id, job_snapshot_json, remarks))
+                    cursor.execute(insert_sql, (user_id, boss_job_id, job_snapshot_json, remarks))
                     new_id = cursor.lastrowid
                     self.connection.commit()
                     print(
-                        f"[{datetime.now()}] [INFO] UserDeliverJobs.add_deliver: 用户 {user_id} 投递职位 {job_id} 成功")
+                        f"[{datetime.now()}] [INFO] UserDeliverJobs.add_deliver: 用户 {user_id} 投递职位 {boss_job_id} 成功")
                     return {'success': True, 'message': '投递成功', 'id': new_id}
 
         except Exception as e:
             self.connection.rollback()
             print(
-                f"[{datetime.now()}] [ERROR] UserDeliverJobs.add_deliver: 投递失败 | 用户: {user_id} | 职位: {job_id} | 错误: {e}")
+                f"[{datetime.now()}] [ERROR] UserDeliverJobs.add_deliver: 投递失败 | 用户: {user_id} | 职位: {boss_job_id} | 错误: {e}")
             return {'success': False, 'message': f'添加投递失败: {str(e)}'}
 
     def cancel_deliver(self, user_id: int, boss_job_id: int) -> Dict:

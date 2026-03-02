@@ -1,7 +1,7 @@
 from flask_jwt_extended import JWTManager, create_access_token, verify_jwt_in_request, get_jwt_identity, get_jwt
 from flask_jwt_extended.exceptions import NoAuthorizationError, InvalidHeaderError, JWTDecodeError
 from flask_sqlalchemy import SQLAlchemy
-from datetime import  timedelta
+from datetime import timedelta
 from dotenv import load_dotenv
 from sqlalchemy import text, func
 from X1_ws import think_speaker
@@ -9,7 +9,8 @@ from demo_boss import Ai_job_demo, InterviewManager
 import logging
 from pathlib import Path
 # from sql_data_demo import Job_prot, Job_category_simple, Forum_comments, Sys_user, ResumeManager, ComplaintTypeManager,UserFeedbackManager,UserDeliverJobs,UserFavoriteJobs
-from sql_data_demo_poll import Job_prot, Job_category_simple, Forum_comments, Sys_user, ResumeManager, ComplaintTypeManager,UserFeedbackManager,UserDeliverJobs,UserFavoriteJobs
+from sql_data_demo_poll import Job_prot, Job_category_simple, Forum_comments, Sys_user, ResumeManager, \
+    ComplaintTypeManager, UserFeedbackManager, UserDeliverJobs, UserFavoriteJobs
 from sqlalchemy import text
 import hashlib
 import re
@@ -26,7 +27,7 @@ import tempfile
 import os
 from flask import Flask, request, jsonify
 from werkzeug.utils import secure_filename
-from  set_up import config
+from set_up import config
 
 config_data = config()
 
@@ -43,7 +44,6 @@ favorite_jobs = UserFavoriteJobs()
 ai_job_demo = Ai_job_demo()
 manager = InterviewManager()
 
-
 think_speaker = think_speaker()
 
 # 假设的JWT密钥和配置
@@ -54,7 +54,6 @@ app = Flask(__name__)
 CORS(app)  # 允许跨域
 UPLOAD_FOLDER = config_data.set_UPLOAD_FOLDER
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
-
 
 # 存储聊天记录
 chat_history = []
@@ -88,11 +87,8 @@ if not os.path.exists(UPLOAD_FOLDER):
 if not HISTORY_FILE.exists():
     HISTORY_FILE.write_text('[]')
 
-
-
 # 加载环境变量
 load_dotenv()
-
 
 # 配置
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'dev-secret-key')
@@ -101,7 +97,7 @@ app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(hours=24)
 
 # 数据库配置
 app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL',
-                                                  'mysql+pymysql://root:123456@localhost:3306/boss_job')
+                                                  'mysql+pymysql://root:271828@localhost:3306/boss_job')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
     'pool_recycle': 300,
@@ -117,6 +113,7 @@ db = SQLAlchemy(app)
 UPLOAD_FOLDER = tempfile.gettempdir()  # 使用临时目录存储上传的PDF文件
 ALLOWED_EXTENSIONS = {'pdf'}
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+
 
 # 辅助函数：验证手机号格式
 def validate_mobile(mobile):
@@ -135,6 +132,7 @@ def validate_email(email):
 # 装饰器：需要登录
 def login_required(func):
     """登录验证装饰器 - flask_jwt_extended 版本"""
+
     @wraps(func)
     def wrapper(*args, **kwargs):
         try:
@@ -190,6 +188,7 @@ def login_required(func):
 
     return wrapper
 
+
 # 错误处理
 @app.errorhandler(400)
 def bad_request(error):
@@ -229,7 +228,7 @@ def missing_token_callback(error):
 
 # API路由
 
-@app.route('/api/job/Job_List_all',methods=['GET'])
+@app.route('/api/job/Job_List_all', methods=['GET'])
 def update_all_job_list():
     '''
     :input:none
@@ -238,7 +237,7 @@ def update_all_job_list():
     '''
     try:
         list_data = job_prot.fetch_some_job_posts_all()
-        return jsonify(list_data),200
+        return jsonify(list_data), 200
 
     except Exception as e:
         app.logger.error(f'获取全部列表信息失败: {str(e)}')
@@ -247,7 +246,8 @@ def update_all_job_list():
             'message': '服务器内部错误'
         }), 500
 
-@app.route('/api/job/job_lis_one_type',methods=['POST'])
+
+@app.route('/api/job/job_lis_one_type', methods=['POST'])
 def update_one_type_job_list():
     '''
     input: category_id: 1001 # 岗位类别，前端需要实现从编码到岗位名的对应，后端返回的岗位类别也是岗位编码。
@@ -259,9 +259,9 @@ def update_one_type_job_list():
         if not data:
             app.logger.error('未获取到工作分类')
             return jsonify({
-                'code':500,
-                'message':'服务器内部错误'
-            }),500
+                'code': 500,
+                'message': '服务器内部错误'
+            }), 500
 
         category_id = data.get('category_id', '').strip()
         print(type(category_id))
@@ -278,7 +278,8 @@ def update_one_type_job_list():
             'message': '服务器内部错误'
         }), 500
 
-@app.route('/api/job/job_list_two_given',methods=['POST'])
+
+@app.route('/api/job/job_list_two_given', methods=['POST'])
 def update_job_list_by_two_given():
     '''
     input: category_id: 1001, emp_type: 1 #emp_type-》1=全职 2=兼职 3=实习
@@ -290,9 +291,9 @@ def update_job_list_by_two_given():
         if not data:
             app.logger.error('未获取到两个工作分类')
             return jsonify({
-                'code':500,
-                'message':'服务器内部错误'
-            }),500
+                'code': 500,
+                'message': '服务器内部错误'
+            }), 500
         category_id = data.get('category_id', '').strip()
         emp_type = data.get('emp_type', '').strip()
         list_data = job_prot.fetch_job_list_by_two_given(category_id=category_id, emp_type=emp_type)
@@ -304,7 +305,8 @@ def update_job_list_by_two_given():
             'message': '服务器内部错误'
         }), 500
 
-@app.route('/api/job/job_search',methods=['POST'])
+
+@app.route('/api/job/job_search', methods=['POST'])
 def job_search():
     '''
     input: user_input :'开发工程师' #用户在搜索框中的输入内容
@@ -322,7 +324,7 @@ def job_search():
         user_input = data.get('user_input', '').strip()
         list_data = job_prot.search_job_by_user_input(user_input=user_input)
         print(list_data)
-        return jsonify(list_data),200
+        return jsonify(list_data), 200
     except Exception as e:
         app.logger.error(f'搜索列表信息失败: {str(e)}')
         return jsonify({
@@ -330,7 +332,8 @@ def job_search():
             'message': '服务器内部错误'
         }), 500
 
-@app.route('/api/job/job_details',methods=['POST'])
+
+@app.route('/api/job/job_details', methods=['POST'])
 def job_details():
     '''
     input: id:1 #岗位的唯一id
@@ -347,7 +350,7 @@ def job_details():
             }), 400
         id = data.get('id', '').strip()
         job_data = job_prot.fetch_one_job_all_data_posts(ones_id=id)
-        return jsonify(job_data),200
+        return jsonify(job_data), 200
     except Exception as e:
         app.logger.error(f'岗位详情信息失败: {str(e)}')
         return jsonify({
@@ -502,6 +505,7 @@ def intro_list():
             'message': '服务器内部错误'
         }), 500
 
+
 @app.route('/api/forum/all_forum_data', methods=['GET'])
 def forum_all_data():
     '''
@@ -518,6 +522,7 @@ def forum_all_data():
             'code': 500,
             'message': '服务器内部错误'
         }), 500
+
 
 @app.route('/api/forum/forum_one_category', methods=['POST'])
 def forum_one_category_data():
@@ -544,6 +549,7 @@ def forum_one_category_data():
             'message': '服务器内部错误'
         }), 500
 
+
 @app.route('/api/forum/forum_all_first_talk', methods=['GET'])
 def forum_all_first_talk_data():
     '''
@@ -561,6 +567,7 @@ def forum_all_first_talk_data():
             'message': '服务器内部错误'
         }), 500
 
+
 @app.route('/api/forum/forums_back', methods=['POST'])
 def forums_back_data():
     '''
@@ -577,13 +584,14 @@ def forums_back_data():
             }), 400
         parent_id = str(data.get('parent_id', '')).strip()
         forum_data = forum_comments.forum_talks_back(parent_id)
-        return jsonify(forum_data),200
+        return jsonify(forum_data), 200
     except Exception as e:
         app.logger.error(f'评论回复查询失败：{e}')
         return jsonify({
             'code': 500,
             'message': '服务器内部错误'
         }), 500
+
 
 @app.route('/api/forum/forums_add', methods=['POST'])
 @jwt_required()
@@ -637,6 +645,7 @@ def forum_add():
             'message': '服务器内部错误'
         }), 500
 
+
 @app.route('/api/forum/forum_delete', methods=['POST'])
 def forum_delete():
     '''
@@ -651,7 +660,7 @@ def forum_delete():
                 'code': 400,
                 'message': '被删除评论的id为空'
             }), 400
-        id = data.get('id','').strip()
+        id = data.get('id', '').strip()
         forum_comments.forum_delete(id)
         return jsonify([{
             "code": 200
@@ -662,6 +671,7 @@ def forum_delete():
             'code': 500,
             'message': '服务器内部错误'
         }), 500
+
 
 @app.route('/api/forum/forum_count', methods=['POST'])
 def forum_count_data():
@@ -716,6 +726,7 @@ def forum_count_data():
             'code': 500,
             'message': '服务器内部错误'
         }), 500
+
 
 @app.route('/api/user/register', methods=['POST'])
 def user_register():
@@ -898,7 +909,6 @@ def user_login():
             'exp': datetime.now().timestamp() + 7 * 24 * 3600  # 7天过期
         }
 
-
         # token = jwt.encode(token_payload, JWT_SECRET, algorithm=JWT_ALGORITHM)
         access_token = create_access_token(identity=str(user['user_id']))
 
@@ -970,7 +980,6 @@ def get_user_profile():
             'register_time': user['register_time'],
             'last_login_time': user['last_login_time']
         }
-
 
         return jsonify({
             'code': 200,
@@ -1402,6 +1411,7 @@ def get_user_statistics():
             'data': None
         }), 500
 
+
 # 简历基本信息路由
 @app.route('/api/resume/basic', methods=['POST'])
 @jwt_required()
@@ -1470,7 +1480,6 @@ def get_resume():
     """获取简历基本信息"""
     try:
         user_id = get_jwt_identity()
-        
 
         resume = resume_manager.resumes.get_resume_by_user(user_id)
 
@@ -1502,7 +1511,6 @@ def delete_resume():
     """删除简历"""
     try:
         user_id = get_jwt_identity()
-        
 
         success = resume_manager.resumes.delete_resume(user_id)
 
@@ -1547,7 +1555,6 @@ def add_certificate():
                     'data': None
                 }), 400
 
-        
         cert_id = resume_manager.certificates.add_certificate(user_id, data)
 
         if cert_id:
@@ -1580,7 +1587,6 @@ def get_certificates():
         user_id = get_jwt_identity()
         cert_type = request.args.get('cert_type')
 
-        
         certificates = resume_manager.certificates.get_user_certificates(user_id, cert_type)
 
         return jsonify({
@@ -1606,7 +1612,6 @@ def update_certificate(cert_id):
         user_id = get_jwt_identity()
         data = request.get_json()
 
-        
         success = resume_manager.certificates.update_certificate(cert_id, user_id, data)
 
         if success:
@@ -1638,7 +1643,6 @@ def delete_certificate(cert_id):
     try:
         user_id = get_jwt_identity()
 
-        
         success = resume_manager.certificates.delete_certificate(cert_id, user_id)
 
         if success:
@@ -1672,7 +1676,6 @@ def upsert_campus_experience():
         user_id = get_jwt_identity()
         data = request.get_json()
 
-        
         experience_id = resume_manager.campus_experiences.upsert_campus_experience(user_id, data)
 
         if experience_id:
@@ -1704,7 +1707,6 @@ def get_campus_experience():
     try:
         user_id = get_jwt_identity()
 
-        
         experience = resume_manager.campus_experiences.get_campus_experience(user_id)
 
         if experience:
@@ -1748,7 +1750,6 @@ def add_internship():
                     'data': None
                 }), 400
 
-        
         internship_id = resume_manager.internships.add_internship(user_id, data)
 
         if internship_id:
@@ -1780,7 +1781,6 @@ def get_internships():
     try:
         user_id = get_jwt_identity()
 
-        
         internships = resume_manager.internships.get_user_internships(user_id)
 
         return jsonify({
@@ -1806,7 +1806,6 @@ def update_internship(internship_id):
         user_id = get_jwt_identity()
         data = request.get_json()
 
-        
         success = resume_manager.internships.update_internship(internship_id, user_id, data)
 
         if success:
@@ -1838,7 +1837,6 @@ def delete_internship(internship_id):
     try:
         user_id = get_jwt_identity()
 
-        
         success = resume_manager.internships.delete_internship(internship_id, user_id)
 
         if success:
@@ -1882,7 +1880,6 @@ def upsert_job_intention():
                     'data': None
                 }), 400
 
-        
         intention_id = resume_manager.job_intentions.upsert_job_intention(user_id, data)
 
         if intention_id:
@@ -1914,7 +1911,6 @@ def get_job_intention():
     try:
         user_id = get_jwt_identity()
 
-        
         intention = resume_manager.job_intentions.get_job_intention(user_id)
 
         if intention:
@@ -1948,7 +1944,6 @@ def upsert_job_preference():
         user_id = get_jwt_identity()
         data = request.get_json()
 
-        
         preference_id = resume_manager.job_preferences.upsert_job_preference(user_id, data)
 
         if preference_id:
@@ -1980,7 +1975,6 @@ def get_job_preference():
     try:
         user_id = get_jwt_identity()
 
-        
         preference = resume_manager.job_preferences.get_job_preference(user_id)
 
         if preference:
@@ -2013,7 +2007,6 @@ def get_complete_resume():
     try:
         user_id = get_jwt_identity()
 
-        
         complete_resume = resume_manager.get_complete_resume(user_id)
 
         # 检查是否有基本信息
@@ -2050,7 +2043,6 @@ def search_resumes():
 
         data = request.get_json()
 
-        
         resumes = resume_manager.search_resumes(data)
 
         return jsonify({
@@ -2079,7 +2071,6 @@ def get_resume_stats():
     try:
         # 这里可以添加管理员权限验证
 
-        
         stats = resume_manager.get_resume_stats()
 
         # 获取证书统计
@@ -2142,7 +2133,6 @@ def batch_update_resumes():
                 'data': None
             }), 400
 
-        
         count = resume_manager.batch_update_resumes(data['update_data'], data['conditions'])
 
         return jsonify({
@@ -2158,6 +2148,7 @@ def batch_update_resumes():
             'message': f'服务器异常: {str(e)}',
             'data': None
         }), 500
+
 
 def admin_required(f):
     """管理员权限装饰器"""
@@ -2467,7 +2458,7 @@ def admin_get_feedback_list():
     '''
     try:
         # 获取查询参数
-        #user_id = request.args.get('user_id', type=int)
+        # user_id = request.args.get('user_id', type=int)
         user_id = g.user_id
         complaint_type = request.args.get('complaint_type', type=int)
         is_resolved = request.args.get('is_resolved', type=int)
@@ -2475,7 +2466,7 @@ def admin_get_feedback_list():
         limit = request.args.get('limit', 20, type=int)
         offset = (page - 1) * limit
 
-       #  feedback_manager = UserFeedbackManager(db.connection)
+        #  feedback_manager = UserFeedbackManager(db.connection)
         list_data = feedback_manager.get_feedback_list(
             user_id=g.user_id,
             complaint_type=complaint_type,
@@ -2534,7 +2525,7 @@ def admin_resolve_feedback(feedback_id):
         # 获取管理员ID（从g或token中解析）
         resolved_by = g.get('admin_id', 1)  # 默认值，实际应从登录信息获取
 
-       #  feedback_manager = UserFeedbackManager(db.connection)
+        #  feedback_manager = UserFeedbackManager(db.connection)
         success = feedback_manager.resolve_feedback(
             feedback_id=feedback_id,
             resolved_by=resolved_by,
@@ -2570,7 +2561,7 @@ def admin_get_feedback_detail(feedback_id):
     管理员查看反馈详情
     '''
     try:
-       #  feedback_manager = UserFeedbackManager(db.connection)
+        #  feedback_manager = UserFeedbackManager(db.connection)
         detail_data = feedback_manager.get_feedback_by_id(feedback_id)
 
         if detail_data is None:
@@ -2591,6 +2582,7 @@ def admin_get_feedback_detail(feedback_id):
             'code': 500,
             'message': '服务器内部错误'
         }), 500
+
 
 @app.route('/api/job/favorite/add', methods=['POST'])
 @jwt_required()
@@ -2708,11 +2700,11 @@ def get_user_favorites():
             }), 500
 
     except Exception as e:
-        app.logger.error(f'获取收藏列表失败: ',e)
+        app.logger.error(f'获取收藏列表失败: ', e)
         return jsonify({'code': 500, 'message': '服务器内部错误'}), 500
 
 
-@app.route('/api/job/favorite/check', methods=['GET'])
+@app.route('/api/job/favorite/check', methods=['POST'])
 @jwt_required()
 def check_is_favorite():
     """
@@ -2722,9 +2714,11 @@ def check_is_favorite():
         boss_job_id: 岗位ID
     """
     try:
+        data = request.get_json()
         # #user_id = request.args.get('user_id', type=int) user_id = g.user_id
         user_id = get_jwt_identity()
-        boss_job_id = request.args.get('boss_job_id', type=int)
+        # boss_job_id = request.args.get('boss_job_id', type=int)
+        boss_job_id = data.get('boss_job_id', '').strip()
 
         if not user_id or not boss_job_id:
             return jsonify({'code': 400, 'message': 'user_id 和 boss_job_id 不能为空'}), 400
@@ -2985,7 +2979,7 @@ def get_user_delivers():
         return jsonify({'code': 500, 'message': '服务器内部错误'}), 500
 
 
-@app.route('/api/job/deliver/check', methods=['GET'])
+@app.route('/api/job/deliver/check', methods=['POST'])
 @jwt_required()
 def check_is_deliver():
     """
@@ -2995,10 +2989,11 @@ def check_is_deliver():
         boss_job_id: 岗位ID
     """
     try:
-        ##user_id = request.args.get('user_id', type=int) 
+        data = request.get_json()
+        ##user_id = request.args.get('user_id', type=int)
         user_id = get_jwt_identity()
-        boss_job_id = request.args.get('boss_job_id', type=int)
-
+        # boss_job_id = request.args.get('boss_job_id', type=int)
+        boss_job_id = data.get('boss_job_id', '').strip()
         if not user_id or not boss_job_id:
             return jsonify({'code': 400, 'message': 'user_id 和 boss_job_id 不能为空'}), 400
 
@@ -3066,7 +3061,7 @@ def get_deliver_detail():
         boss_job_id: 岗位ID
     """
     try:
-        #user_id = request.args.get('user_id', type=int) 
+        # user_id = request.args.get('user_id', type=int)
         user_id = get_jwt_identity()
         boss_job_id = request.args.get('boss_job_id', type=int)
 
@@ -3133,7 +3128,6 @@ def batch_cancel_delivers():
     except Exception as e:
         app.logger.error(f'批量取消投递失败: {str(e)}')
         return jsonify({'code': 500, 'message': '服务器内部错误'}), 500
-
 
 
 def allowed_file(filename):
@@ -3206,7 +3200,7 @@ def api_ask_by_pdf_and_job_id():
             'data': {
                 'analysis': ai_answer
             }
-        }),200
+        }), 200
 
     except Exception as e:
         current_app.logger.error(f'PDF+职位ID分析异常：{e}')
@@ -3264,7 +3258,7 @@ def api_ask_by_pdf_and_job_text():
             'data': {
                 'analysis': ai_answer
             }
-        }),200
+        }), 200
 
     except Exception as e:
         current_app.logger.error(f'PDF+职位文本分析异常：{e}')
@@ -3302,7 +3296,7 @@ def api_ask_by_user_id_and_job_text():
             'data': {
                 'analysis': ai_answer
             }
-        }),200
+        }), 200
 
     except Exception as e:
         current_app.logger.error(f'用户ID+职位文本分析异常：{e}')
@@ -3859,6 +3853,7 @@ def api_university_plan_by_user_id_and_job_id():
             'data': None
         }), 500
 
+
 # ==================== 1. 文本 + 文本（原有功能保留）====================
 
 @app.route('/api/ai/interview/start/text', methods=['POST'])
@@ -4331,6 +4326,7 @@ def process_answer(session_id):
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+
 @app.route('/api/ai/interview/<session_id>/report', methods=['GET'])
 def download_report(session_id):
     """下载面试报告"""
@@ -4353,8 +4349,7 @@ def get_history(session_id):
         'session_id': session_id,
         'current_stage': session['stage'],
         'history': session['history']
-    }),200
-
+    }), 200
 
 
 @app.route('/api/health', methods=['GET'])
@@ -4375,7 +4370,7 @@ def health_check():
             'database': db_status,
             'service': '运行正常'
         }
-    }),200
+    }), 200
 
 
 if __name__ == '__main__':
@@ -4394,7 +4389,6 @@ if __name__ == '__main__':
         print(f"服务器启动在: http://localhost:5000")
         print(f"健康检查: http://localhost:5000/api/health")
         print(f"数据库连接: {app.config['SQLALCHEMY_DATABASE_URI']}")
-
 
         # 启动服务器
         print("=" * 50)
