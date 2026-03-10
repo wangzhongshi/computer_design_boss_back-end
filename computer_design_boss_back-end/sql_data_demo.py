@@ -247,6 +247,22 @@ class Job_prot:
             print('职位展示页详细信息查询失败:', e)
             return None
 
+    def fetch_one_job_all_data_posts_by_name(self, ones_name_part):
+        """
+        用于根据前端提供的信息，输出岗位的详细信息
+        """
+        try:
+            with self.connection.cursor(DictCursor) as cursor:
+                sql = f"SELECT * FROM job_post WHERE title LIKE '%{ones_name_part}%'"
+                # sql = f"SELECT * FROM job_post where title='{ones_title}'"
+                cursor.execute(sql)
+                result = cursor.fetchone()
+                print(result)
+                return result
+        except Exception as e:
+            print('职位展示页详细信息查询失败:', e)
+            return None
+
     def insert_job_post(self, boss_job_id, title, company_id, city_id, category_id, emp_type=1,
                         salary_min=None, salary_max=None, salary_desc=None, edu_req=None, exp_req=None,
                         district=None, address=None, recruiter_id=None, description=None,

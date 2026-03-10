@@ -3210,6 +3210,63 @@ def api_ask_by_pdf_and_job_id():
             'data': None
         }), 500
 
+@app.route('/api/ai/ask_by_pdf_job_name', methods=['POST'])
+@jwt_required()
+def api_ask_by_pdf_and_job_name():
+    """使用PDF文件和职位ID进行分析"""
+    try:
+        # 检查文件上传
+        if 'pdf_file' not in request.files:
+            return jsonify({
+                'code': 400,
+                'message': '请上传PDF简历文件',
+                'data': None
+            }), 400
+
+        # 获取job_id
+        job_name = request.form.get('job_name')
+        if not job_name:
+            return jsonify({
+                'code': 400,
+                'message': '请提供职位ID',
+                'data': None
+            }), 400
+
+        # 保存PDF文件
+        pdf_path, error = save_uploaded_file()
+        if error:
+            return jsonify({
+                'code': 400,
+                'message': error,
+                'data': None
+            }), 400
+
+        # 调用AI分析函数
+        ai_answer = ai_job_demo.ask_by_pdf_and_job_name(pdf_path, job_name)
+
+        # 清理临时文件
+        try:
+            if os.path.exists(pdf_path):
+                os.remove(pdf_path)
+        except:
+            pass
+
+        return jsonify({
+            'code': 200,
+            'message': '分析成功',
+            'data': {
+                'analysis': ai_answer
+            }
+        }), 200
+
+    except Exception as e:
+        current_app.logger.error(f'PDF+职位ID分析异常：{e}')
+        return jsonify({
+            'code': 500,
+            'message': f'服务器异常: {str(e)}',
+            'data': None
+        }), 500
+
 
 @app.route('/api/ai/ask_by_pdf_job_text', methods=['POST'])
 @jwt_required()
@@ -3342,6 +3399,40 @@ def api_ask_by_user_id_and_job_id():
             'data': None
         }), 500
 
+@app.route('/api/ai/ask_by_user_job_name', methods=['GET'])
+@jwt_required()
+def api_ask_by_user_id_and_job_name():
+    """使用用户ID和职位ID进行分析"""
+    try:
+        user_id = get_jwt_identity()
+
+        # 获取job_id
+        job_name = request.args.get('job_name')
+        if not job_name:
+            return jsonify({
+                'code': 400,
+                'message': '请提供职位ID',
+                'data': None
+            }), 400
+
+        # 调用AI分析函数
+        ai_answer = ai_job_demo.ask_by_user_id_and_job_name(user_id, job_name)
+
+        return jsonify({
+            'code': 200,
+            'message': '分析成功',
+            'data': {
+                'analysis': ai_answer
+            }
+        })
+
+    except Exception as e:
+        current_app.logger.error(f'用户ID+职位ID分析异常：{e}')
+        return jsonify({
+            'code': 500,
+            'message': f'服务器异常: {str(e)}',
+            'data': None
+        }), 500
 
 @app.route('/api/ai/chat', methods=['POST'])
 @jwt_required()
@@ -3503,6 +3594,63 @@ def api_success_rate_by_pdf_and_job_id():
             'data': None
         }), 500
 
+@app.route('/api/ai/success_rate_pdf_job_name', methods=['POST'])
+@jwt_required()
+def api_success_rate_by_pdf_and_job_name():
+    """成功率分析（PDF+职位ID）"""
+    try:
+        # 检查文件上传
+        if 'pdf_file' not in request.files:
+            return jsonify({
+                'code': 400,
+                'message': '请上传PDF简历文件',
+                'data': None
+            }), 400
+
+        # 获取job_id
+        job_name = request.form.get('job_name')
+        if not job_name:
+            return jsonify({
+                'code': 400,
+                'message': '请提供职位ID',
+                'data': None
+            }), 400
+
+        # 保存PDF文件
+        pdf_path, error = save_uploaded_file()
+        if error:
+            return jsonify({
+                'code': 400,
+                'message': error,
+                'data': None
+            }), 400
+
+        # 调用成功率分析函数
+        ai_answer = ai_job_demo.success_rate_by_pdf_and_job_name(pdf_path, job_name)
+
+        # 清理临时文件
+        try:
+            if os.path.exists(pdf_path):
+                os.remove(pdf_path)
+        except:
+            pass
+
+        return jsonify({
+            'code': 200,
+            'message': '分析成功',
+            'data': {
+                'analysis': ai_answer
+            }
+        })
+
+    except Exception as e:
+        current_app.logger.error(f'PDF+职位ID成功率分析异常：{e}')
+        return jsonify({
+            'code': 500,
+            'message': f'服务器异常: {str(e)}',
+            'data': None
+        }), 500
+
 
 @app.route('/api/ai/success_rate_pdf_job_text', methods=['POST'])
 @jwt_required()
@@ -3635,6 +3783,40 @@ def api_success_rate_by_user_id_and_job_id():
             'data': None
         }), 500
 
+@app.route('/api/ai/success_rate_user_job_name', methods=['GET'])
+@jwt_required()
+def api_success_rate_by_user_id_and_job_name():
+    """成功率分析（用户ID+职位ID）"""
+    try:
+        user_id = get_jwt_identity()
+
+        # 获取job_id
+        job_name = request.args.get('job_name')
+        if not job_name:
+            return jsonify({
+                'code': 400,
+                'message': '请提供职位ID',
+                'data': None
+            }), 400
+
+        # 调用成功率分析函数
+        ai_answer = ai_job_demo.success_rate_by_user_id_and_job_name(user_id, job_name)
+
+        return jsonify({
+            'code': 200,
+            'message': '分析成功',
+            'data': {
+                'analysis': ai_answer
+            }
+        })
+
+    except Exception as e:
+        current_app.logger.error(f'用户ID+职位ID成功率分析异常：{e}')
+        return jsonify({
+            'code': 500,
+            'message': f'服务器异常: {str(e)}',
+            'data': None
+        }), 500
 
 @app.route('/api/ai/university_plan_pdf_job_id', methods=['POST'])
 @jwt_required()
@@ -3702,6 +3884,71 @@ def api_university_plan_by_pdf_and_job_id():
             'data': None
         }), 500
 
+@app.route('/api/ai/university_plan_pdf_job_name', methods=['POST'])
+@jwt_required()
+def api_university_plan_by_pdf_and_job_name():
+    """大学生活规划（PDF+职位ID）"""
+    try:
+        # 检查文件上传
+        if 'pdf_file' not in request.files:
+            return jsonify({
+                'code': 400,
+                'message': '请上传PDF简历文件',
+                'data': None
+            }), 400
+
+        # 获取job_id和user_grade
+        job_name = request.form.get('job_name')
+        user_grade = request.form.get('user_grade')
+
+        if not job_name:
+            return jsonify({
+                'code': 400,
+                'message': '请提供职位ID',
+                'data': None
+            }), 400
+
+        if not user_grade:
+            return jsonify({
+                'code': 400,
+                'message': '请提供学生年级',
+                'data': None
+            }), 400
+
+        # 保存PDF文件
+        pdf_path, error = save_uploaded_file()
+        if error:
+            return jsonify({
+                'code': 400,
+                'message': error,
+                'data': None
+            }), 400
+
+        # 调用大学生活规划函数
+        ai_answer = ai_job_demo.uni_plan_by_pdf_and_job_name(pdf_path, job_name, user_grade)
+
+        # 清理临时文件
+        try:
+            if os.path.exists(pdf_path):
+                os.remove(pdf_path)
+        except:
+            pass
+
+        return jsonify({
+            'code': 200,
+            'message': '规划生成成功',
+            'data': {
+                'plan': ai_answer
+            }
+        })
+
+    except Exception as e:
+        current_app.logger.error(f'PDF+职位ID大学生活规划异常：{e}')
+        return jsonify({
+            'code': 500,
+            'message': f'服务器异常: {str(e)}',
+            'data': None
+        }), 500
 
 @app.route('/api/ai/university_plan_pdf_job_text', methods=['POST'])
 @jwt_required()
@@ -3853,6 +4100,49 @@ def api_university_plan_by_user_id_and_job_id():
             'data': None
         }), 500
 
+@app.route('/api/ai/university_plan_user_job_name', methods=['GET'])
+@jwt_required()
+def api_university_plan_by_user_id_and_job_name():
+    """大学生活规划（用户ID+职位ID）"""
+    try:
+        user_id = get_jwt_identity()
+
+        # 获取job_id和user_grade
+        job_name = request.args.get('job_name')
+        user_grade = request.args.get('user_grade')
+
+        if not job_name:
+            return jsonify({
+                'code': 400,
+                'message': '请提供职位ID',
+                'data': None
+            }), 400
+
+        if not user_grade:
+            return jsonify({
+                'code': 400,
+                'message': '请提供学生年级',
+                'data': None
+            }), 400
+
+        # 调用大学生活规划函数
+        ai_answer = ai_job_demo.uni_plan_by_user_id_and_job_name(user_id, job_name, user_grade)
+
+        return jsonify({
+            'code': 200,
+            'message': '规划生成成功',
+            'data': {
+                'plan': ai_answer
+            }
+        })
+
+    except Exception as e:
+        current_app.logger.error(f'用户ID+职位ID大学生活规划异常：{e}')
+        return jsonify({
+            'code': 500,
+            'message': f'服务器异常: {str(e)}',
+            'data': None
+        }), 500
 
 # ==================== 1. 文本 + 文本（原有功能保留）====================
 
@@ -3935,7 +4225,7 @@ def start_interview_pdf_jobid():
 
         # 从数据库获取岗位
         job_id = data.get('job_id')
-        job_text, error = _get_job_from_db(job_id)
+        job_text, error = _get_job_from_db_by_job_id(job_id)
         if error:
             return jsonify({'error': error}), 400
 
@@ -3944,6 +4234,36 @@ def start_interview_pdf_jobid():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+@app.route('/api/ai/interview/start/pdf-job_name', methods=['POST'])
+def start_interview_pdf_job_name():
+    """
+    方式3：PDF简历 + 岗位ID
+    POST /api/ai/interview/start/pdf-jobid
+
+    Body: {
+        "resume_file": "base64编码的PDF",
+        "job_id": "123"
+    }
+    """
+    try:
+        data = request.get_json() or {}
+
+        # 解析PDF
+        resume_text, error = _parse_pdf_base64(data.get('resume_file'))
+        if error:
+            return jsonify({'error': error}), 400
+
+        # 从数据库获取岗位
+        job_name = data.get('job_name')
+        job_text, error = _get_job_from_db_by_job_id(job_name)
+        if error:
+            return jsonify({'error': error}), 400
+
+        return _create_interview_session_by_job_name(resume_text, job_text, 'pdf',
+                                                     'database', job_name=job_name)
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 # ==================== 4. 用户ID + 岗位ID（全数据库） ====================
 
@@ -3970,13 +4290,48 @@ def start_interview_userid_jobid():
 
         # 从数据库获取岗位
         job_id = data.get('job_id')
-        job_text, error = _get_job_from_db(job_id)
+        job_text, error = _get_job_from_db_by_job_id(job_id)
         if error:
             return jsonify({'error': error}), 400
 
         return _create_interview_session(
             resume_text, job_text, 'database', 'database',
             user_id=user_id, job_id=job_id
+        )
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/ai/interview/start/userid-job_name', methods=['POST'])
+@jwt_required()
+def start_interview_userid_job_name():
+    """
+    方式4：用户ID + 岗位ID（全部从数据库获取）
+    POST /api/ai/interview/start/userid-jobid
+
+    Body: {
+        "user_id": "user_123",
+        "job_id": "job_456"
+    }
+    """
+    try:
+        data = request.get_json() or {}
+
+        # 从数据库获取简历
+        user_id = get_jwt_identity()
+        resume_text, error = _get_resume_from_db(user_id)
+        if error:
+            return jsonify({'error': error}), 400
+
+        # 从数据库获取岗位
+        job_name = data.get('job_name')
+        job_text, error = _get_job_from_db_by_job_id(job_name)
+        if error:
+            return jsonify({'error': error}), 400
+
+        return _create_interview_session_by_job_name(
+            resume_text, job_text, 'database', 'database',
+            user_id=user_id, job_name=job_name
         )
 
     except Exception as e:
@@ -4041,7 +4396,7 @@ def start_interview_text_jobid():
 
         # 从数据库获取岗位
         job_id = data.get('job_id')
-        job_text, error = _get_job_from_db(job_id)
+        job_text, error = _get_job_from_db_by_job_id(job_id)
         if error:
             return jsonify({'error': error}), 400
 
@@ -4049,6 +4404,37 @@ def start_interview_text_jobid():
 
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+@app.route('/api/ai/interview/start/text-job_name', methods=['POST'])
+def start_interview_text_job_name():
+    """
+    方式6：简历文本 + 岗位ID
+    POST /api/ai/interview/start/text-jobid
+
+    Body: {
+        "resume_text": "简历内容...",
+        "job_id": "123"
+    }
+    """
+    try:
+        data = request.get_json() or {}
+
+        resume_text = data.get('resume_text', '').strip()
+        if not resume_text:
+            return jsonify({'error': 'resume_text 不能为空'}), 400
+
+        # 从数据库获取岗位
+        job_name = data.get('job_name')
+        job_text, error = _get_job_from_db_by_job_id(job_name)
+        if error:
+            return jsonify({'error': error}), 400
+
+        return _create_interview_session_by_job_name(resume_text, job_text, 'text',
+                                         'database', job_name=job_name)
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
 
 
 # ==================== 私有工具函数 ====================
@@ -4103,7 +4489,7 @@ def _get_resume_from_db(user_id):
         return None, f'获取简历失败: {str(e)}'
 
 
-def _get_job_from_db(job_id):
+def _get_job_from_db_by_job_id(job_id):
     """
     从数据库获取岗位文本，返回 (text, error)
     """
@@ -4172,6 +4558,58 @@ def _create_interview_session(resume_text, job_text, resume_source, job_source,
         'job_id': job_id
     }), 200
 
+def _create_interview_session_by_job_name(resume_text, job_text, resume_source, job_source,
+                              user_id=None, job_name=None):
+    """
+    统一创建面试会话的核心逻辑 - 等待语音合成成功后返回
+    """
+    # 创建会话
+    session_id = manager.create_session(resume_text, job_text)
+    session = manager.get_session(session_id)
+
+    # 记录来源信息
+    session['resume_source'] = resume_source
+    session['job_source'] = job_source
+    session['user_id'] = user_id
+    session['job_name'] = job_name
+
+    # 获取AI第一个问题
+    ai_response = manager.only_chat(session['messages'])
+    first_question = manager.extract_ai_text(ai_response)
+
+    if not first_question:
+        # 清理会话
+        manager.delete_session(session_id)
+        return jsonify({'error': 'AI生成问题失败'}), 500
+
+    # 更新会话
+    manager.append_message(session_id, f"面试官：{first_question}")
+    manager.add_to_history(session_id, 'interviewer', first_question)
+    manager.increment_question(session_id)
+
+    # 生成语音 - 必须成功才返回
+    audio_url, error = _generate_audio_sync(session_id, first_question)
+
+    if error:
+        # TTS失败，清理会话并返回错误
+        manager.delete_session(session_id)
+        return jsonify({
+            'error': f'语音合成失败: {error}',
+            'question': first_question  # 可选：返回文本以便调试
+        }), 500
+
+    return jsonify({
+        'code': 200,
+        'session_id': session_id,
+        'question': first_question,
+        'audio_url': audio_url,
+        'stage': session['stage'],
+        'question_number': 1,
+        'resume_source': resume_source,
+        'job_source': job_source,
+        'user_id': user_id,
+        'job_name': job_name
+    }), 200
 
 def _generate_audio_sync(session_id, text):
     """
