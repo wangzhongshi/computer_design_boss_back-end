@@ -1,0 +1,209 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="f6d4acd4-d239-46c0-b2c0-f3d36c9e9bc1" name="更改" comment="">
+      <change afterPath="$PROJECT_DIR$/computer_design_boss_back-end/后端测试网页/test_ai_name.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/computer_design_boss_back-end/app.py" beforeDir="false" afterPath="$PROJECT_DIR$/computer_design_boss_back-end/app.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/computer_design_boss_back-end/demo_boss.py" beforeDir="false" afterPath="$PROJECT_DIR$/computer_design_boss_back-end/demo_boss.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/computer_design_boss_back-end/sql_data_demo.py" beforeDir="false" afterPath="$PROJECT_DIR$/computer_design_boss_back-end/sql_data_demo.py" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Python Script" />
+        <option value="HTML File" />
+      </list>
+    </option>
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="ProblemsViewState">
+    <option name="selectedTabId" value="CurrentFile" />
+  </component>
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 4
+}</component>
+  <component name="ProjectId" id="38kVR5ONbo8v6lq9FW0gyNyKmC8" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;DefaultHtmlFileTemplate&quot;: &quot;HTML File&quot;,
+    &quot;RunOnceActivity.OpenProjectViewOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;WebServerToolWindowFactoryState&quot;: &quot;false&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
+    &quot;last_opened_file_path&quot;: &quot;D:/up_design&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
+  },
+  &quot;keyToStringList&quot;: {
+    &quot;DatabaseDriversLRU&quot;: [
+      &quot;mysql&quot;
+    ]
+  }
+}</component>
+  <component name="RecentsManager">
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="D:\computer_design_boss\computer_design_boss\computer_design_boss_back-end" />
+    </key>
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="D:\computer_design_boss2.0\computer_design_boss_back-end\computer_design_boss_back-end\data" />
+      <recent name="D:\computer_design_boss2.0\computer_design_boss_back-end\computer_design_boss_back-end" />
+      <recent name="D:\computer_design_boss2.0\computer_design_boss_back-end\computer_design_boss_back-end\讯飞官方接口文档" />
+      <recent name="D:\computer_design_boss\computer_design_boss\computer_design_boss_back-end\后端测试网页" />
+    </key>
+  </component>
+  <component name="RunManager" selected="Python.app (1)">
+    <configuration name="test_job.html" type="JavascriptDebugType" temporary="true" nameIsGenerated="true" uri="http://localhost:63342/computer_design_boss_back-end/computer_design_boss_back-end/后端测试网页/test_job.html" useBuiltInWebServerPort="true">
+      <method v="2" />
+    </configuration>
+    <configuration name="test_job_intro.html" type="JavascriptDebugType" temporary="true" nameIsGenerated="true" uri="http://localhost:63342/computer_design_boss_back-end/computer_design_boss_back-end/后端测试网页/test_job_intro.html" useBuiltInWebServerPort="true">
+      <method v="2" />
+    </configuration>
+    <configuration name="test_user.html" type="JavascriptDebugType" temporary="true" nameIsGenerated="true" uri="http://localhost:63342/computer_design_boss_back-end/computer_design_boss_back-end/后端测试网页/test_user.html" useBuiltInWebServerPort="true">
+      <method v="2" />
+    </configuration>
+    <configuration name="app (1)" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="computer_design_boss_back-end" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/computer_design_boss_back-end" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/computer_design_boss_back-end/app.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="app" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="computer_design_boss_back-end" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/app.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <recent_temporary>
+      <list>
+        <item itemvalue="Python.app (1)" />
+        <item itemvalue="Python.app" />
+        <item itemvalue="JavaScript 调试.test_user.html" />
+        <item itemvalue="JavaScript 调试.test_job.html" />
+        <item itemvalue="JavaScript 调试.test_job_intro.html" />
+      </list>
+    </recent_temporary>
+  </component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="应用程序级" UseSingleDictionary="true" transferred="true" />
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="默认任务">
+      <changelist id="f6d4acd4-d239-46c0-b2c0-f3d36c9e9bc1" name="更改" comment="" />
+      <created>1769343544447</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1769343544447</updated>
+      <workItem from="1769343545497" duration="13313000" />
+      <workItem from="1769358866264" duration="1427000" />
+      <workItem from="1769360694158" duration="142000" />
+      <workItem from="1769390158492" duration="20970000" />
+      <workItem from="1769508647981" duration="3351000" />
+      <workItem from="1769524558019" duration="2029000" />
+      <workItem from="1769527902267" duration="6227000" />
+      <workItem from="1769590446535" duration="18142000" />
+      <workItem from="1769618751409" duration="122000" />
+      <workItem from="1769674155582" duration="18249000" />
+      <workItem from="1769696450960" duration="1507000" />
+      <workItem from="1769736408240" duration="10963000" />
+      <workItem from="1769748712976" duration="261000" />
+      <workItem from="1770000319757" duration="24690000" />
+      <workItem from="1770110882917" duration="7377000" />
+      <workItem from="1770166310778" duration="14657000" />
+      <workItem from="1770255821663" duration="17995000" />
+      <workItem from="1770545565845" duration="7000" />
+      <workItem from="1770732470639" duration="748000" />
+      <workItem from="1770735089337" duration="725000" />
+      <workItem from="1770777775783" duration="1205000" />
+      <workItem from="1770795114090" duration="8123000" />
+      <workItem from="1770806471018" duration="596000" />
+      <workItem from="1770875231789" duration="11084000" />
+      <workItem from="1771119181517" duration="1396000" />
+      <workItem from="1771727878998" duration="630000" />
+      <workItem from="1771901891427" duration="9000" />
+      <workItem from="1771902091885" duration="26000" />
+      <workItem from="1772174067613" duration="2532000" />
+      <workItem from="1772192990863" duration="718000" />
+      <workItem from="1772253718834" duration="1782000" />
+      <workItem from="1772336837243" duration="19092000" />
+      <workItem from="1772434615983" duration="1930000" />
+      <workItem from="1772440302359" duration="1059000" />
+      <workItem from="1772450555907" duration="1322000" />
+      <workItem from="1772456947617" duration="1474000" />
+      <workItem from="1772465260422" duration="1198000" />
+      <workItem from="1773108639847" duration="4192000" />
+    </task>
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State />
+          </value>
+        </entry>
+      </map>
+    </option>
+  </component>
+  <component name="com.intellij.coverage.CoverageDataManagerImpl">
+    <SUITE FILE_PATH="coverage/computer_design_boss_back_end$test_sql.coverage" NAME="test_sql 覆盖结果" MODIFIED="1770028723938" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/computer_design_boss_back_end$app__1_.coverage" NAME="app (1) 覆盖结果" MODIFIED="1773111816943" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/computer_design_boss_back-end" />
+    <SUITE FILE_PATH="coverage/computer_design_boss_back_end$Doctests__tts_ws_python3_demo__.coverage" NAME="Doctests (tts_ws_python3_demo 内) 覆盖结果" MODIFIED="1770220207138" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/讯飞官方接口文档" />
+    <SUITE FILE_PATH="coverage/computer_design_boss_back_end$tts_ws_python3_demo__1_.coverage" NAME="tts_ws_python3_demo (1) 覆盖结果" MODIFIED="1770222754182" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/computer_design_boss_back_end$demo_boss.coverage" NAME="demo_boss 覆盖结果" MODIFIED="1770888800714" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/computer_design_boss_back_end$sql_data_demo.coverage" NAME="sql_data_demo 覆盖结果" MODIFIED="1769615949268" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/computer_design_boss_back_end$tts_ws_python3_demo.coverage" NAME="tts_ws_python3_demo 覆盖结果" MODIFIED="1770220953347" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/讯飞官方接口文档" />
+    <SUITE FILE_PATH="coverage/computer_design_boss_back_end$app.coverage" NAME="app 覆盖结果" MODIFIED="1772450739578" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/computer_design_boss_back_end$iat_ws_python3.coverage" NAME="iat_ws_python3 覆盖结果" MODIFIED="1770223168481" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/讯飞官方接口文档" />
+  </component>
+</project>
