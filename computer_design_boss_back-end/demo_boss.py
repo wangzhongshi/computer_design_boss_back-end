@@ -224,6 +224,7 @@ class Ai_job_demo:
 
     def get_job_text_in_db_by_job_name(self, job_name):
         job_text = self.job_prot.fetch_one_job_all_data_posts_by_name(ones_name_part=job_name)
+        print('910')
         job_text = self.generate_job_description(job_text)
         return job_text
 
@@ -313,9 +314,12 @@ class Ai_job_demo:
     def success_rate_by_pdf_and_job_name(self, pdf_path, job_name):
         user_pdf_text = self.extract_pdf_text(pdf_path)
         job_text = self.get_job_text_in_db_by_job_name(job_name)
+        print('78')
         first_input_qus = config_data.set_request_str_success.format(user_pdf_text=user_pdf_text,
                                                                      job_text=job_text)
+        print('56')
         ai_answer = main_answer(self.appid, self.api_key, self.api_secret, self.Spark_url, self.domain, first_input_qus)
+        print('45')
         return ai_answer
 
     @extract_assistant_content

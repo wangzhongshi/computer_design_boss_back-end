@@ -256,7 +256,7 @@ class Job_prot:
                 sql = f"SELECT * FROM job_post WHERE title LIKE '%{ones_name_part}%'"
                 # sql = f"SELECT * FROM job_post where title='{ones_title}'"
                 cursor.execute(sql)
-                result = cursor.fetchone()
+                result = cursor.fetchall()
                 print(result)
                 return result
         except Exception as e:

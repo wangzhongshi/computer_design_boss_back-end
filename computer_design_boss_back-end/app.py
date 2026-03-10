@@ -97,7 +97,7 @@ app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(hours=24)
 
 # 数据库配置
 app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL',
-                                                  'mysql+pymysql://root:271828@localhost:3306/boss_job')
+                                                  f'mysql+pymysql://root:{config_data.set_db_password}@localhost:3306/boss_job')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
     'pool_recycle': 300,
@@ -3626,8 +3626,9 @@ def api_success_rate_by_pdf_and_job_name():
             }), 400
 
         # 调用成功率分析函数
+        print('12')
         ai_answer = ai_job_demo.success_rate_by_pdf_and_job_name(pdf_path, job_name)
-
+        print('34')
         # 清理临时文件
         try:
             if os.path.exists(pdf_path):
