@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>接口测试平台 - job_name 功能</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+            color: #333;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+        }
+        .section {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+            padding: 20px;
+        }
+        .section h2 {
+            margin-top: 0;
+            color: #3498db;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 10px;
+        }
+        .login-form {
+            display: flex;
+            gap: 10px;
+            align-items: flex-end;
+            flex-wrap: wrap;
+        }
+        .form-group {
+            margin-bottom: 15px;
+            flex: 1;
+            min-width: 200px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #555;
+        }
+        .form-group input, .form-group textarea, .form-group select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+            font-family: inherit;
+        }
+        .form-group textarea {
+            min-height: 80px;
+            resize: vertical;
+        }
+        button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #2980b9;
+        }
+        button.danger {
+            background-color: #e74c3c;
+        }
+        button.danger:hover {
+            background-color: #c0392b;
+        }
+        .token-info {
+            background-color: #ecf0f1;
+            padding: 10px;
+            border-radius: 4px;
+            word-break: break-all;
+            margin-top: 10px;
+            font-family: monospace;
+        }
+        .card-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        .card {
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .card h3 {
+            margin-top: 0;
+            color: #2c3e50;
+            font-size: 16px;
+            border-left: 4px solid #3498db;
+            padding-left: 10px;
+        }
+        .card .method {
+            display: inline-block;
+            background-color: #3498db;
+            color: white;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            margin-bottom: 10px;
+        }
+        .card .url {
+            font-family: monospace;
+            background-color: #f8f9fa;
+            padding: 5px;
+            border-radius: 4px;
+            margin: 10px 0;
+            font-size: 12px;
+            word-break: break-all;
+        }
+        .response {
+            background-color: #2c3e50;
+            color: #ecf0f1;
+            padding: 10px;
+            border-radius: 4px;
+            margin-top: 15px;
+            max-height: 300px;
+            overflow: auto;
+            font-family: monospace;
+            font-size: 12px;
+            white-space: pre-wrap;
+        }
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(0,0,0,0.1);
+            border-radius: 50%;
+            border-top-color: #3498db;
+            animation: spin 1s ease-in-out infinite;
+            margin-left: 10px;
+            vertical-align: middle;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        hr {
+            margin: 20px 0;
+            border: 0;
+            border-top: 1px solid #ddd;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📡 接口测试平台 - job_name 功能</h1>
+
+        <!-- 登录区域 -->
+        <div class="section">
+            <h2>🔐 用户登录 (获取 JWT Token)</h2>
+            <div class="login-form">
+                <div class="form-group">
+                    <label>手机号</label>
+                    <input type="text" id="login-mobile" placeholder="例如 13800138000" value="13800138000">
+                </div>
+                <div class="form-group">
+                    <label>密码</label>
+                    <input type="password" id="login-password" placeholder="密码" value="12345678">
+                </div>
+                <div class="form-group">
+                    <button id="login-btn">登录</button>
+                </div>
+            </div>
+            <div class="token-info" id="token-display">
+                Token: 未登录
+            </div>
+        </div>
+
+        <!-- 接口卡片网格 -->
+        <div class="card-grid" id="api-cards">
+            <!-- 动态生成的卡片会通过 JavaScript 插入 -->
+        </div>
+    </div>
+
+    <script>
+        // 配置
+        const BASE_URL = 'http://localhost:5000'; // 如果部署在不同端口，请修改为完整地址，例如 'http://localhost:5000'
+        let token = localStorage.getItem('jwt_token') || '';
+
+        // 页面加载时更新token显示
+        document.addEventListener('DOMContentLoaded', () => {
+            updateTokenDisplay();
+            renderCards();
+        });
+
+        // 更新token显示
+        function updateTokenDisplay() {
+            const tokenDisplay = document.getElementById('token-display');
+            if (token) {
+                tokenDisplay.innerHTML = `Token: <span style="color:#27ae60;">${token.substring(0, 50)}...</span>`;
+            } else {
+                tokenDisplay.innerHTML = 'Token: 未登录';
+            }
+        }
+
+        // 登录
+        document.getElementById('login-btn').addEventListener('click', async () => {
+            const mobile = document.getElementById('login-mobile').value.trim();
+            const password = document.getElementById('login-password').value.trim();
+            if (!mobile || !password) {
+                alert('请输入手机号和密码');
+                return;
+            }
+
+            try {
+                const response = await fetch(BASE_URL + '/api/user/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ mobile, password })
+                });
+                const data = await response.json();
+                if (data.code === 200 && data.data && data.data.token) {
+                    token = data.data.token;
+                    localStorage.setItem('jwt_token', token);
+                    updateTokenDisplay();
+                    alert('登录成功！');
+                } else {
+                    alert('登录失败: ' + (data.message || '未知错误'));
+                }
+            } catch (error) {
+                alert('登录请求异常: ' + error.message);
+            }
+        });
+
+        // 定义接口列表
+        const apiList = [
+            {
+                name: '📄 PDF + job_name 分析',
+                method: 'POST',
+                url: '/api/ai/ask_by_pdf_job_name',
+                auth: true,
+                type: 'form-data',
+                fields: [
+                    { name: 'job_name', label: '职位名称', type: 'text', required: true },
+                    { name: 'pdf_file', label: 'PDF简历文件', type: 'file', required: true }
+                ]
+            },
+            {
+                name: '👤 用户ID + job_name 分析',
+                method: 'GET',
+                url: '/api/ai/ask_by_user_job_name',
+                auth: true,
+                type: 'query',
+                fields: [
+                    { name: 'job_name', label: '职位名称', type: 'text', required: true }
+                ],
+                note: '用户ID从JWT自动获取'
+            },
+            {
+                name: '📊 PDF + job_name 成功率分析',
+                method: 'POST',
+                url: '/api/ai/success_rate_pdf_job_name',
+                auth: true,
+                type: 'form-data',
+                fields: [
+                    { name: 'job_name', label: '职位名称', type: 'text', required: true },
+                    { name: 'pdf_file', label: 'PDF简历文件', type: 'file', required: true }
+                ]
+            },
+            {
+                name: '📊 用户ID + job_name 成功率分析',
+                method: 'GET',
+                url: '/api/ai/success_rate_user_job_name',
+                auth: true,
+                type: 'query',
+                fields: [
+                    { name: 'job_name', label: '职位名称', type: 'text', required: true }
+                ]
+            },
+            {
+                name: '🎓 PDF + job_name 大学生活规划',
+                method: 'POST',
+                url: '/api/ai/university_plan_pdf_job_name',
+                auth: true,
+                type: 'form-data',
+                fields: [
+                    { name: 'job_name', label: '职位名称', type: 'text', required: true },
+                    { name: 'user_grade', label: '学生年级', type: 'text', required: true, placeholder: '例如 大一' },
+                    { name: 'pdf_file', label: 'PDF简历文件', type: 'file', required: true }
+                ]
+            },
+            {
+                name: '🎓 用户ID + job_name 大学生活规划',
+                method: 'GET',
+                url: '/api/ai/university_plan_user_job_name',
+                auth: true,
+                type: 'query',
+                fields: [
+                    { name: 'job_name', label: '职位名称', type: 'text', required: true },
+                    { name: 'user_grade', label: '学生年级', type: 'text', required: true }
+                ]
+            },
+            {
+                name: '🎙️ 面试启动 (PDF + job_name)',
+                method: 'POST',
+                url: '/api/ai/interview/start/pdf-job_name',
+                auth: true,
+                type: 'json',
+                fields: [
+                    { name: 'job_name', label: '职位名称', type: 'text', required: true },
+                    { name: 'resume_file', label: 'PDF简历 (base64)', type: 'textarea', required: true, placeholder: 'PDF文件的Base64编码' }
+                ]
+            },
+            {
+                name: '🎙️ 面试启动 (用户ID + job_name)',
+                method: 'POST',
+                url: '/api/ai/interview/start/userid-job_name',
+                auth: true,
+                type: 'json',
+                fields: [
+                    { name: 'job_name', label: '职位名称', type: 'text', required: true }
+                ],
+                note: '用户ID从JWT自动获取，简历从数据库获取'
+            },
+            {
+                name: '🎙️ 面试启动 (简历文本 + job_name)',
+                method: 'POST',
+                url: '/api/ai/interview/start/text-job_name',
+                auth: true,
+                type: 'json',
+                fields: [
+                    { name: 'job_name', label: '职位名称', type: 'text', required: true },
+                    { name: 'resume_text', label: '简历文本', type: 'textarea', required: true }
+                ]
+            }
+        ];
+
+        // 渲染卡片
+        function renderCards() {
+            const container = document.getElementById('api-cards');
+            container.innerHTML = '';
+            apiList.forEach(api => {
+                const card = document.createElement('div');
+                card.className = 'card';
+                card.innerHTML = `
+                    <h3>${api.name}</h3>
+                    <span class="method">${api.method}</span>
+                    <div class="url">${api.url}</div>
+                    <form onsubmit="submitApi(event, '${api.url}', '${api.method}', ${api.auth}, '${api.type}', ${JSON.stringify(api.fields).replace(/'/g, "&apos;")})">
+                        ${api.fields.map(f => `
+                            <div class="form-group">
+                                <label>${f.label} ${f.required ? '*' : ''}</label>
+                                ${f.type === 'textarea'
+                                    ? `<textarea name="${f.name}" ${f.required ? 'required' : ''} placeholder="${f.placeholder || ''}"></textarea>`
+                                    : f.type === 'file'
+                                    ? `<input type="file" name="${f.name}" ${f.required ? 'required' : ''} accept=".pdf,.PDF">`
+                                    : `<input type="${f.type}" name="${f.name}" ${f.required ? 'required' : ''} placeholder="${f.placeholder || ''}">`
+                                }
+                            </div>
+                        `).join('')}
+                        ${api.note ? `<p style="font-size:12px; color:#888;">${api.note}</p>` : ''}
+                        <button type="submit">发送请求</button>
+                    </form>
+                    <div class="response" id="response-${api.url.replace(/\//g, '-')}">等待请求...</div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        // 全局提交函数
+        window.submitApi = async (event, url, method, authRequired, requestType, fields) => {
+            event.preventDefault();
+            const form = event.target;
+            const responseDiv = form.nextElementSibling; // 紧邻的 response div
+            responseDiv.textContent = '请求中...';
+
+            // 准备请求参数
+            let requestUrl = BASE_URL + url;
+            let headers = {};
+            let body = null;
+
+            // 添加认证头
+            if (authRequired) {
+                if (!token) {
+                    alert('请先登录获取Token');
+                    responseDiv.textContent = '错误: 未提供Token';
+                    return;
+                }
+                headers['Authorization'] = 'Bearer ' + token;
+            }
+
+            if (requestType === 'form-data') {
+                // multipart/form-data
+                const formData = new FormData();
+                for (let field of fields) {
+                    const input = form.querySelector(`[name="${field.name}"]`);
+                    if (field.type === 'file') {
+                        const file = input.files[0];
+                        if (field.required && !file) {
+                            alert(`请选择文件: ${field.label}`);
+                            return;
+                        }
+                        if (file) formData.append(field.name, file);
+                    } else {
+                        const value = input.value.trim();
+                        if (field.required && !value) {
+                            alert(`请填写: ${field.label}`);
+                            return;
+                        }
+                        if (value) formData.append(field.name, value);
+                    }
+                }
+                body = formData;
+                // 不设置 Content-Type，让浏览器自动设置
+            } else if (requestType === 'json') {
+                // application/json
+                headers['Content-Type'] = 'application/json';
+                const jsonBody = {};
+                for (let field of fields) {
+                    const input = form.querySelector(`[name="${field.name}"]`);
+                    let value = input.value.trim();
+                    if (field.type === 'file') {
+                        // 对于JSON模式，如果是文件类型，需要读取为base64
+                        const file = input.files[0];
+                        if (field.required && !file) {
+                            alert(`请选择文件: ${field.label}`);
+                            return;
+                        }
+                        if (file) {
+                            // 异步读取文件，这里需要特殊处理，暂时提示
+                            alert('文件字段需要转换为Base64，请手动填写Base64内容到文本域');
+                            return;
+                        }
+                    } else {
+                        if (field.required && !value) {
+                            alert(`请填写: ${field.label}`);
+                            return;
+                        }
+                        jsonBody[field.name] = value;
+                    }
+                }
+                body = JSON.stringify(jsonBody);
+            } else if (requestType === 'query') {
+                // GET 请求，拼接查询参数
+                const params = new URLSearchParams();
+                for (let field of fields) {
+                    const input = form.querySelector(`[name="${field.name}"]`);
+                    const value = input.value.trim();
+                    if (field.required && !value) {
+                        alert(`请填写: ${field.label}`);
+                        return;
+                    }
+                    if (value) params.append(field.name, value);
+                }
+                requestUrl += '?' + params.toString();
+                body = null;
+            }
+
+            try {
+                const response = await fetch(requestUrl, {
+                    method: method,
+                    headers: headers,
+                    body: body
+                });
+                const responseData = await response.json();
+                responseDiv.textContent = JSON.stringify(responseData, null, 2);
+            } catch (error) {
+                responseDiv.textContent = '请求异常: ' + error.message;
+            }
+        };
+    </script>
+</body>
+</html>
