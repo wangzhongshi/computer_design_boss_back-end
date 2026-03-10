@@ -1,0 +1,1229 @@
+我来为你编写一份清晰的接口文档。这份文档将基于你的Flask代码，涵盖所有API端点、请求参数、响应格式和认证方式，方便你的伙伴快速理解和对接。
+
+---
+
+# Boss招聘平台 API 接口文档
+
+## 基础信息
+
+| 项目 | 内容 |
+|------|------|
+| **基础URL** | `http://localhost:5000` |
+| **数据格式** | JSON |
+| **字符编码** | UTF-8 |
+| **认证方式** | JWT Bearer Token |
+
+---
+
+## 认证说明
+
+### JWT Token 获取
+登录成功后，接口返回 `access_token`，后续请求需在 Header 中携带：
+
+```http
+Authorization: Bearer <your_jwt_token>
+```
+
+### Token 有效期
+- 访问令牌：24小时
+- 刷新机制：需重新登录获取新Token
+
+---
+
+## 通用响应格式
+
+### 成功响应
+```json
+{
+    "code": 200,
+    "message": "操作成功",
+    "data": { ... }
+}
+```
+
+### 错误响应
+```json
+{
+    "code": 400/401/403/404/500,
+    "message": "错误描述",
+    "data": null
+}
+```
+
+### 状态码说明
+| 状态码 | 含义 |
+|--------|------|
+| 200 | 成功 |
+| 300 | 业务逻辑警告（参数缺失等） |
+| 400 | 请求参数错误 |
+| 401 | 未授权/Token无效 |
+| 403 | 禁止访问（账号禁用等） |
+| 404 | 资源不存在 |
+| 500 | 服务器内部错误 |
+
+---
+
+## 1. 岗位管理接口
+
+### 1.1 获取全部岗位列表
+**GET** `/api/job/Job_List_all`
+
+**描述**：获取所有岗位的简要信息，用于列表展示
+
+**请求参数**：无
+
+**响应示例**：
+```json
+[
+    {
+        "id": 1,
+        "title": "Java开发工程师",
+        "company_name": "某某科技",
+        "salary_min": 15000,
+        "salary_max": 25000,
+        "city": "北京",
+        "emp_type": 1
+    }
+]
+```
+
+---
+
+### 1.2 按类别获取岗位列表
+**POST** `/api/job/job_lis_one_type`
+
+**描述**：根据岗位类别ID获取对应岗位列表
+
+**请求参数**：
+| 参数 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| category_id | string | 是 | 岗位类别编码（如"1001"） |
+
+**请求示例**：
+```json
+{
+    "category_id": "1001"
+}
+```
+
+**特殊说明**：当 `category_id` 为 "100" 时，返回该大类下所有岗位
+
+---
+
+### 1.3 按类别+雇佣类型获取岗位
+**POST** `/api/job/job_list_two_given`
+
+**描述**：根据岗位类别和雇佣类型（全职/兼职/实习）筛选岗位
+
+**请求参数**：
+| 参数 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| category_id | string | 是 | 岗位类别编码 |
+| emp_type | string | 是 | 1=全职, 2=兼职, 3=实习 |
+
+**请求示例**：
+```json
+{
+    "category_id": "1001",
+    "emp_type": "1"
+}
+```
+
+---
+
+### 1.4 搜索岗位
+**POST** `/api/job/job_search`
+
+**描述**：根据用户输入关键词搜索岗位
+
+**请求参数**：
+| 参数 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| user_input | string | 是 | 搜索关键词（如"开发工程师"） |
+
+---
+
+### 1.5 获取岗位详情
+**POST** `/api/job/job_details`
+
+**描述**：获取单个岗位的完整详细信息
+
+**请求参数**：
+| 参数 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| id | string | 是 | 岗位唯一ID |
+
+---
+
+### 1.6 发布新岗位
+**POST** `/api/job/job_add`
+
+**描述**：发布新的职位信息（需管理员权限）
+
+**请求参数**：
+| 参数 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| boss_job_id | string | 是 | Boss平台ID |
+| title | string | 是 | 岗位名称 |
+| company_id | int | 是 | 公司ID |
+| city_id | int | 是 | 城市ID |
+| category_id | int | 是 | 职位分类ID |
+| emp_type | int | 否 | 雇佣类型（默认1全职） |
+| salary_min | float | 否 | 最低薪资 |
+| salary_max | float | 否 | 最高薪资 |
+| salary_desc | string | 否 | 薪资描述 |
+| edu_req | string | 否 | 学历要求 |
+| exp_req | string | 否 | 经验要求 |
+| district | string | 否 | 区域 |
+| address | string | 否 | 详细地址 |
+| recruiter_id | int | 否 | 招聘者ID |
+| description | string | 否 | 职位描述 |
+| require_list | array | 否 | 要求列表（JSON数组） |
+| welfare_list | array | 否 | 福利列表（JSON数组） |
+| status | int | 否 | 职位状态（默认1） |
+
+---
+
+## 2. 岗位分类接口
+
+### 2.1 获取所有岗位分类
+**GET** `/api/job_intro/job_intro_list`
+
+**描述**：获取全部岗位分类及介绍信息
+
+**响应示例**：
+```json
+[
+    {
+        "id": 1,
+        "category_code": "1001",
+        "category_name": "后端开发",
+        "description": "负责服务器端程序开发",
+        "sort_order": 0
+    }
+]
+```
+
+---
+
+## 3. 论坛/评论接口
+
+### 3.1 获取全部评论
+**GET** `/api/forum/all_forum_data`
+
+**描述**：获取论坛所有评论数据
+
+---
+
+### 3.2 按类别获取评论
+**POST** `/api/forum/forum_one_category`
+
+**请求参数**：
+| 参数 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| category_id | string | 是 | 岗位分类ID |
+
+---
+
+### 3.3 获取所有一级评论
+**GET** `/api/forum/forum_all_first_talk`
+
+**描述**：获取所有顶层评论（不包含回复）
+
+---
+
+### 3.4 获取评论的回复
+**POST** `/api/forum/forums_back`
+
+**请求参数**：
+| 参数 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| parent_id | string | 是 | 被回复的评论ID |
+
+---
+
+### 3.5 发表评论 ⭐需登录
+**POST** `/api/forum/forums_add`
+
+**Headers**: `Authorization: Bearer <token>`
+
+**请求参数**：
+| 参数 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| category_id | string | 是 | 职位分类ID |
+| content | string | 是 | 评论内容 |
+| level | string | 是 | 1=一级评论，2=二级评论（回复） |
+| sort_order | string | 是 | 展示排序 |
+| parent_id | string | 否 | 回复的目标评论ID（一级评论可不传） |
+
+**注意**：`user_id` 自动从JWT Token中获取，无需传递
+
+---
+
+### 3.6 删除评论
+**POST** `/api/forum/forum_delete`
+
+**请求参数**：
+| 参数 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| id | string | 是 | 要删除的评论ID |
+
+---
+
+### 3.7 评论统计
+**POST** `/api/forum/forum_count`
+
+**请求参数**：
+| 参数 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| switch | string | 是 | 统计类型：all/category/back/user |
+| category_id | string | 否 | switch=category时必填 |
+| parent_id | string | 否 | switch=back时必填 |
+| user_id | string | 否 | switch=user时必填（自动获取） |
+
+---
+
+## 4. 用户管理接口
+
+### 4.1 用户注册
+**POST** `/api/user/register`
+
+**请求参数**：
+| 参数 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| mobile | string | 是 | 手机号（11位） |
+| password | string | 是 | 密码（至少8位） |
+| sms_code | string | 是 | 短信验证码 |
+| email | string | 否 | 邮箱（需验证格式） |
+
+**响应示例**：
+```json
+{
+    "code": 200,
+    "message": "注册成功",
+    "data": {
+        "user_id": 1710123456789,
+        "mobile": "13800138000",
+        "register_time": "2024-01-15 10:30:00"
+    }
+}
+```
+
+---
+
+### 4.2 用户登录
+**POST** `/api/user/login`
+
+**请求参数**：
+| 参数 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| mobile | string | 是 | 手机号 |
+| password | string | 是 | 密码 |
+
+**Headers**（可选，用于记录设备信息）：
+- `X-Device-Model`: 设备型号
+- `X-Device-Type`: 设备类型
+
+**响应示例**：
+```json
+{
+    "code": 200,
+    "message": "登录成功",
+    "data": {
+        "token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...",
+        "user_info": {
+            "user_id": 1710123456789,
+            "mobile": "13800138000",
+            "email": "user@example.com",
+            "real_name": "张三",
+            "avatar_url": "http://...",
+            "status": 1,
+            "job_status": 0,
+            "last_login_time": "2024-01-15 10:30:00"
+        }
+    }
+}
+```
+
+---
+
+### 4.3 获取个人信息 ⭐需登录
+**GET** `/api/user/profile`
+
+**Headers**: `Authorization: Bearer <token>`
+
+**响应字段**：
+- user_id, mobile, email, real_name, gender, birth_date
+- education_level, major, enrollment_year, graduation_year
+- bio, avatar_url, status, job_status, register_time, last_login_time
+
+---
+
+### 4.4 更新个人信息 ⭐需登录
+**PUT** `/api/user/profile`
+
+**Headers**: `Authorization: Bearer <token>`
+
+**可更新字段**（不可更新：user_id, mobile, password_hash, status等）：
+- real_name, email, gender, birth_date, education_level
+- major, bio, avatar_url 等
+
+---
+
+### 4.5 修改密码 ⭐需登录
+**PUT** `/api/user/password`
+
+**Headers**: `Authorization: Bearer <token>`
+
+**请求参数**：
+| 参数 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| old_password | string | 是 | 原密码 |
+| new_password | string | 是 | 新密码（至少8位） |
+
+---
+
+### 4.6 更新头像 ⭐需登录
+**POST** `/api/user/avatar`
+
+**Headers**: `Authorization: Bearer <token>`
+
+**请求参数**：
+| 参数 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| avatar_url | string | 是 | 头像图片URL |
+
+---
+
+### 4.7 获取用户状态 ⭐需登录
+**GET** `/api/user/status`
+
+**Headers**: `Authorization: Bearer <token>`
+
+**状态说明**：
+- status: 0=禁用, 1=正常, 2=未激活, 3=锁定
+- job_status: 0=待业, 1=实习中, 2=应届求职
+
+---
+
+### 4.8 用户登出 ⭐需登录
+**POST** `/api/user/logout`
+
+**Headers**: `Authorization: Bearer <token>`
+
+---
+
+### 4.9 搜索用户（公开接口）
+**GET** `/api/user/search`
+
+**Query参数**：
+| 参数 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| keyword | string | 否 | 搜索关键词 |
+| page | int | 否 | 页码（默认1） |
+| page_size | int | 否 | 每页数量（默认20） |
+
+---
+
+### 4.10 获取用户公开信息
+**GET** `/api/user/public/<user_id>`
+
+**说明**：获取指定用户的公开资料（仅返回正常状态用户）
+
+---
+
+### 4.11 获取用户统计信息 ⭐需登录
+**GET** `/api/user/statistics`
+
+**Headers**: `Authorization: Bearer <token>`
+
+---
+
+## 5. 简历管理接口
+
+### 5.1 创建/更新简历基本信息 ⭐需登录
+**POST** `/api/resume/basic`
+
+**Headers**: `Authorization: Bearer <token>`
+
+**必填字段**：real_name, phone, email, education_level, school_name
+
+---
+
+### 5.2 获取简历基本信息 ⭐需登录
+**GET** `/api/resume/basic`
+
+**Headers**: `Authorization: Bearer <token>`
+
+---
+
+### 5.3 删除简历 ⭐需登录
+**DELETE** `/api/resume/basic`
+
+**Headers**: `Authorization: Bearer <token>`
+
+---
+
+### 5.4 添加证书 ⭐需登录
+**POST** `/api/resume/certificates`
+
+**Headers**: `Authorization: Bearer <token>`
+
+**必填字段**：cert_name, cert_type
+
+---
+
+### 5.5 获取证书列表 ⭐需登录
+**GET** `/api/resume/certificates`
+
+**Headers**: `Authorization: Bearer <token>`
+
+**Query参数**：cert_type（可选，按类型筛选）
+
+---
+
+### 5.6 更新证书 ⭐需登录
+**PUT** `/api/resume/certificates/<int:cert_id>`
+
+**Headers**: `Authorization: Bearer <token>`
+
+---
+
+### 5.7 删除证书 ⭐需登录
+**DELETE** `/api/resume/api/resume/certificates/<int:cert_id>`
+
+**Headers**: `Authorization: Bearer <token>`
+
+**⚠️ 注意**：URL路径有重复，实际应为 `/api/resume/certificates/<int:cert_id>`
+
+---
+
+### 5.8 更新校园经历 ⭐需登录
+**POST** `/api/resume/campus-experience`
+
+**Headers**: `Authorization: Bearer <token>`
+
+---
+
+### 5.9 获取校园经历 ⭐需登录
+**GET** `/api/resume/campus-experience`
+
+**Headers**: `Authorization: Bearer <token>`
+
+---
+
+### 5.10 添加实习经历 ⭐需登录
+**POST** `/api/resume/internships`
+
+**Headers**: `Authorization: Bearer <token>`
+
+**必填字段**：company_name, position, start_date
+
+---
+
+### 5.11 获取实习经历列表 ⭐需登录
+**GET** `/api/resume/internships`
+
+**Headers**: `Authorization: Bearer <token>`
+
+---
+
+### 5.12 更新实习经历 ⭐需登录
+**PUT** `/api/resume/internships/<int:internship_id>`
+
+**Headers**: `Authorization: Bearer <token>`
+
+---
+
+### 5.13 删除实习经历 ⭐需登录
+**DELETE** `/api/resume/internships/<int:internship_id>`
+
+**Headers**: `Authorization: Bearer <token>`
+
+---
+
+### 5.14 更新求职意向 ⭐需登录
+**POST** `/api/resume/job-intention`
+
+**Headers**: `Authorization: Bearer <token>`
+
+**必填字段**：target_industries, target_positions, salary_min, salary_max
+
+---
+
+### 5.15 获取求职意向 ⭐需登录
+**GET** `/api/resume/job-intention`
+
+**Headers**: `Authorization: Bearer <token>`
+
+---
+
+### 5.16 更新求职偏好 ⭐需登录
+**POST** `/api/resume/job-preference`
+
+**Headers**: `Authorization: Bearer <token>`
+
+---
+
+### 5.17 获取求职偏好 ⭐需登录
+**GET** `/api/resume/job-preference`
+
+**Headers**: `Authorization: Bearer <token>`
+
+---
+
+### 5.18 获取完整简历 ⭐需登录
+**GET** `/api/resume/complete`
+
+**Headers**: `Authorization: Bearer <token>`
+
+**返回**：包含basic_info, certificates, campus_experience, internships, job_intention, job_preference的完整数据
+
+---
+
+### 5.19 搜索简历 ⭐需登录（管理员）
+**POST** `/api/resume/search`
+
+**Headers**: `Authorization: Bearer <token>`
+
+---
+
+### 5.20 获取简历统计 ⭐需登录（管理员）
+**GET** `/api/resume/stats`
+
+**Headers**: `Authorization: Bearer <token>`
+
+---
+
+## 6. 收藏功能接口 ⭐均需登录
+
+### 6.1 添加收藏
+**POST** `/api/job/favorite/add`
+
+**Headers**: `Authorization: Bearer <token>`
+
+**请求参数**：
+| 参数 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| job_id | int | 是 | 岗位ID |
+| remarks | string | 否 | 收藏备注 |
+
+---
+
+### 6.2 取消收藏
+**POST** `/api/job/favorite/cancel`
+
+**Headers**: `Authorization: Bearer <token>`
+
+**请求参数**：
+| 参数 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| boss_job_id | int/string | 是 | Boss平台岗位ID |
+
+---
+
+### 6.3 获取收藏列表
+**GET** `/api/job/favorite/list`
+
+**Headers**: `Authorization: Bearer <token>`
+
+**Query参数**：include_canceled（0或1，是否包含已取消的收藏）
+
+---
+
+### 6.4 检查是否已收藏
+**POST** `/api/job/favorite/check`
+
+**Headers**: `Authorization: Bearer <token>`
+
+**请求参数**：
+| 参数 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| boss_job_id | string | 是 | Boss平台岗位ID |
+
+---
+
+### 6.5 更新收藏备注
+**POST** `/api/job/favorite/update_remarks`
+
+**Headers**: `Authorization: Bearer <token>`
+
+---
+
+### 6.6 获取收藏详情
+**GET** `/api/job/favorite/detail`
+
+**Headers**: `Authorization: Bearer <token>`
+
+**Query参数**：boss_job_id
+
+---
+
+### 6.7 批量取消收藏
+**POST** `/api/job/favorite/batch_cancel`
+
+**Headers**: `Authorization: Bearer <token>`
+
+**请求参数**：
+| 参数 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| boss_job_id_list | array | 是 | Boss平台岗位ID数组 |
+
+---
+
+## 7. 投递功能接口 ⭐均需登录
+
+### 7.1 添加投递
+**POST** `/api/job/deliver/add`
+
+**Headers**: `Authorization: Bearer <token>`
+
+**请求参数**：
+| 参数 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| job_id | int | 是 | 岗位ID |
+| remarks | string | 否 | 投递备注 |
+
+---
+
+### 7.2 取消投递
+**POST** `/api/job/deliver/cancel`
+
+**Headers**: `Authorization: Bearer <token>`
+
+---
+
+### 7.3 获取投递列表
+**GET** `/api/job/deliver/list`
+
+**Headers**: `Authorization: Bearer <token>`
+
+**Query参数**：include_canceled
+
+---
+
+### 7.4 检查是否已投递
+**POST** `/api/job/deliver/check`
+
+**Headers**: `Authorization: Bearer <token>`
+
+---
+
+### 7.5 更新投递备注
+**POST** `/api/job/deliver/update_remarks`
+
+**Headers**: `Authorization: Bearer <token>`
+
+---
+
+### 7.6 获取投递详情
+**GET** `/api/job/deliver/detail`
+
+**Headers**: `Authorization: Bearer <token>`
+
+---
+
+### 7.7 批量取消投递
+**POST** `/api/job/deliver/batch_cancel`
+
+**Headers**: `Authorization: Bearer <token>`
+
+---
+
+## 8. AI 智能服务接口 ⭐均需登录（除特别说明）
+
+### 8.1 简历与岗位匹配分析（PDF+岗位ID）
+**POST** `/api/ai/ask_by_pdf_job_id`
+
+**Headers**: `Authorization: Bearer <token>`
+
+**Content-Type**: `multipart/form-data`
+
+**请求参数**：
+| 参数 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| pdf_file | file | 是 | PDF简历文件 |
+| job_id | string | 是 | 岗位ID |
+
+---
+
+### 8.2 简历与岗位匹配分析（PDF+岗位名称）
+**POST** `/api/ai/ask_by_pdf_job_name`
+
+**参数**：pdf_file, job_name
+
+---
+
+### 8.3 简历与岗位匹配分析（PDF+岗位文本）
+**POST** `/api/ai/ask_by_pdf_job_text`
+
+**参数**：pdf_file, job_text
+
+---
+
+### 8.4 简历与岗位匹配分析（用户ID+岗位文本）
+**POST** `/api/ai/ask_by_user_job_text`
+
+**Headers**: `Authorization: Bearer <token>`
+
+**JSON参数**：job_text
+
+---
+
+### 8.5 简历与岗位匹配分析（用户ID+岗位ID）
+**GET** `/api/ai/ask_by_user_job_id`
+
+**Headers**: `Authorization: Bearer <token>`
+
+**Query参数**：job_id
+
+---
+
+### 8.6 简历与岗位匹配分析（用户ID+岗位名称）
+**GET** `/api/ai/ask_by_user_job_name`
+
+**Query参数**：job_name
+
+---
+
+### 8.7 AI对话
+**POST** `/api/ai/chat`
+
+**Headers**: `Authorization: Bearer <token>`
+
+**JSON参数**：
+| 参数 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| message | string | 是 | 用户输入的对话内容 |
+
+---
+
+### 8.8 简历评估（通过用户ID）
+**GET** `/api/ai/resume_evaluation`
+
+**Headers**: `Authorization: Bearer <token>`
+
+---
+
+### 8.9 简历评估（通过PDF文件）
+**POST** `/api/ai/resume_evaluation_text`
+
+**Headers**: `Authorization: Bearer <token>`
+
+**Content-Type**: `multipart/form-data`
+
+**参数**：pdf_file
+
+---
+
+### 8.10 求职成功率分析（PDF+岗位ID）
+**POST** `/api/ai/success_rate_pdf_job_id`
+
+**参数**：pdf_file, job_id
+
+---
+
+### 8.11 求职成功率分析（PDF+岗位名称）
+**POST** `/api/ai/success_rate_pdf_job_name`
+
+**参数**：pdf_file, job_name
+
+---
+
+### 8.12 求职成功率分析（PDF+岗位文本）
+**POST** `/api/ai/success_rate_pdf_job_text`
+
+**参数**：pdf_file, job_text
+
+---
+
+### 8.13 求职成功率分析（用户ID+岗位文本）
+**POST** `/api/ai/success_rate_user_job_text`
+
+**JSON参数**：job_text
+
+---
+
+### 8.14 求职成功率分析（用户ID+岗位ID）
+**GET** `/api/ai/success_rate_user_job_id`
+
+**Query参数**：job_id
+
+---
+
+### 8.15 求职成功率分析（用户ID+岗位名称）
+**GET** `/api/ai/success_rate_user_job_name`
+
+**Query参数**：job_name
+
+---
+
+### 8.16 大学生活规划（PDF+岗位ID）
+**POST** `/api/ai/university_plan_pdf_job_id`
+
+**参数**：pdf_file, job_id, user_grade（年级）
+
+---
+
+### 8.17 大学生活规划（PDF+岗位名称）
+**POST** `/api/ai/university_plan_pdf_job_name`
+
+**参数**：pdf_file, job_name, user_grade
+
+---
+
+### 8.18 大学生活规划（PDF+岗位文本）
+**POST** `/api/ai/university_plan_pdf_job_text`
+
+**参数**：pdf_file, job_text, user_grade
+
+---
+
+### 8.19 大学生活规划（用户ID+岗位文本）
+**POST** `/api/ai/university_plan_user_job_text`
+
+**JSON参数**：job_text, user_grade
+
+---
+
+### 8.20 大学生活规划（用户ID+岗位ID）
+**GET** `/api/ai/university_plan_user_job_id`
+
+**Query参数**：job_id, user_grade
+
+---
+
+### 8.21 大学生活规划（用户ID+岗位名称）
+**GET** `/api/ai/university_plan_user_job_name`
+
+**Query参数**：job_name, user_grade
+
+---
+
+## 9. AI 模拟面试接口
+
+### 9.1 开始面试 - 简历文本+岗位文本
+**POST** `/api/ai/interview/start/text`
+
+**请求参数**：
+| 参数 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| resume_text | string | 是 | 简历内容文本 |
+| job_text | string | 是 | 岗位描述文本 |
+
+**响应示例**：
+```json
+{
+    "code": 200,
+    "session_id": "sess_abc123",
+    "question": "请先做一个简短的自我介绍",
+    "audio_url": "/static/audio/question_sess_abc123_1234567890.mp3",
+    "stage": "basic",
+    "question_number": 1,
+    "resume_source": "text",
+    "job_source": "text"
+}
+```
+
+---
+
+### 9.2 开始面试 - PDF简历+岗位文本
+**POST** `/api/ai/interview/start/pdf-text`
+
+**请求参数**：
+| 参数 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| resume_file | string | 是 | Base64编码的PDF文件 |
+| job_text | string | 是 | 岗位描述文本 |
+
+---
+
+### 9.3 开始面试 - PDF简历+岗位ID
+**POST** `/api/ai/interview/start/pdf-jobid`
+
+**请求参数**：resume_file（base64 PDF）, job_id
+
+---
+
+### 9.4 开始面试 - PDF简历+岗位名称
+**POST** `/api/ai/interview/start/pdf-job_name`
+
+**请求参数**：resume_file（base64 PDF）, job_name
+
+---
+
+### 9.5 开始面试 - 用户ID+岗位ID ⭐需登录
+**POST** `/api/ai/interview/start/userid-jobid`
+
+**Headers**: `Authorization: Bearer <token>`
+
+**请求参数**：job_id（resume从数据库自动获取）
+
+---
+
+### 9.6 开始面试 - 用户ID+岗位名称 ⭐需登录
+**POST** `/api/ai/interview/start/userid-job_name`
+
+**Headers**: `Authorization: Bearer <token>`
+
+---
+
+### 9.7 开始面试 - 用户ID+岗位文本 ⭐需登录
+**POST** `/api/ai/interview/start/userid-text`
+
+**Headers**: `Authorization: Bearer <token>`
+
+**请求参数**：job_text
+
+---
+
+### 9.8 开始面试 - 简历文本+岗位ID
+**POST** `/api/ai/interview/start/text-jobid`
+
+**请求参数**：resume_text, job_id
+
+---
+
+### 9.9 开始面试 - 简历文本+岗位名称
+**POST** `/api/ai/interview/start/text-job_name`
+
+**请求参数**：resume_text, job_name
+
+---
+
+### 9.10 语音听写（语音识别）
+**POST** `/api/ai/interview/<session_id>/transcribe`
+
+**Content-Type**: `multipart/form-data`
+
+**请求参数**：
+| 参数 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| audio_file | file | 是 | 音频文件（MP3/PCM，最长60秒） |
+
+**响应示例**：
+```json
+{
+    "code": 200,
+    "text": "我叫张三，毕业于北京大学",
+    "confidence": 0.95,
+    "session_id": "sess_abc123"
+}
+```
+
+---
+
+### 9.11 提交回答并获取下一个问题
+**POST** `/api/ai/interview/<session_id>/answer`
+
+**请求参数**：
+| 参数 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| user_text | string | 是 | 用户回答的文本内容 |
+| end_interview | bool | 否 | 是否结束面试（默认false） |
+
+**响应示例**：
+```json
+{
+    "code": 200,
+    "question": "你有哪些项目经验？",
+    "audio_url": "/static/audio/question_sess_abc123_1234567891.mp3",
+    "stage": "project",
+    "question_number": 2,
+    "is_ended": false
+}
+```
+
+**结束面试响应**：
+```json
+{
+    "code": 200,
+    "is_ended": true,
+    "report": { ...面试报告... },
+    "audio_url": "/static/audio/ending_sess_abc123.mp3"
+}
+```
+
+---
+
+### 9.12 获取面试报告
+**GET** `/api/ai/interview/<session_id>/report`
+
+**响应**：完整的面试评估报告JSON
+
+---
+
+### 9.13 获取面试历史记录
+**GET** `/api/ai/interview/<session_id>/history`
+
+**响应示例**：
+```json
+{
+    "code": 200,
+    "session_id": "sess_abc123",
+    "current_stage": "project",
+    "history": [
+        {"role": "interviewer", "content": "请先自我介绍", "timestamp": "..."},
+        {"role": "candidate", "content": "我叫张三...", "timestamp": "..."}
+    ]
+}
+```
+
+---
+
+## 10. 反馈与投诉接口
+
+### 10.1 获取投诉类型列表
+**GET** `/api/complaint/types`
+
+**响应示例**：
+```json
+{
+    "code": 200,
+    "data": [
+        {"type_code": 1, "type_name": "功能问题", "sort_order": 0},
+        {"type_code": 2, "type_name": "BUG反馈", "sort_order": 1}
+    ],
+    "message": "success"
+}
+```
+
+---
+
+### 10.2 获取用户反馈列表 ⭐需登录
+**GET** `/api/feedback/list`
+
+**Headers**: `Authorization: Bearer <token>`
+
+**Query参数**：
+| 参数 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| is_resolved | int | 否 | 0=未解决, 1=已解决 |
+| page | int | 否 | 页码（默认1） |
+| limit | int | 否 | 每页数量（默认20） |
+
+---
+
+### 10.3 获取反馈详情 ⭐需登录
+**GET** `/api/feedback/detail/<int:feedback_id>`
+
+**Headers**: `Authorization: Bearer <token>`
+
+**权限**：只能查看自己的反馈
+
+---
+
+### 10.4 提交反馈 ⭐需登录
+**POST** `/api/feedback/submit`
+
+**Headers**: `Authorization: Bearer <token>`
+
+**请求参数**：
+| 参数 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| complaint_type | int | 是 | 投诉类型代码 |
+| description | string | 是 | 投诉内容（10-2000字符） |
+| image_url_1 | string | 否 | 图片1 |
+| image_url_2 | string | 否 | 图片2 |
+| image_url_3 | string | 否 | 图片3 |
+| priority | int | 否 | 优先级1-3（默认1） |
+
+---
+
+### 10.5 更新反馈 ⭐需登录
+**PUT** `/api/feedback/update/<int:feedback_id>`
+
+**Headers**: `Authorization: Bearer <token>`
+
+**限制**：只能更新未解决的反馈
+
+---
+
+### 10.6 管理员获取全部反馈 ⭐需管理员权限
+**GET** `/api/admin/feedback/list`
+
+**Headers**: `Authorization: Bearer <token>` + `X-Admin-Token` 或管理员标识
+
+---
+
+### 10.7 管理员解决反馈 ⭐需管理员权限
+**POST** `/api/admin/feedback/resolve/<int:feedback_id>`
+
+**请求参数**：
+| 参数 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| feedback_content | string | 是 | 回复内容（不超过1000字符） |
+
+---
+
+### 10.8 管理员查看反馈详情 ⭐需管理员权限
+**GET** `/api/admin/feedback/detail/<int:feedback_id>`
+
+---
+
+## 11. 系统接口
+
+### 11.1 健康检查
+**GET** `/api/health`
+
+**响应示例**：
+```json
+{
+    "code": 200,
+    "message": "服务正常",
+    "data": {
+        "timestamp": "2024-01-15 10:30:00",
+        "database": "正常",
+        "service": "运行正常"
+    }
+}
+```
+
+---
+
+## 附录：数据字典
+
+### 雇佣类型（emp_type）
+| 值 | 含义 |
+|----|------|
+| 1 | 全职 |
+| 2 | 兼职 |
+| 3 | 实习 |
+
+### 用户状态（status）
+| 值 | 含义 |
+|----|------|
+| 0 | 禁用 |
+| 1 | 正常 |
+| 2 | 未激活 |
+| 3 | 锁定 |
+
+### 求职状态（job_status）
+| 值 | 含义 |
+|----|------|
+| 0 | 待业 |
+| 1 | 实习中 |
+| 2 | 应届求职 |
+
+### 面试阶段（stage）
+| 值 | 含义 |
+|----|------|
+| basic | 基础问题 |
+| project | 项目经验 |
+| skill | 技能考察 |
+| scene | 场景题 |
+| ending | 结束阶段 |
+
+---
+
+## 注意事项
+
+1. **文件上传限制**：PDF文件最大16MB，图片建议不超过5MB
+2. **音频文件**：面试语音文件保存在 `static/audio/` 目录，可通过URL直接访问
+3. **临时文件**：上传的PDF会被自动清理，无需手动删除
+4. **并发处理**：面试会话使用内存存储，重启服务会丢失进行中的面试状态
+5. **Base64 PDF**：面试接口接受的PDF需为Base64编码字符串
+
+---
+
+这份文档涵盖了你的代码中所有路由，按照功能模块分类，方便伙伴快速查找和对接。如需补充特定接口的详细示例或调整格式，告诉我！
