@@ -4226,7 +4226,7 @@ def start_interview_pdf_jobid():
 
         # 从数据库获取岗位
         job_id = data.get('job_id')
-        job_text, error = _get_job_from_db_by_job_id(job_id)
+        job_text, error = _get_job_from_db_by_job_id_or_name(job_id=job_id)
         if error:
             return jsonify({'error': error}), 400
 
@@ -4256,8 +4256,10 @@ def start_interview_pdf_job_name():
 
         # 从数据库获取岗位
         job_name = data.get('job_name')
-        job_text, error = _get_job_from_db_by_job_id(job_name)
+        job_text, error = _get_job_from_db_by_job_id_or_name(job_name=job_name)
         if error:
+            print('123')
+            print(f'error:{error}')
             return jsonify({'error': error}), 400
 
         return _create_interview_session_by_job_name(resume_text, job_text, 'pdf',
@@ -4291,7 +4293,7 @@ def start_interview_userid_jobid():
 
         # 从数据库获取岗位
         job_id = data.get('job_id')
-        job_text, error = _get_job_from_db_by_job_id(job_id)
+        job_text, error = _get_job_from_db_by_job_id_or_name(job_id=job_id)
         if error:
             return jsonify({'error': error}), 400
 
@@ -4326,7 +4328,7 @@ def start_interview_userid_job_name():
 
         # 从数据库获取岗位
         job_name = data.get('job_name')
-        job_text, error = _get_job_from_db_by_job_id(job_name)
+        job_text, error = _get_job_from_db_by_job_id_or_name(job_name=job_name)
         if error:
             return jsonify({'error': error}), 400
 
@@ -4397,7 +4399,7 @@ def start_interview_text_jobid():
 
         # 从数据库获取岗位
         job_id = data.get('job_id')
-        job_text, error = _get_job_from_db_by_job_id(job_id)
+        job_text, error = _get_job_from_db_by_job_id_or_name(job_id=job_id)
         if error:
             return jsonify({'error': error}), 400
 
@@ -4426,7 +4428,7 @@ def start_interview_text_job_name():
 
         # 从数据库获取岗位
         job_name = data.get('job_name')
-        job_text, error = _get_job_from_db_by_job_id(job_name)
+        job_text, error = _get_job_from_db_by_job_id_or_name(job_name=job_name)
         if error:
             return jsonify({'error': error}), 400
 
@@ -4490,18 +4492,23 @@ def _get_resume_from_db(user_id):
         return None, f'获取简历失败: {str(e)}'
 
 
-def _get_job_from_db_by_job_id(job_id):
+def _get_job_from_db_by_job_id_or_name(job_id=None, job_name=None):
     """
     从数据库获取岗位文本，返回 (text, error)
     """
-    if not job_id:
-        return None, 'job_id 不能为空'
-
+    if not job_id and not job_name:
+        return None, 'job_id或job_name不能为空'
     try:
-        text = manager.Ai_job.get_job_text_in_db(job_id)
-        if not text or not text.strip():
-            return None, '数据库中未找到该岗位信息'
-        return text, None
+        if job_id:
+            text = manager.Ai_job.get_job_text_in_db_by_job_id(job_id)
+            if not text or not text.strip():
+                return None, '数据库中未找到该岗位信息'
+            return text, None
+        if job_name:
+            text = manager.Ai_job.get_job_text_in_db_by_job_name(job_name)
+            if not text or not text.strip():
+                return None,  '数据库中未找到该岗位信息'
+            return  text, None
     except Exception as e:
         return None, f'获取岗位信息失败: {str(e)}'
 
