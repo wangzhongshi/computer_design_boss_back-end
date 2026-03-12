@@ -465,7 +465,7 @@ class Forum_comments(BaseManager):
             print(f"[{datetime.now()}] [ERROR] Forum_comments.forum_all_first_talk: 查询失败 | 错误: {e}")
             return None
 
-    def forum_talks_back(self, parent_id: int) -> Optional[List[Dict]]:
+    def forum_talks_back(self, parent_id: str) -> Optional[List[Dict]]:
         """
         查询某个评论的回复
         :param parent_id: 父评论ID

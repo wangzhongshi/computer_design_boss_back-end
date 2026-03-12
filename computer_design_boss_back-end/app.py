@@ -584,6 +584,7 @@ def forums_back_data():
             }), 400
         parent_id = str(data.get('parent_id', '')).strip()
         forum_data = forum_comments.forum_talks_back(parent_id)
+        # forum_data = forum_data.get()
         return jsonify(forum_data), 200
     except Exception as e:
         app.logger.error(f'评论回复查询失败：{e}')
@@ -3243,6 +3244,9 @@ def api_ask_by_pdf_and_job_name():
 
         # 调用AI分析函数
         ai_answer = ai_job_demo.ask_by_pdf_and_job_name(pdf_path, job_name)
+        print(f'ai_answer:{ai_answer}')
+        ai_answer = ai_answer[-1].get('content')
+        print(f'ai_answer:{ai_answer}')
 
         # 清理临时文件
         try:
