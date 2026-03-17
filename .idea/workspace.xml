@@ -160,7 +160,8 @@
       <workItem from="1773142328249" duration="89000" />
       <workItem from="1773229361810" duration="1649000" />
       <workItem from="1773316224795" duration="369000" />
-      <workItem from="1773316752212" duration="1093000" />
+      <workItem from="1773316752212" duration="1789000" />
+      <workItem from="1773717832257" duration="738000" />
     </task>
     <servers />
   </component>
@@ -180,7 +181,7 @@
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
     <SUITE FILE_PATH="coverage/computer_design_boss_back_end$test_sql.coverage" NAME="test_sql 覆盖结果" MODIFIED="1770028723938" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
-    <SUITE FILE_PATH="coverage/computer_design_boss_back_end$app__1_.coverage" NAME="app (1) 覆盖结果" MODIFIED="1773317191049" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/computer_design_boss_back-end" />
+    <SUITE FILE_PATH="coverage/computer_design_boss_back_end$app__1_.coverage" NAME="app (1) 覆盖结果" MODIFIED="1773717871517" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/computer_design_boss_back-end" />
     <SUITE FILE_PATH="coverage/computer_design_boss_back_end$Doctests__tts_ws_python3_demo__.coverage" NAME="Doctests (tts_ws_python3_demo 内) 覆盖结果" MODIFIED="1770220207138" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/讯飞官方接口文档" />
     <SUITE FILE_PATH="coverage/computer_design_boss_back_end$tts_ws_python3_demo__1_.coverage" NAME="tts_ws_python3_demo (1) 覆盖结果" MODIFIED="1770222754182" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/computer_design_boss_back_end$demo_boss.coverage" NAME="demo_boss 覆盖结果" MODIFIED="1770888800714" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
