@@ -166,8 +166,7 @@ class Job_prot(BaseManager):
         try:
             # 默认分类ID列表
             default_categories = [101, 102, 103, 104, 105, 106, 108, 200, 300]
-            if category_ids is None:
-                category_ids = default_categories
+            category_ids = default_categories
 
             # 类型转换和验证
             if isinstance(category_ids, (int, str)):
@@ -181,11 +180,10 @@ class Job_prot(BaseManager):
 
             columns = [
                 'id', 'title', 'salary_min', 'salary_max', 'edu_req',
-                'exp_req', 'emp_type', 'company', 'city', 'welfare_list', 'publish_time'
+                'exp_req', 'emp_type', 'company', 'city', 'welfare_list', 'publish_time','category_id'
             ]
             select_clause = ", ".join(f"`{c}`" for c in columns)
             placeholders = ', '.join(['%s'] * len(category_ids))
-
             sql = f"""
                 SELECT {select_clause} 
                 FROM job_post 
