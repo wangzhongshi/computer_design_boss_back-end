@@ -1,0 +1,20 @@
+# Flask 核心框架
+Flask==2.0.1
+
+# JWT 认证
+Flask-JWT-Extended==4.4.4
+
+# 数据库 ORM
+Flask-SQLAlchemy==2.5.1
+
+# 跨域支持
+Flask-CORS==3.0.10
+
+# 环境变量管理
+python-dotenv==0.19.2
+
+# MySQL 驱动
+pymysql==1.0.2
+
+# 工具库
+Werkzeug==2.0.1
