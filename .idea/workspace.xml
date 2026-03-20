@@ -6,6 +6,7 @@
   <component name="ChangeListManager">
     <list default="true" id="f6d4acd4-d239-46c0-b2c0-f3d36c9e9bc1" name="更改" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/dataSources.local.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dataSources.local.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/dataSources/b2dab522-104e-4118-acc2-b9ecfef314e7.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dataSources/b2dab522-104e-4118-acc2-b9ecfef314e7.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -162,6 +163,8 @@
       <workItem from="1773316752212" duration="1789000" />
       <workItem from="1773717832257" duration="738000" />
       <workItem from="1773726619149" duration="2319000" />
+      <workItem from="1773999253054" duration="625000" />
+      <workItem from="1774003301419" duration="873000" />
     </task>
     <servers />
   </component>
@@ -181,7 +184,7 @@
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
     <SUITE FILE_PATH="coverage/computer_design_boss_back_end$test_sql.coverage" NAME="test_sql 覆盖结果" MODIFIED="1770028723938" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
-    <SUITE FILE_PATH="coverage/computer_design_boss_back_end$app__1_.coverage" NAME="app (1) 覆盖结果" MODIFIED="1773726622986" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/computer_design_boss_back-end" />
+    <SUITE FILE_PATH="coverage/computer_design_boss_back_end$app__1_.coverage" NAME="app (1) 覆盖结果" MODIFIED="1773999277377" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/computer_design_boss_back-end" />
     <SUITE FILE_PATH="coverage/computer_design_boss_back_end$Doctests__tts_ws_python3_demo__.coverage" NAME="Doctests (tts_ws_python3_demo 内) 覆盖结果" MODIFIED="1770220207138" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/讯飞官方接口文档" />
     <SUITE FILE_PATH="coverage/computer_design_boss_back_end$tts_ws_python3_demo__1_.coverage" NAME="tts_ws_python3_demo (1) 覆盖结果" MODIFIED="1770222754182" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/computer_design_boss_back_end$demo_boss.coverage" NAME="demo_boss 覆盖结果" MODIFIED="1770888800714" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
