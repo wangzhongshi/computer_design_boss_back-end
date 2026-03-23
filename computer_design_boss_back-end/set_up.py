@@ -12,9 +12,9 @@ class config:
 
         self.set_UPLOAD_FOLDER = 'static/audio'
         # 大模型和请求提示词
-        self.set_LLM_appid = "9e54e001"  # 填写控制台中获取的 APPID 信息
-        self.set_LLM_api_secret = "MWZlZmE4MzE4YTMxNWUxMDg1ZDI2MDBi"  # 填写控制台中获取的 APISecret 信息
-        self.set_LLM_api_key = "55edcb29ab95c53aad65b95343544821"  # 填写控制台中获取的 APIKey 信息
+        self.set_LLM_appid = "af5d91f0"  # 填写控制台中获取的 APPID 信息
+        self.set_LLM_api_secret = "OGRhOTVkMGY3ZTA2M2U2OWM2MTEyZmM4"  # 填写控制台中获取的 APISecret 信息
+        self.set_LLM_api_key = "bbc640957c9754ce610385539be4dcdc"  # 填写控制台中获取的 APIKey 信息
         self.set_LLM_domain = "generalv3"  # 控制请求的模型版本
         self.set_LLM_Spark_url = "wss://spark-api.xf-yun.com/v3.1/chat"  # 查看接口文档  https://www.xfyun.cn/doc/spark/X1ws.html
         self.set_request_str_ask = '''\n我：以下是我的简历内容：{user_pdf_text}\n

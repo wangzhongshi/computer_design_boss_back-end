@@ -5,13 +5,8 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="f6d4acd4-d239-46c0-b2c0-f3d36c9e9bc1" name="更改" comment="">
-      <change afterPath="$PROJECT_DIR$/computer_design_boss_back-end/app_sever.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/computer_design_boss_back-end/app_sever_http.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/computer_design_boss_back-end/ssl/wbyhaohaode.xyz.key" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/computer_design_boss_back-end/ssl/wbyhaohaode.xyz.pem" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/computer_design_boss_back-end/demo_boss.py" beforeDir="false" afterPath="$PROJECT_DIR$/computer_design_boss_back-end/demo_boss.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/computer_design_boss_back-end/set_up.py" beforeDir="false" afterPath="$PROJECT_DIR$/computer_design_boss_back-end/set_up.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -208,7 +203,8 @@
       <workItem from="1774024273116" duration="1678000" />
       <workItem from="1774056847547" duration="7545000" />
       <workItem from="1774156305047" duration="1242000" />
-      <workItem from="1774236098005" duration="2504000" />
+      <workItem from="1774236098005" duration="3103000" />
+      <workItem from="1774252054640" duration="585000" />
     </task>
     <servers />
   </component>
