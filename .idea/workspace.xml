@@ -5,9 +5,13 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="f6d4acd4-d239-46c0-b2c0-f3d36c9e9bc1" name="更改" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/dataSources.local.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dataSources.local.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/dataSources/b2dab522-104e-4118-acc2-b9ecfef314e7.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dataSources/b2dab522-104e-4118-acc2-b9ecfef314e7.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/computer_design_boss_back-end/app_sever.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/computer_design_boss_back-end/app_sever_http.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/computer_design_boss_back-end/ssl/wbyhaohaode.xyz.key" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/computer_design_boss_back-end/ssl/wbyhaohaode.xyz.pem" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/computer_design_boss_back-end/demo_boss.py" beforeDir="false" afterPath="$PROJECT_DIR$/computer_design_boss_back-end/demo_boss.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -17,9 +21,20 @@
   <component name="FileTemplateManagerImpl">
     <option name="RECENT_TEMPLATES">
       <list>
-        <option value="Python Script" />
         <option value="HTML File" />
+        <option value="Python Script" />
       </list>
+    </option>
+  </component>
+  <component name="FlaskConsoleOptions" custom-start-script="import sys&#10;sys.path.extend([WORKING_DIR_AND_PYTHON_PATHS])&#10;from flask.cli import ScriptInfo&#10;locals().update(ScriptInfo(create_app=None).load_app().make_shell_context())&#10;print(&quot;Python %s on %s\nApp: %s [%s]\nInstance: %s&quot; % (sys.version, sys.platform, app.import_name, app.env, app.instance_path))">
+    <envs>
+      <env key="FLASK_APP" value="app" />
+    </envs>
+    <option name="myCustomStartScript" value="import sys&#10;sys.path.extend([WORKING_DIR_AND_PYTHON_PATHS])&#10;from flask.cli import ScriptInfo&#10;locals().update(ScriptInfo(create_app=None).load_app().make_shell_context())&#10;print(&quot;Python %s on %s\nApp: %s [%s]\nInstance: %s&quot; % (sys.version, sys.platform, app.import_name, app.env, app.instance_path))" />
+    <option name="myEnvs">
+      <map>
+        <entry key="FLASK_APP" value="app" />
+      </map>
     </option>
   </component>
   <component name="Git.Settings">
@@ -48,6 +63,7 @@
     &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
     &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
     &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;preferences.pluginManager&quot;,
     &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   },
   &quot;keyToStringList&quot;: {
@@ -61,6 +77,7 @@
       <recent name="D:\computer_design_boss\computer_design_boss\computer_design_boss_back-end" />
     </key>
     <key name="MoveFile.RECENT_KEYS">
+      <recent name="D:\computer_design_boss2.0\computer_design_boss_back-end\computer_design_boss_back-end\computer_design_boss_back-end\ssl" />
       <recent name="D:\computer_design_boss2.0\computer_design_boss_back-end\computer_design_boss_back-end\data" />
       <recent name="D:\computer_design_boss2.0\computer_design_boss_back-end\computer_design_boss_back-end" />
       <recent name="D:\computer_design_boss2.0\computer_design_boss_back-end\computer_design_boss_back-end\讯飞官方接口文档" />
@@ -99,9 +116,32 @@
       <option name="INPUT_FILE" value="" />
       <method v="2" />
     </configuration>
+    <configuration name="app_sever" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="computer_design_boss_back-end" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/computer_design_boss_back-end" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/computer_design_boss_back-end/app_sever.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
     <recent_temporary>
       <list>
         <item itemvalue="Python.app (1)" />
+        <item itemvalue="Python.app_sever" />
         <item itemvalue="JavaScript 调试.test_user.html" />
         <item itemvalue="JavaScript 调试.test_job.html" />
         <item itemvalue="JavaScript 调试.test_job_intro.html" />
@@ -165,6 +205,10 @@
       <workItem from="1773726619149" duration="2319000" />
       <workItem from="1773999253054" duration="625000" />
       <workItem from="1774003301419" duration="873000" />
+      <workItem from="1774024273116" duration="1678000" />
+      <workItem from="1774056847547" duration="7545000" />
+      <workItem from="1774156305047" duration="1242000" />
+      <workItem from="1774236098005" duration="2504000" />
     </task>
     <servers />
   </component>
@@ -184,7 +228,8 @@
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
     <SUITE FILE_PATH="coverage/computer_design_boss_back_end$test_sql.coverage" NAME="test_sql 覆盖结果" MODIFIED="1770028723938" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
-    <SUITE FILE_PATH="coverage/computer_design_boss_back_end$app__1_.coverage" NAME="app (1) 覆盖结果" MODIFIED="1773999277377" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/computer_design_boss_back-end" />
+    <SUITE FILE_PATH="coverage/computer_design_boss_back_end$app__1_.coverage" NAME="app (1) 覆盖结果" MODIFIED="1774236327834" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/computer_design_boss_back-end" />
+    <SUITE FILE_PATH="coverage/computer_design_boss_back_end$app_sever.coverage" NAME="app_sever 覆盖结果" MODIFIED="1774080392162" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/computer_design_boss_back-end" />
     <SUITE FILE_PATH="coverage/computer_design_boss_back_end$Doctests__tts_ws_python3_demo__.coverage" NAME="Doctests (tts_ws_python3_demo 内) 覆盖结果" MODIFIED="1770220207138" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/讯飞官方接口文档" />
     <SUITE FILE_PATH="coverage/computer_design_boss_back_end$tts_ws_python3_demo__1_.coverage" NAME="tts_ws_python3_demo (1) 覆盖结果" MODIFIED="1770222754182" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/computer_design_boss_back_end$demo_boss.coverage" NAME="demo_boss 覆盖结果" MODIFIED="1770888800714" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
