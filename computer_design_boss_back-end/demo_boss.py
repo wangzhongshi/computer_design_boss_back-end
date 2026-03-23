@@ -638,6 +638,42 @@ class InterviewManager:
         for sid in expired:
             del self.sessions[sid]
 
+    def delete_session(self, session_id: str) -> dict:
+        """删除面试会话"""
+        try:
+            if session_id not in self.sessions:
+                return {
+                    'success': False,
+                    'error': '会话不存在',
+                    'code': 404
+                }
+
+            # 获取会话信息（用于返回）
+            session_info = {
+                'session_id': session_id,
+                'start_time': self.sessions[session_id].get('start_time'),
+                'question_count': self.sessions[session_id].get('question_count', 0)
+            }
+
+            # 如果会话已结束，可以选择保留报告文件或一并删除
+            # 这里我们选择保留报告文件，只删除内存中的会话数据
+
+            # 删除会话数据
+            del self.sessions[session_id]
+
+            return {
+                'success': True,
+                'message': '会话删除成功',
+                'data': session_info
+            }
+
+        except Exception as e:
+            return {
+                'success': False,
+                'error': f'删除会话失败: {str(e)}',
+                'code': 500
+            }
+
     def only_chat(self, text):
         ai_result = main_answer(
             self.Ai_job.appid, self.Ai_job.api_key, self.Ai_job.api_secret,
