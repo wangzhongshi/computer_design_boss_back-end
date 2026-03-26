@@ -1,0 +1,407 @@
+ 我将为您编写一份详细的接口开发文档，方便您的uniapp开发伙伴使用。
+
+```
+========================================
+接口开发文档 - 招聘APP后端API
+========================================
+
+文档版本: 1.0.0
+更新日期: 2026-03-26
+适用端: UniApp (微信小程序/H5/App)
+========================================
+
+目录:
+1. 基础信息
+2. 认证相关接口
+3. 用户相关接口
+4. 论坛/评论接口
+5. 数据模型定义
+6. 错误码说明
+7. 开发注意事项
+
+========================================
+1. 基础信息
+========================================
+
+【服务器地址】
+开发环境: http://localhost:5000
+测试环境: http://test-api.example.com
+生产环境: https://api.example.com
+
+【请求格式】
+Content-Type: application/json (除文件上传外)
+
+【认证方式】
+JWT Token (Bearer Token)
+- 登录成功后获取 token
+- 后续请求在 Header 中携带: Authorization: Bearer <token>
+
+【通用响应格式】
+{
+    "code": 200,        // 状态码，200为成功
+    "message": "成功",   // 提示信息
+    "data": {}          // 业务数据，可能为对象或数组
+}
+
+========================================
+2. 认证相关接口
+========================================
+
+【接口2.1】用户登录
+----------------------------------------
+URL: /api/user/login
+Method: POST
+认证: 不需要
+
+请求参数:
+| 字段名   | 类型   | 必填 | 说明         |
+|---------|--------|------|-------------|
+| mobile  | string | 是   | 手机号       |
+| password| string | 是   | 密码(明文传输，后端SHA256加密) |
+
+请求示例:
+{
+    "mobile": "13800138000",
+    "password": "12345678"
+}
+
+成功响应 (200):
+{
+    "code": 200,
+    "message": "登录成功",
+    "data": {
+        "token": "eyJ0eXAiOiJKV1QiLCJhbGc...",  // JWT Token，需本地存储
+        "user_info": {
+            "user_id": 1711430400000,
+            "mobile": "13800138000",
+            "email": "user@example.com",
+            "real_name": "张三",
+            "avatar_url": "http://...",
+            "status": 1,           // 0禁用 1正常 2未激活 3锁定
+            "job_status": 0,       // 0待业 1实习中 2应届求职
+            "last_login_time": "2026-03-26 10:30:00"
+        }
+    }
+}
+
+失败响应:
+- 400: 手机号或密码错误
+- 403: 账号被禁用/锁定
+- 500: 服务器内部错误
+
+UniApp调用示例:
+```javascript
+uni.request({
+    url: 'http://localhost:5000/api/user/login',
+    method: 'POST',
+    data: {
+        mobile: '13800138000',
+        password: '12345678'
+    },
+    success: (res) => {
+        if (res.data.code === 200) {
+            // 保存token
+            uni.setStorageSync('token', res.data.data.token);
+            uni.setStorageSync('userInfo', res.data.data.user_info);
+        } else {
+            uni.showToast({ title: res.data.message, icon: 'none' });
+        }
+    }
+});
+```
+
+========================================
+3. 用户相关接口
+========================================
+
+【接口3.1】获取当前用户名称和头像
+----------------------------------------
+URL: /api/user/get_name_and_avatar
+Method: GET
+认证: 需要 (JWT Token)
+
+请求参数: 无
+
+请求头:
+Authorization: Bearer <token>
+
+成功响应 (200):
+{
+    "code": 200,
+    "message": "获取成功",
+    "data": {
+        "user_name": "张三",                    // 用户名
+        "user_avatar": "/9j/4QDeRXhpZgAASUkq...", // Base64编码的头像数据
+        "user_avatar_format": "jpg",            // 头像格式: jpg/png/gif/webp
+        "user_avatar_size": 12019               // 头像大小(字节)
+    }
+}
+
+头像使用说明:
+1. 将 user_avatar 作为 base64 数据
+2. 拼接格式: `data:image/${format};base64,${user_avatar}`
+3. 可直接用于 image 标签的 src 属性
+
+失败响应:
+- 401: 未提供token或token无效
+- 404: 用户不存在
+- 500: 服务器内部错误
+
+UniApp调用示例:
+```javascript
+const token = uni.getStorageSync('token');
+uni.request({
+    url: 'http://localhost:5000/api/user/get_name_and_avatar',
+    method: 'GET',
+    header: {
+        'Authorization': 'Bearer ' + token
+    },
+    success: (res) => {
+        if (res.data.code === 200) {
+            const { user_name, user_avatar, user_avatar_format } = res.data.data;
+            // 构建头像URL
+            const avatarUrl = `data:image/${user_avatar_format};base64,${user_avatar}`;
+            this.userName = user_name;
+            this.avatarUrl = avatarUrl;
+        }
+    }
+});
+```
+
+========================================
+4. 论坛/评论接口
+========================================
+
+【接口4.1】获取所有一级评论
+----------------------------------------
+URL: /api/forum/forum_all_first_talk
+Method: GET
+认证: 不需要
+
+请求参数: 无
+
+成功响应 (200):
+直接返回数组:
+[
+    {
+        "id": 62,                           // 评论ID
+        "category_id": 108,                 // 岗位分类ID
+        "user_id": 62,                       // 发布者用户ID
+        "parent_id": 60,                     // 父评论ID(一级评论通常为0或null)
+        "content": "RT-Thread国产支持更好...", // 评论内容
+        "level": 1,                          // 评论层级: 1一级 2二级(回复)
+        "sort_order": 10,                    // 排序权重
+        "is_deleted": 0,                     // 是否删除: 0否 1是
+        "created_at": "2026-01-12 11:30:00", // 创建时间
+        "updated_at": "2026-01-12 11:30:00", // 更新时间
+        "user_name": "虚拟用户_62",          // 发布者用户名
+        "user_avatar": "/9j/4QDeRXhpZg...",   // 头像Base64(可能为null)
+        "user_avatar_format": "jpg",         // 头像格式
+        "user_avatar_size": 12019            // 头像大小
+    }
+]
+
+注意: 后端直接返回数组，不是包装对象
+
+失败响应:
+- 500: 服务器内部错误
+
+UniApp调用示例:
+```javascript
+uni.request({
+    url: 'http://localhost:5000/api/forum/forum_all_first_talk',
+    method: 'GET',
+    success: (res) => {
+        if (Array.isArray(res.data)) {
+            // 处理数据，构建头像URL
+            const comments = res.data.map(item => {
+                let avatarUrl = '/static/default-avatar.png'; // 默认头像
+                if (item.user_avatar) {
+                    avatarUrl = `data:image/${item.user_avatar_format || 'jpeg'};base64,${item.user_avatar}`;
+                }
+                return {
+                    ...item,
+                    avatarUrl
+                };
+            });
+            this.commentList = comments;
+        }
+    }
+});
+```
+
+----------------------------------------
+【接口4.2】获取评论的回复(二级评论)
+----------------------------------------
+URL: /api/forum/forums_back
+Method: POST
+认证: 不需要
+
+请求参数:
+| 字段名    | 类型   | 必填 | 说明           |
+|----------|--------|------|---------------|
+| parent_id| string | 是   | 父评论ID(一级评论的id) |
+
+请求示例:
+{
+    "parent_id": "60"
+}
+
+成功响应 (200):
+直接返回数组，数据结构与一级评论相同:
+[
+    {
+        "id": 63,
+        "category_id": 108,
+        "user_id": 63,
+        "parent_id": 60,        // 指向父评论
+        "content": "确实，文档很详细",
+        "level": 2,             // 二级评论
+        "sort_order": 10,
+        "is_deleted": 0,
+        "created_at": "2026-01-12 12:00:00",
+        "updated_at": "2026-01-12 12:00:00",
+        "user_name": "虚拟用户_63",
+        "user_avatar": "/9j/4QDeRXhpZg...",
+        "user_avatar_format": "jpg",
+        "user_avatar_size": 11500
+    }
+]
+
+失败响应:
+- 400: parent_id为空
+- 500: 服务器内部错误
+
+UniApp调用示例:
+```javascript
+// 点击一级评论查看回复时调用
+getReplies(parentId) {
+    uni.request({
+        url: 'http://localhost:5000/api/forum/forums_back',
+        method: 'POST',
+        data: {
+            parent_id: String(parentId)  // 注意转为字符串
+        },
+        success: (res) => {
+            if (Array.isArray(res.data)) {
+                this.replyList = res.data.map(item => ({
+                    ...item,
+                    avatarUrl: item.user_avatar
+                        ? `data:image/${item.user_avatar_format || 'jpeg'};base64,${item.user_avatar}`
+                        : '/static/default-avatar.png'
+                }));
+            }
+        }
+    });
+}
+```
+
+========================================
+5. 数据模型定义
+========================================
+
+【用户状态枚举】
+status:
+  0 - 禁用 (无法登录)
+  1 - 正常
+  2 - 未激活 (需要激活)
+  3 - 锁定 (临时锁定)
+
+【求职状态枚举】
+job_status:
+  0 - 待业
+  1 - 实习中
+  2 - 应届求职
+
+【评论层级枚举】
+level:
+  1 - 一级评论(主题评论)
+  2 - 二级评论(回复)
+
+========================================
+6. 错误码说明
+========================================
+
+通用HTTP状态码:
+200 - 请求成功
+400 - 请求参数错误
+401 - 未授权(未登录/token无效)
+403 - 禁止访问(权限不足/账号被禁)
+404 - 资源不存在
+500 - 服务器内部错误
+
+业务状态码(code字段):
+200 - 操作成功
+300 - 业务逻辑错误(如参数为空)
+400 - 客户端错误
+401 - 认证失败
+403 - 权限不足
+404 - 数据不存在
+500 - 服务端错误
+
+========================================
+7. 开发注意事项
+========================================
+
+【7.1 Token管理】
+1. 登录成功后务必保存token到本地存储
+2. 每次请求携带token在Header中
+3. 收到401错误时，跳转登录页重新登录
+
+【7.2 头像处理】
+1. 后端返回的头像是Base64编码
+2. 需要拼接 data:image/format;base64, 前缀
+3. 建议设置默认头像防止为空时显示异常
+
+【7.3 评论功能开发建议】
+1. 一级评论列表使用 forum_all_first_talk
+2. 点击查看回复时调用 forums_back 传入parent_id
+3. 建议实现评论嵌套展示或平铺展示回复
+
+【7.4 数据缓存】
+1. 用户信息可本地缓存，减少请求
+2. 评论列表建议下拉刷新，上拉加载更多
+
+【7.5 安全性】
+1. 密码前端不需要加密，明文传输(HTTPS)
+2. 敏感操作必须携带有效token
+3. 本地存储的token注意加密存储
+
+========================================
+附录: 快速参考
+========================================
+
+// 通用请求封装建议
+const request = (options) => {
+    const token = uni.getStorageSync('token');
+    return new Promise((resolve, reject) => {
+        uni.request({
+            ...options,
+            header: {
+                ...options.header,
+                'Authorization': token ? 'Bearer ' + token : ''
+            },
+            success: (res) => {
+                if (res.statusCode === 401) {
+                    uni.navigateTo({ url: '/pages/login/login' });
+                    return;
+                }
+                resolve(res.data);
+            },
+            fail: reject
+        });
+    });
+};
+
+// 使用示例
+const res = await request({
+    url: 'http://localhost:5000/api/user/get_name_and_avatar',
+    method: 'GET'
+});
+
+========================================
+文档结束
+========================================
+```
+
+这份文档包含了您要求的四个接口的详细说明，以及额外的开发指导，方便uniapp开发人员快速上手。

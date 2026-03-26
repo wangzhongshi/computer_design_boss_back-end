@@ -94,5 +94,5 @@ class config:
         self.set_tts_api_key = 'fd79a4d97543e35b2881a64b81b8f124'
         self.set_tts_api_secret = 'NDcwM2M1OWY0NTQxOWZiZjg4YzZiNzY3'
         # 大模型的最大生成长度和灵活度
-        self.set_LLM_max_tokens = 2000  # 通过这个参数设置api的最大生成长度,具体值范围,依照官方文档
+        self.set_LLM_max_tokens = 100  # 通过这个参数设置api的最大生成长度,具体值范围,依照官方文档
         self.set_LLM_temperature = 1

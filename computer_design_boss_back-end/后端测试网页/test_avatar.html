@@ -1,0 +1,938 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API 接口测试工具</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+            font-size: 2.5rem;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .auth-section {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            backdrop-filter: blur(10px);
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            color: #333;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .section-title::before {
+            content: '';
+            width: 4px;
+            height: 24px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 2px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #555;
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+
+        input[type="text"],
+        input[type="password"],
+        input[type="number"] {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            background: #f8f9fa;
+        }
+
+        input[type="text"]:focus,
+        input[type="password"]:focus,
+        input[type="number"]:focus {
+            outline: none;
+            border-color: #667eea;
+            background: white;
+            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+        }
+
+        .btn {
+            padding: 12px 28px;
+            border: none;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+        }
+
+        .btn-secondary {
+            background: #f0f0f0;
+            color: #333;
+        }
+
+        .btn-secondary:hover {
+            background: #e0e0e0;
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            color: white;
+        }
+
+        .token-display {
+            background: #f8f9fa;
+            border: 2px dashed #667eea;
+            border-radius: 12px;
+            padding: 16px;
+            margin-top: 15px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.85rem;
+            word-break: break-all;
+            color: #555;
+            display: none;
+        }
+
+        .token-display.active {
+            display: block;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 25px;
+        }
+
+        .api-card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            transition: transform 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .api-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .api-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .api-title {
+            font-size: 1.1rem;
+            color: #333;
+            font-weight: 700;
+        }
+
+        .method-badge {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .method-get {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .method-post {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .endpoint {
+            font-family: 'Courier New', monospace;
+            font-size: 0.85rem;
+            color: #666;
+            background: #f8f9fa;
+            padding: 8px 12px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            word-break: break-all;
+        }
+
+        .response-area {
+            background: #1e1e1e;
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 15px;
+            min-height: 150px;
+            max-height: 400px;
+            overflow: auto;
+            display: none;
+        }
+
+        .response-area.active {
+            display: block;
+        }
+
+        .response-area pre {
+            color: #d4d4d4;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 0.85rem;
+            line-height: 1.6;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        .response-area .key {
+            color: #9cdcfe;
+        }
+
+        .response-area .string {
+            color: #ce9178;
+        }
+
+        .response-area .number {
+            color: #b5cea8;
+        }
+
+        .response-area .boolean {
+            color: #569cd6;
+        }
+
+        .response-area .null {
+            color: #569cd6;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .status-success {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .loading {
+            display: none;
+            align-items: center;
+            gap: 10px;
+            color: #667eea;
+            font-weight: 600;
+        }
+
+        .loading.active {
+            display: inline-flex;
+        }
+
+        .spinner {
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .avatar-preview {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin-top: 10px;
+            border: 3px solid #667eea;
+            display: none;
+        }
+
+        .avatar-preview.active {
+            display: block;
+        }
+
+        .comments-list {
+            max-height: 300px;
+            overflow-y: auto;
+            margin-top: 15px;
+        }
+
+        .comment-item {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-left: 4px solid #667eea;
+        }
+
+        .comment-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 8px;
+        }
+
+        .comment-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
+        .comment-author {
+            font-weight: 600;
+            color: #333;
+        }
+
+        .comment-time {
+            font-size: 0.8rem;
+            color: #888;
+        }
+
+        .comment-content {
+            color: #555;
+            line-height: 1.5;
+            margin-left: 50px;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #888;
+        }
+
+        .empty-state svg {
+            width: 64px;
+            height: 64px;
+            margin-bottom: 15px;
+            opacity: 0.5;
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 1.8rem;
+            }
+
+            .grid {
+                grid-template-columns: 1fr;
+            }
+
+            .auth-section {
+                padding: 20px;
+            }
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: #333;
+            color: white;
+            padding: 16px 24px;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+
+        .toast.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        .toast.error {
+            background: #e74c3c;
+        }
+
+        .toast.success {
+            background: #27ae60;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 API 接口测试工具</h1>
+
+        <!-- 登录区域 -->
+        <div class="auth-section">
+            <h2 class="section-title">用户认证</h2>
+            <div class="form-group">
+                <label>服务器基础地址</label>
+                <input type="text" id="baseUrl" placeholder="http://localhost:5000" value="http://localhost:5000">
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                <div class="form-group">
+                    <label>手机号</label>
+                    <input type="text" id="mobile" placeholder="请输入手机号">
+                </div>
+                <div class="form-group">
+                    <label>密码</label>
+                    <input type="password" id="password" placeholder="请输入密码">
+                </div>
+            </div>
+            <button class="btn btn-primary" onclick="login()">
+                <span>🔐</span> 登录获取 Token
+            </button>
+            <div class="loading" id="loginLoading">
+                <div class="spinner"></div>
+                <span>登录中...</span>
+            </div>
+            <div class="token-display" id="tokenDisplay">
+                <strong>Token:</strong> <span id="tokenText"></span>
+            </div>
+        </div>
+
+        <!-- API 测试区域 -->
+        <div class="grid">
+            <!-- 获取用户名和头像 -->
+            <div class="api-card">
+                <div class="api-header">
+                    <span class="api-title">获取用户信息</span>
+                    <span class="method-badge method-get">GET</span>
+                </div>
+                <div class="endpoint">/api/user/get_name_and_avatar</div>
+                <p style="color: #666; font-size: 0.9rem; margin-bottom: 15px;">
+                    获取当前登录用户的用户名和头像信息（需要 JWT Token）
+                </p>
+                <button class="btn btn-success" onclick="testGetNameAndAvatar()">
+                    <span>🚀</span> 发送请求
+                </button>
+                <div class="loading" id="loading1">
+                    <div class="spinner"></div>
+                    <span>请求中...</span>
+                </div>
+                <img id="avatarPreview" class="avatar-preview" alt="用户头像">
+                <div class="response-area" id="response1">
+                    <div class="status-badge" id="status1"></div>
+                    <pre id="content1"></pre>
+                </div>
+            </div>
+
+            <!-- 获取所有一级评论 -->
+            <div class="api-card">
+                <div class="api-header">
+                    <span class="api-title">获取所有一级评论</span>
+                    <span class="method-badge method-get">GET</span>
+                </div>
+                <div class="endpoint">/api/forum/forum_all_first_talk</div>
+                <p style="color: #666; font-size: 0.9rem; margin-bottom: 15px;">
+                    查询所有一级评论（公开接口，无需认证），包含用户名和头像
+                </p>
+                <button class="btn btn-success" onclick="testGetAllFirstTalk()">
+                    <span>🚀</span> 发送请求
+                </button>
+                <div class="loading" id="loading2">
+                    <div class="spinner"></div>
+                    <span>请求中...</span>
+                </div>
+                <div class="response-area" id="response2">
+                    <div class="status-badge" id="status2"></div>
+                    <div class="comments-list" id="commentsList"></div>
+                    <pre id="content2" style="display: none;"></pre>
+                </div>
+            </div>
+
+            <!-- 获取评论回复 -->
+            <div class="api-card">
+                <div class="api-header">
+                    <span class="api-title">获取评论回复</span>
+                    <span class="method-badge method-post">POST</span>
+                </div>
+                <div class="endpoint">/api/forum/forums_back</div>
+                <div class="form-group" style="margin-top: 15px;">
+                    <label>父评论 ID (parent_id)</label>
+                    <input type="number" id="parentId" placeholder="请输入父评论ID" value="1">
+                </div>
+                <button class="btn btn-success" onclick="testGetForumsBack()">
+                    <span>🚀</span> 发送请求
+                </button>
+                <div class="loading" id="loading3">
+                    <div class="spinner"></div>
+                    <span>请求中...</span>
+                </div>
+                <div class="response-area" id="response3">
+                    <div class="status-badge" id="status3"></div>
+                    <div class="comments-list" id="repliesList"></div>
+                    <pre id="content3" style="display: none;"></pre>
+                </div>
+            </div>
+
+            <!-- 登录接口测试 -->
+            <div class="api-card">
+                <div class="api-header">
+                    <span class="api-title">用户登录</span>
+                    <span class="method-badge method-post">POST</span>
+                </div>
+                <div class="endpoint">/api/user/login</div>
+                <div class="form-group" style="margin-top: 15px;">
+                    <label>手机号</label>
+                    <input type="text" id="testMobile" placeholder="请输入手机号">
+                </div>
+                <div class="form-group">
+                    <label>密码</label>
+                    <input type="password" id="testPassword" placeholder="请输入密码">
+                </div>
+                <button class="btn btn-success" onclick="testLogin()">
+                    <span>🚀</span> 测试登录
+                </button>
+                <div class="loading" id="loading4">
+                    <div class="spinner"></div>
+                    <span>请求中...</span>
+                </div>
+                <div class="response-area" id="response4">
+                    <div class="status-badge" id="status4"></div>
+                    <pre id="content4"></pre>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script>
+        // 存储 Token
+        let authToken = localStorage.getItem('authToken') || '';
+
+        // 页面加载时恢复 Token
+        if (authToken) {
+            document.getElementById('tokenDisplay').classList.add('active');
+            document.getElementById('tokenText').textContent = authToken.substring(0, 50) + '...';
+        }
+
+        // 显示提示
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.className = 'toast show ' + type;
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+
+        // 获取基础 URL
+        function getBaseUrl() {
+            return document.getElementById('baseUrl').value.replace(/\/$/, '');
+        }
+
+        // 获取请求头
+        function getHeaders() {
+            const headers = {
+                'Content-Type': 'application/json'
+            };
+            if (authToken) {
+                headers['Authorization'] = 'Bearer ' + authToken;
+            }
+            return headers;
+        }
+
+        // 登录功能
+        async function login() {
+            const mobile = document.getElementById('mobile').value;
+            const password = document.getElementById('password').value;
+
+            if (!mobile || !password) {
+                showToast('请输入手机号和密码', 'error');
+                return;
+            }
+
+            const loading = document.getElementById('loginLoading');
+            loading.classList.add('active');
+
+            try {
+                const response = await fetch(getBaseUrl() + '/api/user/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ mobile, password })
+                });
+
+                const data = await response.json();
+
+                if (data.code === 200 && data.data && data.data.token) {
+                    authToken = data.data.token;
+                    localStorage.setItem('authToken', authToken);
+                    document.getElementById('tokenDisplay').classList.add('active');
+                    document.getElementById('tokenText').textContent = authToken.substring(0, 50) + '...';
+                    showToast('登录成功！Token 已保存');
+                } else {
+                    showToast(data.message || '登录失败', 'error');
+                }
+            } catch (error) {
+                showToast('请求失败: ' + error.message, 'error');
+            } finally {
+                loading.classList.remove('active');
+            }
+        }
+
+        // 测试获取用户名和头像
+        async function testGetNameAndAvatar() {
+            if (!authToken) {
+                showToast('请先登录获取 Token', 'error');
+                return;
+            }
+
+            const loading = document.getElementById('loading1');
+            const responseArea = document.getElementById('response1');
+            const statusBadge = document.getElementById('status1');
+            const content = document.getElementById('content1');
+            const avatarPreview = document.getElementById('avatarPreview');
+
+            loading.classList.add('active');
+            responseArea.classList.remove('active');
+            avatarPreview.classList.remove('active');
+
+            try {
+                const response = await fetch(getBaseUrl() + '/api/user/get_name_and_avatar', {
+                    method: 'GET',
+                    headers: getHeaders()
+                });
+
+                const data = await response.json();
+
+                responseArea.classList.add('active');
+
+                if (data.code === 200) {
+                    statusBadge.className = 'status-badge status-success';
+                    statusBadge.textContent = '✓ Success (200)';
+
+                    // 显示头像
+                    if (data.data && data.data.user_avatar) {
+                        avatarPreview.src = 'data:image/' + (data.data.user_avatar_format || 'jpeg') +
+                                          ';base64,' + data.data.user_avatar;
+                        avatarPreview.classList.add('active');
+                    }
+                } else {
+                    statusBadge.className = 'status-badge status-error';
+                    statusBadge.textContent = '✗ Error (' + data.code + ')';
+                }
+
+                content.innerHTML = syntaxHighlight(data);
+            } catch (error) {
+                responseArea.classList.add('active');
+                statusBadge.className = 'status-badge status-error';
+                statusBadge.textContent = '✗ Network Error';
+                content.textContent = error.message;
+            } finally {
+                loading.classList.remove('active');
+            }
+        }
+
+        // 渲染评论卡片（通用函数，用于一级评论和回复）
+        function renderCommentCard(item, isReply = false) {
+            const borderColor = isReply ? '#38ef7d' : '#667eea';
+            const timeText = isReply
+                ? `回复 ID: ${item.id} | 层级: ${item.level}`
+                : (item.created_at || '');
+
+            // 处理头像 URL
+            let avatarUrl = 'https://via.placeholder.com/40';
+            if (item.user_avatar) {
+                const format = item.user_avatar_format || 'jpeg';
+                // 检查是否已经是 base64 格式（可能包含 data:image 前缀）
+                if (item.user_avatar.startsWith('data:image')) {
+                    avatarUrl = item.user_avatar;
+                } else if (item.user_avatar.startsWith('/9j/') || item.user_avatar.startsWith('iVBOR')) {
+                    // 纯 base64 字符串，需要添加前缀
+                    avatarUrl = `data:image/${format};base64,${item.user_avatar}`;
+                } else {
+                    // 其他情况，可能是 URL
+                    avatarUrl = item.user_avatar;
+                }
+            }
+
+            return `
+                <div class="comment-item" style="border-left-color: ${borderColor};">
+                    <div class="comment-header">
+                        <img src="${avatarUrl}"
+                             class="comment-avatar"
+                             onerror="this.src='https://via.placeholder.com/40'"
+                             alt="${item.user_name || '用户'}">
+                        <div>
+                            <div class="comment-author">${item.user_name || '匿名用户'}</div>
+                            <div class="comment-time">${timeText}</div>
+                        </div>
+                    </div>
+                    <div class="comment-content">${escapeHtml(item.content || '')}</div>
+                </div>
+            `;
+        }
+
+        // HTML 转义函数，防止 XSS
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // 测试获取所有一级评论
+        async function testGetAllFirstTalk() {
+            const loading = document.getElementById('loading2');
+            const responseArea = document.getElementById('response2');
+            const statusBadge = document.getElementById('status2');
+            const commentsList = document.getElementById('commentsList');
+            const content = document.getElementById('content2');
+
+            loading.classList.add('active');
+            responseArea.classList.remove('active');
+
+            try {
+                const response = await fetch(getBaseUrl() + '/api/forum/forum_all_first_talk', {
+                    method: 'GET',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+
+                const data = await response.json();
+
+                responseArea.classList.add('active');
+
+                // 检查是否是数组（直接返回数据）或者是对象包含 code
+                let comments = [];
+                if (Array.isArray(data)) {
+                    comments = data;
+                } else if (data.code === 200 && Array.isArray(data.data)) {
+                    comments = data.data;
+                }
+
+                if (comments.length > 0) {
+                    statusBadge.className = 'status-badge status-success';
+                    statusBadge.textContent = '✓ Success (' + comments.length + ' 条记录)';
+
+                    // 渲染评论列表，使用通用渲染函数
+                    commentsList.innerHTML = comments.map(item => renderCommentCard(item, false)).join('');
+
+                    commentsList.style.display = 'block';
+                    content.style.display = 'none';
+                } else if (data.code && data.code !== 200) {
+                    statusBadge.className = 'status-badge status-error';
+                    statusBadge.textContent = '✗ Error (' + data.code + ')';
+                    commentsList.style.display = 'none';
+                    content.style.display = 'block';
+                    content.innerHTML = syntaxHighlight(data);
+                } else {
+                    statusBadge.className = 'status-badge status-success';
+                    statusBadge.textContent = '✓ Success (0 条记录)';
+                    commentsList.innerHTML = '<div class="empty-state">暂无评论数据</div>';
+                    commentsList.style.display = 'block';
+                    content.style.display = 'none';
+                }
+            } catch (error) {
+                responseArea.classList.add('active');
+                statusBadge.className = 'status-badge status-error';
+                statusBadge.textContent = '✗ Network Error';
+                commentsList.style.display = 'none';
+                content.style.display = 'block';
+                content.textContent = error.message;
+            } finally {
+                loading.classList.remove('active');
+            }
+        }
+
+        // 测试获取评论回复
+        async function testGetForumsBack() {
+            const parentId = document.getElementById('parentId').value;
+
+            const loading = document.getElementById('loading3');
+            const responseArea = document.getElementById('response3');
+            const statusBadge = document.getElementById('status3');
+            const repliesList = document.getElementById('repliesList');
+            const content = document.getElementById('content3');
+
+            loading.classList.add('active');
+            responseArea.classList.remove('active');
+
+            try {
+                const response = await fetch(getBaseUrl() + '/api/forum/forums_back', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ parent_id: String(parentId) })
+                });
+
+                const data = await response.json();
+
+                responseArea.classList.add('active');
+
+                // 检查是否是数组（直接返回数据）或者是对象包含 code
+                let replies = [];
+                if (Array.isArray(data)) {
+                    replies = data;
+                } else if (data.code === 200 && Array.isArray(data.data)) {
+                    replies = data.data;
+                }
+
+                if (replies.length > 0) {
+                    statusBadge.className = 'status-badge status-success';
+                    statusBadge.textContent = '✓ Success (' + replies.length + ' 条回复)';
+
+                    // 渲染回复列表，使用通用渲染函数，标记为回复
+                    repliesList.innerHTML = replies.map(item => renderCommentCard(item, true)).join('');
+
+                    repliesList.style.display = 'block';
+                    content.style.display = 'none';
+                } else if (data.code && data.code !== 200) {
+                    statusBadge.className = 'status-badge status-error';
+                    statusBadge.textContent = '✗ Error (' + data.code + ')';
+                    repliesList.style.display = 'none';
+                    content.style.display = 'block';
+                    content.innerHTML = syntaxHighlight(data);
+                } else {
+                    statusBadge.className = 'status-badge status-success';
+                    statusBadge.textContent = '✓ Success (0 条回复)';
+                    repliesList.innerHTML = '<div class="empty-state">暂无回复数据</div>';
+                    repliesList.style.display = 'block';
+                    content.style.display = 'none';
+                }
+            } catch (error) {
+                responseArea.classList.add('active');
+                statusBadge.className = 'status-badge status-error';
+                statusBadge.textContent = '✗ Network Error';
+                repliesList.style.display = 'none';
+                content.style.display = 'block';
+                content.textContent = error.message;
+            } finally {
+                loading.classList.remove('active');
+            }
+        }
+
+        // 测试登录接口
+        async function testLogin() {
+            const mobile = document.getElementById('testMobile').value;
+            const password = document.getElementById('testPassword').value;
+
+            if (!mobile || !password) {
+                showToast('请输入测试账号的手机号和密码', 'error');
+                return;
+            }
+
+            const loading = document.getElementById('loading4');
+            const responseArea = document.getElementById('response4');
+            const statusBadge = document.getElementById('status4');
+            const content = document.getElementById('content4');
+
+            loading.classList.add('active');
+            responseArea.classList.remove('active');
+
+            try {
+                const response = await fetch(getBaseUrl() + '/api/user/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ mobile, password })
+                });
+
+                const data = await response.json();
+
+                responseArea.classList.add('active');
+
+                if (data.code === 200) {
+                    statusBadge.className = 'status-badge status-success';
+                    statusBadge.textContent = '✓ Login Success (200)';
+                } else {
+                    statusBadge.className = 'status-badge status-error';
+                    statusBadge.textContent = '✗ ' + (data.message || 'Login Failed') + ' (' + data.code + ')';
+                }
+
+                content.innerHTML = syntaxHighlight(data);
+            } catch (error) {
+                responseArea.classList.add('active');
+                statusBadge.className = 'status-badge status-error';
+                statusBadge.textContent = '✗ Network Error';
+                content.textContent = error.message;
+            } finally {
+                loading.classList.remove('active');
+            }
+        }
+
+        // JSON 语法高亮
+        function syntaxHighlight(json) {
+            if (typeof json !== 'string') {
+                json = JSON.stringify(json, undefined, 2);
+            }
+            json = json.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+            return json.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, function (match) {
+                let cls = 'number';
+                if (/^"/.test(match)) {
+                    if (/:$/.test(match)) {
+                        cls = 'key';
+                    } else {
+                        cls = 'string';
+                    }
+                } else if (/true|false/.test(match)) {
+                    cls = 'boolean';
+                } else if (/null/.test(match)) {
+                    cls = 'null';
+                }
+                return '<span class="' + cls + '">' + match + '</span>';
+            });
+        }
+
+        // 同步登录表单的值到测试区域
+        document.getElementById('mobile').addEventListener('input', function(e) {
+            document.getElementById('testMobile').value = e.target.value;
+        });
+        document.getElementById('password').addEventListener('input', function(e) {
+            document.getElementById('testPassword').value = e.target.value;
+        });
+    </script>
+</body>
+</html>

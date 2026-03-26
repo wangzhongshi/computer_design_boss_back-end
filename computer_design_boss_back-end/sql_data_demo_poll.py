@@ -454,7 +454,17 @@ class Forum_comments(BaseManager):
         :return: 一级评论列表或None
         """
         try:
-            sql = "SELECT * FROM forum_comments WHERE parent_id IS NULL"
+            # sql = "SELECT * FROM forum_comments WHERE parent_id IS NULL"
+            sql = """SELECT 
+                        fc.*,
+                        su.real_name AS user_name,
+                        TO_BASE64(su.avatar) AS user_avatar,
+                        su.avatar_format AS user_avatar_format,
+                        su.avatar_size AS user_avatar_size
+                    FROM forum_comments fc
+                    LEFT JOIN sys_user su ON fc.user_id = su.user_id
+                    WHERE fc.parent_id IS NULL;"""
+
             result = self.execute_query(sql)
             print(f"[{datetime.now()}] [INFO] Forum_comments.forum_all_first_talk: 成功获取 {len(result)} 条一级评论")
             return result
@@ -470,7 +480,15 @@ class Forum_comments(BaseManager):
         :return: 回复列表或None
         """
         try:
-            sql = "SELECT * FROM forum_comments WHERE parent_id = %s"
+            sql = """SELECT 
+                        fc.*,
+                        su.real_name AS user_name,
+                        TO_BASE64(su.avatar) AS user_avatar,  -- 必须转 Base64
+                        su.avatar_format AS user_avatar_format,
+                        su.avatar_size AS user_avatar_size
+                    FROM forum_comments fc
+                    LEFT JOIN sys_user su ON fc.user_id = su.user_id
+                    WHERE fc.parent_id = %s"""
             result = self.execute_query(sql, (parent_id,))
             print(
                 f"[{datetime.now()}] [INFO] Forum_comments.forum_talks_back: 父评论 {parent_id} 获取 {len(result)} 条回复")
@@ -648,6 +666,39 @@ class Sys_user(BaseManager):
 
         except Exception as e:
             print(f"[{datetime.now()}] [ERROR] Sys_user.get_user_by_field: 查询失败 | 字段: {field} | 错误: {e}")
+            return None
+
+    def get_user_name_and_avatar_by_user_id(self, user_id) -> Optional[Dict]:
+        """
+        通过 user_id 获取用户名和头像信息
+        :param user_id: 用户业务ID
+        :return: 包含 user_name, user_avatar(Base64), user_avatar_format, user_avatar_size 的字典
+        """
+        try:
+            sql = """
+                SELECT 
+                    real_name AS user_name,
+                    TO_BASE64(avatar) AS user_avatar,
+                    avatar_format AS user_avatar_format,
+                    avatar_size AS user_avatar_size
+                FROM sys_user 
+                WHERE user_id = %s AND is_deleted = 0
+            """
+
+            result = self.execute_one(sql, (user_id,))
+
+            if result:
+                print(
+                    f"[{datetime.now()}] [INFO] Sys_user.get_user_name_and_avatar_by_user_id: user_id={user_id} 查询成功")
+            else:
+                print(
+                    f"[{datetime.now()}] [INFO] Sys_user.get_user_name_and_avatar_by_user_id: user_id={user_id} 未找到")
+
+            return result
+
+        except Exception as e:
+            print(
+                f"[{datetime.now()}] [ERROR] Sys_user.get_user_name_and_avatar_by_user_id: 查询失败 | user_id: {user_id} | 错误: {e}")
             return None
 
     def update_user_status(self, user_id: str, status: int) -> bool:

@@ -1,0 +1,64 @@
+{
+  "session_id": "d0714158-2a43-4642-bf9d-1f8b5e871a45",
+  "interview_info": {
+    "start_time": "2026-03-24T14:34:55.875853",
+    "end_time": "2026-03-24T14:36:13.921123",
+    "duration_minutes": 1,
+    "total_questions": 3
+  },
+  "evaluation": {
+    "overall_score": 75,
+    "result": "待定",
+    "summary": "```json\n{\n    \"overall_score\": 85,\n    \"dimension_scores\": {\n        \"专业匹配度\": 90,\n        \"项目经验\": 85,\n        \"表达能力\": 80,\n        \"逻辑思维\": 88,\n        \"综合素质\": 82\n    },\n    \"result\": \"待定\",\n    \"strengths\": [\"良好的教育背景\", \"相关的实习",
+    "improvement_suggestions": [
+      "请优化简历内容",
+      "加强项目描述"
+    ]
+  },
+  "transcript": [
+    {
+      "timestamp": "2026-03-24T14:34:58.438391",
+      "role": "interviewer",
+      "content": "王柄屹小姐，您好！首先欢迎您参与今天的面试。为了更好地了解您的专业背景和技能水平，请您先做一个简要的自我介绍。",
+      "audio_url": null,
+      "stage": "intro"
+    },
+    {
+      "timestamp": "2026-03-24T14:35:29.707787",
+      "role": "candidate",
+      "content": "我没有什么好说的。",
+      "audio_url": null,
+      "stage": "intro"
+    },
+    {
+      "timestamp": "2026-03-24T14:35:32.822192",
+      "role": "interviewer",
+      "content": "面试官：王柄屹女士，我了解到您毕业于清华大学计算机科学与技术专业，并在阿里巴巴集团有过后端开发的实习经历。请您简单介绍一下，在这段经历中，您参与过哪些项目或任务？这些经历对您现在应聘高级Web前端工程师岗位有什么帮助？",
+      "audio_url": null,
+      "stage": "intro"
+    },
+    {
+      "timestamp": "2026-03-24T14:35:59.541637",
+      "role": "candidate",
+      "content": "[语音识别失败: Decoding failed. ffmpeg returned error code: 3199971767\n\nOutput from ffmpeg/avlib:\n\nffmpeg version 2024-09-22-git-a577d313b2-full_build-www.gyan.dev Copyright (c) 2000-2024 the FFmpeg developers\r\n  built with gcc 13.2.0 (Rev5, Built by MSYS2 project)\r\n  configuration: --enable-gpl --enable-version3 --enable-static --disable-w32threads --disable-autodetect --enable-fontconfig --enable-iconv --enable-gnutls --enable-libxml2 --enable-gmp --enable-bzlib --enable-lzma --enable-libsnappy --enable-zlib --enable-librist --enable-libsrt --enable-libssh --enable-libzmq --enable-avisynth --enable-libbluray --enable-libcaca --enable-sdl2 --enable-libaribb24 --enable-libaribcaption --enable-libdav1d --enable-libdavs2 --enable-libopenjpeg --enable-libquirc --enable-libuavs3d --enable-libxevd --enable-libzvbi --enable-libqrencode --enable-librav1e --enable-libsvtav1 --enable-libvvenc --enable-libwebp --enable-libx264 --enable-libx265 --enable-libxavs2 --enable-libxeve --enable-libxvid --enable-libaom --enable-libjxl --enable-libvpx --enable-mediafoundation --enable-libass --enable-frei0r --enable-libfreetype --enable-libfribidi --enable-libharfbuzz --enable-liblensfun --enable-libvidstab --enable-libvmaf --enable-libzimg --enable-amf --enable-cuda-llvm --enable-cuvid --enable-dxva2 --enable-d3d11va --enable-d3d12va --enable-ffnvcodec --enable-libvpl --enable-nvdec --enable-nvenc --enable-vaapi --enable-libshaderc --enable-vulkan --enable-libplacebo --enable-opencl --enable-libcdio --enable-libgme --enable-libmodplug --enable-libopenmpt --enable-libopencore-amrwb --enable-libmp3lame --enable-libshine --enable-libtheora --enable-libtwolame --enable-libvo-amrwbenc --enable-libcodec2 --enable-libilbc --enable-libgsm --enable-liblc3 --enable-libopencore-amrnb --enable-libopus --enable-libspeex --enable-libvorbis --enable-ladspa --enable-libbs2b --enable-libflite --enable-libmysofa --enable-librubberband --enable-libsoxr --enable-chromaprint\r\n  libavutil      59. 37.100 / 59. 37.100\r\n  libavcodec     61. 17.100 / 61. 17.100\r\n  libavformat    61.  6.100 / 61.  6.100\r\n  libavdevice    61.  2.101 / 61.  2.101\r\n  libavfilter    10.  3.100 / 10.  3.100\r\n  libswscale      8.  2.100 /  8.  2.100\r\n  libswresample   5.  2.100 /  5.  2.100\r\n  libpostproc    58.  2.100 / 58.  2.100\r\n[in#0 @ 0000022be5f6e580] Error opening input: Invalid data found when processing input\r\nError opening input file temp\\temp_d0714158-2a43-4642-bf9d-1f8b5e871a45_1774334159.wav.\r\nError opening input files: Invalid data found when processing input\r\n]",
+      "audio_url": null,
+      "stage": "intro"
+    },
+    {
+      "timestamp": "2026-03-24T14:36:03.431028",
+      "role": "interviewer",
+      "content": "面试官：您好，王柄屹女士。我注意到您在简历中提到曾在阿里巴巴集团实习担任后端开发实习生，请问您能否分享一下这段经历中您参与的主要项目或任务？这些经验是如何帮助您准备高级Web前端工程师这个岗位的？",
+      "audio_url": null,
+      "stage": "intro"
+    },
+    {
+      "timestamp": "2026-03-24T14:36:08.823052",
+      "role": "candidate",
+      "content": "面试结束",
+      "audio_url": null,
+      "stage": "professional"
+    }
+  ],
+  "resume_snapshot": "我叫王柄屹，女，出生，现居None。\n毕业于清华大学，计算机科学与技术专业，本科学历，None年毕业，GPA None。\n联系方式：手机 15147206048，邮箱 zhangsan@example.com，微信 None。\n已获得的相关证书包括：Python编程证书（None，Python官方认证）。\n共拥有 1 段实习经历，均与目标岗位高度相关。\n曾在阿里巴巴集团担任后端开发实习生，主要工作内容：None。主要成果：None。\n求职意向为None方向，优先行业为None，期望工作城市None，期望薪资15000–25000元/月，可协商，到岗时间：None。\n工作偏好：0，0，None。...",
+  "job_snapshot": "招聘岗位：高级Web前端工程师（25-40K）\n工作地点：海淀区，中关村软件园二期\n学历要求：本科，经验要求：3-5年\n岗位职责：负责抖音创作者平台前端架构设计与开发，优化首屏加载性能，建设前端工程化体系\n任职要求：\n - 精通React/Vue\n - 熟悉Webpack/Vite\n - 有大型SPA开发经验\n - 了解Node.js\n福利待遇：\n - 六险一金\n - 免费三餐\n - 租房补贴\n - 股票期权\n岗位发布时间：，最近刷新：..."
+}

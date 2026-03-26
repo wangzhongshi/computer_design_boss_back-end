@@ -264,7 +264,7 @@ def update_one_type_job_list():
             }), 500
 
         category_id = data.get('category_id', '').strip()
-        print(type(category_id))
+        # # print(type(category_id))
 
         if category_id == '100':
             list_data = job_prot.fetch_one_big_type_job_posts(category_id)
@@ -323,7 +323,7 @@ def job_search():
             }), 400
         user_input = data.get('user_input', '').strip()
         list_data = job_prot.search_job_by_user_input(user_input=user_input)
-        print(list_data)
+        # # print(list_data)
         return jsonify(list_data), 200
     except Exception as e:
         app.logger.error(f'搜索列表信息失败: {str(e)}')
@@ -398,7 +398,7 @@ def job_add():
         for field in required_fields:
             value = data.get(field)
             if value is None or value == '':
-                print(f'后端接受到的{field}信息为空')
+                # # print(f'后端接受到的{field}信息为空')
                 return jsonify({
                     'code': 300,
                     'message': f'后端接受到的{field}信息为空'
@@ -556,9 +556,19 @@ def forum_all_first_talk_data():
     查询所有一级评论
         input:none
         return：[{id:1...}..]
+        后端将返回评论的全部信息，和发布者的用户名和头像的base64编码，和图像大小以及格式
+        一条示例数据
+        [{'id': 62, 'category_id': 108, 'user_id': 62, 'parent_id': 60,
+        'content': 'RT-Thread国产支持更好，社区活跃，文档也中文友好', 'level': 1,
+        'sort_order': 10, 'is_deleted': 0, 'created_at': datetime.datetime(2026, 1, 12, 11, 30),
+        'updated_at': datetime.datetime(2026, 1, 12, 11, 30),
+        'user_name': '虚拟用户_62',
+        'user_avatar': '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',
+        'user_avatar_format': 'jpg', 'user_avatar_size': 12019}]
     '''
     try:
         forum_data = forum_comments.forum_all_first_talk()
+        print(forum_data)
         return jsonify(forum_data), 200
     except Exception as e:
         app.logger.error(f'全部评论查询失败：{e}')
@@ -574,6 +584,16 @@ def forums_back_data():
     查询该评论的所有回复（二级评论）
         input:parent_id 被回复评论的id
         return：[{id:1...}..]
+        后端将返回评论的全部信息，和发布者的用户名和头像的base64编码，和图像大小以及格式
+        一条示例数据
+        [{'id': 62, 'category_id': 108, 'user_id': 62, 'parent_id': 60,
+        'content': 'RT-Thread国产支持更好，社区活跃，文档也中文友好', 'level': 2,
+        'sort_order': 10, 'is_deleted': 0, 'created_at': datetime.datetime(2026, 1, 12, 11, 30),
+        'updated_at': datetime.datetime(2026, 1, 12, 11, 30),
+        'user_name': '虚拟用户_62',
+        'user_avatar': '/9j/4QDeRXhpZgAASUkqAAgAAAAGABIBAwABAAAAAQAAABoBBQABAAAAVgAAABsBBQABAAAAXgAA\nACgBAwABAAAAAgAAABMCAwABAAAAAQAAAGmHBAABAAAAZgAAAAAAAABIAAAAAQAAAEgAAAABAAAA\nBwAAkAcABAAAADAyMTABkQcABAAAAAECAwCGkgcAFgAAAMAAAAAAoAcABAAAADAxMDABoAMAAQAA\nAP//AAACoAQAAQAAACwBAAADoAQAAQAAAMgAAAAAAAAAQVNDSUkAAABQaWNzdW0gSUQ6IDQxMf/b\nAEMACAYGBwYFCAcHBwkJCAoMFA0MCwsMGRITDxQdGh8eHRocHCAkLicgIiwjHBwoNyksMDE0NDQf\nJzk9ODI8LjM0Mv/bAEMBCQkJDAsMGA0NGDIhHCEyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIy\nMjIyMjIyMjIyMjIyMjIyMjIyMjIyMv/CABEIAMgBLAMBIgACEQEDEQH/xAAaAAABBQEAAAAAAAAA\nAAAAAAAAAQIDBAUG/8QAGAEAAwEBAAAAAAAAAAAAAAAAAAECAwT/2gAMAwEAAhADEAAAAeiV655t\nHOG1XuTic9QarnDarnDjWRQjc9w2q5RtVytNHDEVQEUVpBRgAAAwAAAAADKVzsUwerGq9Rsc9U2u\ncraOAFFABRpFFYAMAUSKAADARQAGAAAAAAAAUVcuFIqqCKK0KA3CKxRFBRBigCUjkYAAKgJQGADG\nujkQAMAAGPjQo5Jaq1aVQgXC7BCrJnQOCVYlZKRqEg1QVWjThEDN1eA72hwgkogDhoDhoxknMbcu\n6IUlEAWKSoi4NAVWgZi5Sw9VcgDYXLYPYXEVrbdhSI2VxlDZMWMe/Vy1Fi9hyexa058Yk3DHsKtF\narQtOqRByFuNd+fb2uGu5bdecdpq96nBjo6ozhGiZwnyVzD1NVcdRfLtOaxKOOGvpG1LmTSrMZXH\neydKiPTR9ZKDTy7tKVoiCCfPZp0ZK4azMzLcbMM9Ok18KjsaFWXLfGfXr9GFvrOZ1cNt5tZ8Vw2n\nk6ms1J69p5Twa2Myxp4u/ndAx52aLUaKxTuZrU8mfYodLXa4QatS6evGnt1KkWerqyJ0cW5nSS57\n1p4ZR07lGRaW6zWuZWx0VWtJUrRpFucxsXmOSKs9ViJNU97EupZcFxlK/NWsZ62sjSrk1ZLr2YxP\nBpEroJnLnR0Gn2M7eGy0yCFPn6mvOnHE+dpNqOheZGsTlUyNvTUtOevNZSpJthpNtSRaJey5bLWf\nFU6FtkWWtxs0AlVjahHQlTNVdGyOavLSkxtarUvo6WVU1xqLWQjAexWofqZGoKVK1qKs6mGkaaXP\n6MV52JLNDLVJcybSOr5+9nw9HHtadxTpb+ZLVabtM7TqqJxuzm3OzmJGOzZq3RJWbDUa2Jo5g4BE\nnZ6IgOaImujTtEpZpzp2+h5OOXsuqXEUtHH1s9sFK8m/PoZ9mmPV0+d1XHRc1sYuWkRdzNstCWDQ\nRz9WaB3PK+1Wdqtvc/lrK231IuCzb2fpLHRk6yDASognNLBK5kkglRIwQa9TyfUw+dtUbUa5D78u\n2FeahVFs38XbqNHE1zHXlhlTU3a9W04z5dCsnFYbKy7frV5XSbXANl18zZxbbRCbUQBUEHK+J7l8\nteQUwxyber5Lq5OVcCqCUNM4oQVWtQNMbNIENxgz3v2QuH0wFDYBkcgEsjBO3mBOjQFQACoAOcDQ\n8BSOAI+rBH//xAAsEAACAQQAAwcFAQEBAAAAAAABAgMABBESEyEiEBQgIzEyQQUkMDM0QEIV/9oA\nCAEBAAEFAvBj8eKxWKx/qx4cVisVj/Vjw4rFY/3Y7MVisdmP8Z/JisVisf529viP+XPX+Fvb4v8A\nrwZrNZ7M/k3X/wBP8LHo8Q/Z4c+HP4SdV3bi/H4O+IDFOJE8K/0+DYVsK2FbCthW4rcVsK2FbCtx\nWwrcVuK3FSzDT5WYaSuDXEXOwrYVsKzRYAZrGxTCPFdhURtkrPYrL3nPgzWxyWxXErLGiTW9b4oP\nW5rc1xKMhQJdLLWzbP7cdWazWTlH1rvEZOeQdTTDIZWxbdUlE8u9Sxr3u4q3uJHDS4EbDvm5xxDX\nFNcU1319oZBPRdFbp1EtcSprggR3BkfalK7bU5LF88CPk6jYs3P/AKOc55binbkjYkLcomw25ybj\nFW41ip/UnPZDIEtxM5le5xQmdjbaXEXdzXAesirTHEnuUhliuA7Hhysi5q5VhVuSJEl+7DZu5cb/\nADHkwHClPSQ9fyG2fh8uCNSlSZUht6HSXlKDYvKfLg2r5zUftzyI1YndooqtGaICeWu9vXzZ+6/H\n31qrCoo58d4mBWa4qbPBGjNgd+nPnfI/nbDESeY7deebtmMk0SazzJyU1WmkXe4IFR/snPTmsV6w\n1ANqNrJqLKauI6UtxhlmBppkB/6svdfH79tgPobE20icNkPmXBCQNJoILje5nQvc/I/n2FQ/skmK\nzcd62OD6GvmTLDi6hiDUpyYf2zt14RTvhtkNMMEOQhuFrjimKGj6ooVG9Q2TZLyvlPe+KSo8iKNS\nVxrK7ieGdcQ2x+4DMZ/lcGOTomt87s4VkXdYpdo6NfMMnK4PmCCTLWTaxWCVc2hFNui7E0ZdayHo\nUmAgdSC/So3qXUKo3pTzScQWvEMiRMDExGyvipT56HCa8aCC2lWbnxqU4N2A1/F5NSnK+xYeUGfM\nPr88XZpG2q3l48KNcQ1HBNS28mZIVlW5tpbenullGI6XUVEQaXWukx2cBlp1l0WcQ0uMv6Qrx2Sy\nnLSdMgxUx+4R+VuwxYn7ibnP2SP5mz0WyrHiosYSJv2Gvkcqt41mLHo2atmrdq2astRrPOsdQB2t\nmZH709F90PrGRn1ONUhkKSXkQRAauVJkWScVHFrFYPib3p1yVw2xP0MZK35ainfWmPV8/KxxsLVQ\nHb2+E0KzTnzBzbhsy8KSuBJXdJKjsdnjVgTJ1iXndhplYFGQlkIZHViY4d4nEnLetxV23WZaWeZp\nJZGiTbmWrageZVat8Ufb+Bv2Z6YLh4mhvFmiF1Jav/7DVDJ0FtEzzVqvJsJHdMrLl5k1BiiMs90c\nXHEriVvV4XMzPSEs8iMQAa1oomA+HLE1anm3p4osZzRPmA9I9w9i3GXW0S4UHEk8DXDOAsgqdujN\nRtmXEebbAFy/nljniGoleUyW7lpYpY6Byc0NpWns5ow2qRJE08s30+aCO2PMnprA7OXbHQ5E+8e0\ne4enx9K/jQ+dJJgZFZpmzGyslRv18XqimAiE8oPHWVVZjVtJw2Z5IrWSVpVXpePV2jVRL9QzKbiA\n8axXh3Eke9vD0k+niTtHt/6Wh7Ppn8cZ8y4bFHlQ50raAoJaWBFZeGXvsLazgvGHxSTFBBIqC4k3\nNKu5xq1tl7ia28yL6cSlvCIZ55OFHLhbr48S9o9vyvuH6/pv8UZ65+ZUiiYqkYmvm3xxzyq/w1v5\nU1q8TKlA5rWLBghp9EWWQubM/dSyQRVx3ylzNDS/ULir3ncHxjtHt+U96/p+nfxp6sd1oU3ZB+4y\nZE0glriZNxMzW9W5UTTSxmRZVqQiSUgqYSd3PNcasOS+t42ZvGO0e35X9i/osP4//8QAJhEAAgIB\nBAIBBAMAAAAAAAAAAAECESEDEBIxIEEiMDJCUQRDUP/aAAgBAwEBPwGtq3r61Ff6VfRsssve9qKE\nRdlbcTiafdGHKtrzTIvkSVOh/sXW9+yzU1uONoMrGyTMmk/mOfCbJPFo0naY5pSok7bJyxReC9rE\n0TzqD7EJlo5MyaMqlbJtSk6ER+NocW5JlUTzE9HW3KiMsj7uiMbyO0WXgjlj1PbMC00+yS4ujp5F\nhqyc8nLAnRyvZ+LEJ0TVjhGNMXZ/IrmXZLqyy8bJFEuxeEhCYkz8HtLLOhv4oZ3teaL9HFC78H4f\n1ssUfZK7JK5HGzov9C/Y2qIvAu/B+HoYjU+4TtiGsiRL7T8RPAvNn//EACQRAAICAgEEAwADAAAA\nAAAAAAABAhEQIRIDIDFBMDJRIkJQ/9oACAECAQE/Afhr4r/w2UJ999llll/uLLLLKKxXbLGyyxjj\nXgdrHIs6mkb42aKVElQtqyP4eyWF+FEene8MZSJ16NHV+olcEL7UzqLaODqxeEQK2VijiL6C0hjR\n/I4oVHVi3GkRTUaYyW6YpLi1iGpF7LvFWSTS0evI51oWyih6Qofhsc36IvkrKtD2pEI6KVlCjhC7\nWNWRaRyk7KOgnwPDI1dFFbKyl2rDimOvaH91iGlQ1ZFVJiHp4oRz7Vmfg/uuyLqJeEPwJMcdnrsW\nZHvMfBWsIbEexo9fB//EADgQAAICAAMFBAgFBAMBAAAAAAABAhESITEDEEFRcSIyYYETIDBykaHB\n8ARCc4KSQFJisTNDcIP/2gAIAQEABj8C/wDMn/WVfD2T9d/0tXn6Ovn7J9PXfRf0jfIx8bv2Xefw\nE+frT91fX2epqa+tqSS5bl8CKvjZXq3uda2J4pOim+Ipc/UnnwXq6mq31XsJTleEwr5jse7wM97V\nvIuzKW5jdaGm7ZxjXd4nej8CWOsi3Khu1oa+p3bXix2ql1HGmWotniaanZKZoYbzHa8jWisWTW65\ncyS3292ROxmpqd8m+e6jZ+7u2uVsw2KLjpxOzJiwSeWto7xqt0q/tKwvFd6EsCUaVilFZR1oaMxv\nwFTyoT0EldsX3xJLlRZE83urwH2kOpZi7UcjqUjMuyPX1I78QyycYHePy7pdDPkYmuyyXo/kX6SV\nmU9RvibNySu6+ZhrKzRZC++JtP2iuSyIqM7zJvxe5jzei4ks3rzNfzcxLgZcR2iPMj1Et9cd0k2y\nsjh8RrkNvOyebz0Oy3ul0PIvHJ9WbRtt9rj0LktRdRyZfmiOVZks+gvvibT9pxI++TwmvkST5D6I\nfU/cZC8CyNciPUii2lXKh1VcL4Dzq/A1PDUtT+R3zst3x3W9dzzJTvwMS0SML4notjaTdvtEo0lf\niYb4jjwZFp9nobP3kNv++hHo22sVZocb0dGJN94csM0ouhyt4hx40SXgh9T9xR1Fj7K5sxJ5x1iK\ncdva6GKE1J8jNfE0XwM0r8UW9pBeY87Rpod001YvmRlGV80N7nT7UjFPWuQ29UZ0aaHwKKc6zISa\n0krRJf5i++Yn4C5NIqDas7XaXUmha3hJe6h9T9x9sQ9hJ8BJ7Oc3H8yG8FW7o7pUkYoXS5cCttG3\n/dE/7PkJLTxEno9R0l/Iy59SeB5pXmLGktmm+0YcCl44t3mUnhjzopJfyJJ8CXmPy3SXE1E+Z9+J\n5Cl/hQsinnypDTUYyqrO9bSo8h9T9wySbqo3u7zO8zvM7zO8/UTS6nGs0XXDid1GFwyfAZnoZISj\n2eYm5LIx6zlIfmNq7yOvMUtL1W601XMxKcGd6GZs+PZ3ZITxVeqow64lrufU/cXLa0/dNpUr7D9l\nA4ZSkzKL7tZI7kv4ndl/E0f8WSruriy4u3yXDfCKpZklVq9SUZVmqRhworjwiZxfIWZru2fQ5mG4\npvK6GuzJNUR8Fv8AMzNpT/I/ZQJ9JcTZ0+z6K6+IvyyfBmHHjjyP+JfEl7yHT13akMPP6HZjBCbz\n8THK2+R6SUVGuTNp1NTXdiwvCuO5L5GURchLxOy1l8yjM2n6b9hnuiT6SIfov6n4f3n/ALNt6XtR\ng7+Z6TZRTiQhitN5kVGoxXMcVK0nV8zUj1OAm8ysPzHXIlu1KjwJTxKr/K7MU1qIyYoN+RDu5olB\nxrbKXPIwxwuWHUc5ODUdcLujae49+pqa+oxE+jF+j9D8N731PxX3+Y/czZ9T478tWdpET78Sb5R5\nF6dciWTxGVseK/dom55NrgRUnoalSeRs3BZ4uZsXhrLO2bSMaylrYsUcTw6G2eCV7SFPM2nuP2T6\nG190/wDj9D8N1+p+I++IurIdSN5a7/EWKaQn6S/BC7L6WbPqmQm466OyQ6bT5jvV9TXLhuoriRjl\n5mH0tPlwNpG1LDx5sglFcbFN1V1mbXC1UtMOnspdDa9B/pH4br9Tb+X+yPVkOordZs4dWi8Ga03o\nVczYQ50bTZtrLOJjrK63eJnJ9KFUzssT5IjcsMXkzDstpN0+JcNp8S9nKHwRhco14oUrTWHVeyZt\nOg/0zYffE2vVEfMXgXx9VC6kVgbSjSYlCoUKDrCnrz3KUnoNpWXoyoroVxF9d3dZdZbrquyvZMmS\n9w2P3xNp1RA//8QAKRAAAgIBAwIFBQEBAAAAAAAAAREAITFBUWFxgRCRobHwIDDB0fFA4f/aAAgB\nAQABPyFReC8Ciiii8FFFFB9CKKKL/AooooBF4FFFF9PKKL/KoB4APBReAQIAHiv9IHgX0BeBRf4c\nPuh4hRf5SROPr6p3neP/ABLhOyf2vTn6/aEUI8LieM7iRiP7TqaVc2+y4InBdoMfUVfwv6HH4HHH\nH4HHHHHHH4DI4BwZE6x3AWB3+y6ACLBUaMwox+L+t7knPBvznnNOXwXG8NzzlnPOWcstWWZmbe+0\nAvWkZiDoURpgow2hEL2fC5vAWPSLvAiyF7ysJgCCEYerEEtYHajjiRyoCSan18DjjmnUYy3nyvdx\nlxvARkO0As0IS1OkYO0Th5nPAqzGAgfCAjtCJCQZF2Wy2iFeFBZ0jAmCZOqPcbQxgOmzAKLCxCGx\ng1iMIsKEu05li1DHiFN+ITBw4S0FygrExBKArQWWZjc1PMEBWviWmPTriQFWLd5gsGzMwyM1AACm\nmRvFBFFhAs+oRpwhsFOBVkw8VM0IwNIvqM9yMA3XdaPSCwHvHFjrcAbVEqA36Q2/uVKhayokOsyh\nqgt4MQKsQzySg1wPmYuRqbjkVEqPlLCmM1CG2ie8EBZuCHga1ljEesDsDmVgkPXiGafEDeKHR9MM\nsWM3pDJrqfMfllyCZUAAQxOQ9cQ+wtMa0j7weAJYJfFxCDlpHBJtdoZixvpxDIMWmItRxY1AaOlC\nCuOW75i9X9wDBl4lmAXLgAgULXCwDZrCgSWukKQOYzWZdwZgALJMxslcFhLDgMCTwlURjn56xnWv\nnWM9VShk6mAnAXlEAhI4jQQjBdG52jUhbuBWQ8oYQMpX58xiXYmNiQwEkIKAXQy9VQd2kwlPR6gR\nDOm+8AoRfsQjMKajvCjYgrRh+XVN8mBg9bYU4R5EgCjzCleldI4I3El2tDpUU88Y5smuAtfvxlHK\nABOt0FBZjEOGAaXHN8BNIh6xMDX99ICBwe38iBwFA3HyZSACECcPSPgMCOT7U6u4V960ULd/EXCA\ntzAd0LX+TKXzrAQlDRghHRrJxYNFVwJLgRhNCfnDDGwws5Dj+WkQ29YHASAXLiGvhqgv5sSgEhkM\nQSe69YIRCbFayvV5YTkGCwIxkTm9SZdLWfNwAwDVzeAQxCV1qpr5GFAdpDyVS9hiFvI4P0inahAq\nhI3UWSmIbbSGUFiyzFpgjwY2Y3xC0QMyb6VDGqAAgVaQMF3hBrILuBtNFiWvRIowGCiWlMwNLgsj\nmP6hiUQJC2RYln3JiE3OYXZX9MM70BggK2FyI6Id45oqZYuN2hk4PEGe+BhIO4IZdHwxuxBaLhxT\nS4QIMYOIRjxWsD/kzfrHwYEDo4ntCIBgHQCDGNGKFlgj+I7JSooFg1CINrHrDgjGkhDg0mQVLwaG\nEEM7Awem0GpuowjUvUNQ2iS08kxALhVQ3mbM7RugTek7kCBgDEBIimMP0hULSLIuCwoi47wl4L+w\nFdgNeBLUviukAMJE9o6WjFMwlSynk3iAAlkaLMwd9Gek6T5KEwGwA7cCIiSVTjA3QciYAaCLGkKf\ndBgobcAOsOADDl4jeUAROAERgOGKQNpgAJ0vVDrwHUkFDIBgwhhxAJxW7uk7wEc9gVwStEA7Rjy0\nSoIAG7qkA5SSI7xgKv4i+h7JgQzMZwxAOrvaoQXAYhcQnGlfmCcZw9hHhAKhjk45hOAJC29/SFOY\nm3QHtADqKw0yYQasVUTTkBMunpNEFkR6iWrIKGohmRIO8/oT+hP6xj/3R2fMhWIDs7j1Dl8Lsh1j\n/X0BMmmwHtiigOm/hgCBg1sa5zKA5mTrgIKA4vWADhkDTJiL2yGsv8siV6TffIhMz2OkYU0UIRBq\nMd4PRwYXl4TBDAZ5Uwy4qIEFIBEuJzQe8Q52NZcUshOzMeFLJtof+yieBpCR2MBpGdmOSI7Qz6Dq\nFfp9DgM0TKCidGehe8AELAECSdpnPQCUu4sAnzX6n9v+pwvWBLltDqISA9ADuTD6ARxFBWFzCIEO\nEyVQAcGHNEoMQ0MhGoGYbAWAqDJPSME0GBGIBWzEAik9JRkNzVKH4Qm6CAGURBAndmb8oWyWi+0M\nwlpCBOEyDrBHvRjIRZAh03DtHH8cfxxwQwZjuF6XvA9v8UBxrCPBTQssNgG2j95p+kIpjhSsfZwZ\nNBZbdw1RBCPzgCyxe4SAJrH/AGETsjY6wSuFsQDMRt9/qU4HoHA8AXgVolvSAOiucJd9YAd2oKNH\nKjxNonpDursdhUctXAvRGOsMxIxPUwEU89/BmMxmCGaExEeXPSfefCNp8xtBH42EMIFA30/mDBM3\nOsEBXzylqaB0UEAUB9UQmHYCN3SBTiQLgarACwIO4B6/1MlJKcJW8/iDmCxfM5HnFZZuSSoWZgRO\nTAAHReYhaR2oWkYADyi5UJDN6QzyssIa04DoA7w3hF60rwiMw0gvVSiUJUdYZkZdbwCTiwE55fT5\nE9W909QkGz5h4Z+k9Yj0ZhiLLEFqMMcATBagOGtwAa7QCMTrvBpvIWQh4oDJe0Kg0G3S/MLpnYXA\n2oJ531ia0A3dpg46hECQ7xAGU2UVSUgNUJ2oWAjxvAnoFtDUvJbNzDNAQKDGuYCRIwfWGaoDcaKm\nTNnxUGEMhmVvSaytz/qPuDEoDhNHBMJ1rExfQoDLaQx+4jBdTMAp31YBnQmDfMParb5owQ1ECxic\nPaEY7L1eneFIbIBl3zAVDrodYWi8kCwmTwxrGgjGUJCt4LLRIVBaoQ4FmxHtcBgGCNXHyzFjQ3UJ\n+oZqgMfoQ/l4gPy7Q4J+dD5DeAZcJb+w4PRJ3rCtlCg+0Q5xBdpUnFxXiAU0cdxA9hQEMQxDYVRn\nGDK0cCQy0qIQCBhSso+0AAsJdEYhVZUFMz2kbQAbKYkdoEK4YFXeYLvl1JXIbGwlCdQNuJh9euOP\n0iF8G4j8v7CfH1Qvi6mMOv7oTNQFpuTMmYhIQmDBmGjdYA+vIYPID9I9ZiMqSUCT1hKCQGTb+vgt\nWDeIjKJcPIZRqqimkSkh2dhkbQIQGkNJiCeZ3ltnkhhUDLEJHAWDUJ+wE/AT0f5h9D+J6X8p5j8s\nJYNfef/aAAwDAQACAAMAAAAQCca/YI9+Kxdip1O8888bdQ288WTwAJjAa884w4JCp2QaESACnCAL\nyy1lx3Zr1fClSAD3PM2SynPti6gUi/aO9BKh3xGIBtOYeL564W2lMaFqQHHYTBdjg2bhUcGLSXte\n6ecGcsAwHyUneSvJw/vGaPNzZUMPYM7DT2AcU8ewrc0KEZEPv1/Ep7LTFayHlv8AQucX00FNNFU7\nA6lU2VkNh+rzMIyi99ncfEIetvoowg/QXwfv/QHHwfHov//EACQRAQEBAAIBAwQDAQAAAAAAAAEA\nESExEEFRYSCBsfAwccHh/9oACAEDAQE/EJ334ZZCsg87b436tngFked+jf53zn1FpZaXFllllll6\nWWWWXwd8ZB3ZZbbKnpbi8L2Sx14cNieEkdukwYA4seB0p4YUb6set4hEBWHvloey7F0pY6hkEzow\nrBrCWjGuDahi8xA24WwLZZvMmYfRFOjxfcVkV1k/r/VxG21jeg9oejJVlkYC17J4OZQGxafBsoev\nWZwMxB1AH4n3IYJ2MCk3qRWD/ds6bEsfWBwc5wgySZnMpOYyC4cS4Z4IArnUYmoo4W85h6OupfVO\n3UM3eJ5TyHMYC8wcCQnF8gSi1N9vxGHeZNx9vgHUK8sAASu4KMjyWWQc+HSQ4uoMAM/H+Sux5oTi\n2wQTkgxlhlkGJSeyGFe4fhJzZ8wR5g4g5/fm6l0P30kPcyabIQYfFgcwC5ksY8ify/5a0mmyyyHN\nnHh4P32tdeHW6vt/si7dCJpipepPAyZUON+hv38eOv77X//EACURAQEBAQADAAEEAQUAAAAAAAEA\nESEQMUFxIFFh8IEwkaGxwf/aAAgBAgEBPxDfG2/pDwyyCCz9ILbbtngLLP0B/pb4G22HxtsMPbbb\nsyVL98bbbbbE2eW+Qmx4y3wf0gDwRLGxzfC6XbZuHt25J4Bqm/tK/bxwqGSAZt9s7D7JR/jZYfuv\nRv7IdLCG/lDxLNp5AusOEsbR9ckvwsg7lNvyBqMiCN38GOfihqpfI/vbtFskaWu7DIAN+222OQD7\n/wAQg8glS+w3I18OWnUjlPcJD3suhLh8TZPz7jBU/FkZZE34heEn+0bNbEOnqMM9LPXLMxbLqCLD\nxXDlnBJneXJ/md/JD02Xpk+p5Y92iJa2z2Gj9p4y6H5/7nds3bZn8+LzbAeNIs7HFtLSXwfZdyz7\nSUD+f/YOdlD3CZEt9zYN+ys2XBZQgepeQnhZcn3PqUDG/v2NlNyASbZPsZeT269xREl93t2822yy\n5fb5/f4jpPNeH3dxBxfWXJMyXcvdLSHyY8t//8QAKRABAAICAgEDBAIDAQEAAAAAAQARITFBUWFx\ngZEQobHRIMHh8PEwQP/aAAgBAQABPxAky+s+iGEEAqAdQikBBcS3cB1KdQgn0z0QipUqVKgSpX/g\nZVU9MPCE0/SZQkkVahIkhBBSCCEEBAlMqBKhX/vCMKQOyHSveGeSoSECdKAVqAQpKlQKgfxD/wCA\nUsZYe4OCh4Q8IeEFxDuQFyvEBhqV9a/hn+W30h/K5cv6mGSADvMA9wpDwhRgFagHEogfQqUfXEvP\n8D+SAcJ+0NfyBeUTIYdekMNkAfoGYED6BA+hDcGX9Bg/XD95arq66/jcv+Dpvm9IaPSXUuXL+gDi\n/wCzAkt1UBNVPUTkMkC8MDxB7GPE9SCF3AS/pf0uDLly4KnkJ6D1r63WJcGWSyX9AnhZh8RWL6l1\nLly5cVc6YL8xcuFH0DgvpHcHBwwg+4Y5YYbl/oPoDCAVLDaBcxKtvsruVzgA/MuXLly5cv6KvDPU\nu618wqqXKKstNOTULAjY8kuW/RcXfWHPmLly5cOtDkERxhRPhQt1mG6VB/2QfhXrDqyjjPFhZgxD\nZPVgeBhh47h/tn5wghGAMexBWyOBzRn0lQQ1gfVLaXVRBOX4n+ognM88XpYbqUl0qriZ3RVz0l2G\nGhPcfWGB1jkOn5gqcH8iV7nkle4imhQNkUle5XuV7lApTRbWYUgD0TasV3RePaU0EU7FcXCwsYyO\nf8R5LQb31+IOxG1nuGcWqV6MQJRdMsSdizubbxitwMsV9csJghRnLVSgfMuBFsgEtsUpL9Ywtzya\n9IJfWmvaFoXIw+DcIK4lPARactAVmsVEIhiBeTa7efSHWiWpTiVYfNmY9YrxqOSEC48JQUL4L/3c\nuqTsXDnPpG47YGblYgyKWrTmZ5UVTj6xCACmsJmVxZRRQblDAwgOx6ZhyPDbualLlBdmPE8R8RFp\nq6AtJx/UDzsI7Cw19peRWA15/wB9Ja3YTp1gzCG+JyINy92heCFeZWYN05gPGYTCC+xwfMbrZHaa\nsZb+wJukurl4A6Vz5PbEo2ZBcF+7iO7g1TEOWL63H4E6djKiWZFqC43DBcMixqaNM/EWQlFwhAUZ\n4ELdS6QJUZNWkAH+/WPDBCvWMBRWLfhhYqhba8zNDMLIO1FyS7FcVBJFAwzv/MzWBXKu8cQ0Vijg\n7fEzh1L3v9p4ZZYQEF0YrMCkGWklAs+PvCS8oAh2Wgy0q2C40G/VZ2x3Mul9VEt/l/UwgZaVdRSp\nrDyDmY14CYI421x1MhCWQYdfOZt77k4MXvMwjghKuQ0Xg28xFwEGbaFnialQG9XzXvDo1Bcou3Hr\nMqStYeGrDkHuoLb3xm/iWtqbKei1HtMO0ClZB+2N3Dgoc4H2blrBVhWtxqCWeR/yUbpAqoqVqdAU\nis0xrdh81MDXcqQ8Kf5i5IDkYaM4zAsOEJjzrqBHBtAbMEsrFKZXWYPENAOUxp4lL7Wk2Bd0fLEg\nmVChrK3AjRXu/MLJvat28sGbsXrqINGCxB1OcAbKA+0omuaWODmFleMBKSTBRClWMRCgCqjkKxEL\nAC0f1JYwjGlYzkErCxqxrx9EG4AACuM/qPCitYl7d3xUXXwgKyp/XxLX3bAd4ggWS7hejZ5hePAV\nadBqHng6Njs9bgySnRgBH4nE9itTQp1HlG7TcMKwrD1DcUlAMCi1WzRUYq+maaFK/wBQOqhEe2vt\nEp7xwAE5ocqZJajwHgg7P6EZl+n7kur2IVaeLdxK1HLs9YlvO1+b94AKlZdmK+0AlXF151qVFQWt\nMd4e4iIhbpxA7zVq+YuIMpsQMpVZKl9D5rLKAArul9Pf7RIEq8vUR2XWFFnuQbRoAIp1DzwboFJ9\npYZIqVj7PriG6VW8vvATXB2ytU3yrwmbGz949M+e11KtOlhacsQbW0TT7RRtoxxuJgJq2tJSEeCj\nIrxU5YmvbLFZ3AQbDVFApOi8+jAbNbiYgrD34fqcayHCpSTnJUpWodm135bjZtXW22b5ydkxsLHK\ngofETttop4j7fTdMLA5/zRUizAXZX2zLNQcdhoNRQrcUV3HBcUrGWIRPLd1AJRCWLhyHZL+raBU2\n2Hnu5jx5L2PbJmoVfIQE9LiAodlxj0jkjRA6NL6JiqTbWBk3EypljuI8c0SVD4g4JTRZEEEaUohW\nE9txONscRmeFlW144h6wD8xA4S7nbfHuROkJll7MsYUO0taHsUfMo8yAUsznjrzBqiBWw4bznmJQ\n1njRz7O4JNXirsvOaxKcpTfGMB8AscqcMfMYQKxhmpyCotKH+yXGFFFKDKtBUILA8PvFOgNXJWHg\nWvWIgRcQA8PGY6iuy7wD9xy60Uxiw/UOsTsrzC0VftO4sgKAU31KZxBbhdbiw3NjuLTQtF6LhEFF\nEs3KcKNwOc1yD54Su0FpKL3Rp9GLsYbQHOo5kDguzYwKYFeGJgvCi74xUSAoAfbLg7iCAstDkvZ4\nhJlrd5faIADMGwbsld4J0MtXN6Eo1RxTJ6oINQ4q4IhTS9MrwvwMEKvzq4HIYLIuxadxoLkcua/u\nMUMqOexHOqU94S0GuBlB16VHqtWGq4OpiQA4hkK0FiX0r5WVADBaAbcarMqNL/TWW69YCQMDFyWQ\ndixXi+IAlH4Zu2viGLnSFrrvfMOzWLCS4ApsxK5hvushfzA6DC5LGzdxFdyikcV+2atf9EHBp5wE\nV6yxX4x1A0VwgCmuPmXbMSv/AHqaGY1U8rc0YzwEq2OEKV1XFdSuAERpnuWFg3W4ZesGxU58n+sB\n7ykh7OP6lEHar9nnyQBaA1bLi81j2iHhDJlPOEBbrFyd4wZmwCjHqm9a4h546SBaUMoZWs70COM4\nxUc7CyQWDQTIyrkDBfcdAtKV4lprh3o1EljSmf7y+MDZ0kHZV3tcskIcdfhCRYGpr5ZsVnEP+BcN\nbM7zKiBKYZSq1s99wAuW2JC6oqxFbpil1UF+x946XMC2lHdJtp2gCYv4RprKCVpdm3efECLiV6rK\nRu3UodO9Z0DPO/zIVod3TCQALIZ+DbI3Vwy1C6bl/wC9Mf8AcgG4jtL7pUPkKIMbNR4ty3BAUOMZ\n415gxqqOmCxde8DgsDdhRjRzArsGoM8qqhijIEetXyl4W6VK78GVcRAiUMPS4W1ZjErZXKQj5gXm\nvtAndIaNvUbWY7Z1WCXVWDoBhobfWIFzSgPfDPEAHFBVWLbtmg9c91ALC6A0LV4Wce/Ms1DOq3oY\naIJwaFG6vGT+4slBeSng+/38wyiIXtVvfoHtHoxBBQNqp8wAJaFL918QIbLS8sUXmCWCXBp0r0Su\nbHw1aQFgklVQ5dYjKUqzT5gVWGWczkKgqA8hb96jUhSNUxm7348wN/CXX/ZZ2fLLzs+WYG/zAq1c\n9MRdIsfUj3KAbL3iM5eDucHkoIAt+5FEwEDWeEsSuZUgDZRLaUw7q89SG53HFZ+KhQ6DDq6aobXi\nHRSg63F7T4zuKqoYRUadLmIRoq7fAqCqHSeaGCrHac4GO9y+iComx8a1KYSWtMMJ4ipQ9cVUdtwt\nrIrFJT+YOhMbSGa5F3BkAdFL+8UKp5S9PTKjsDTOBpLdLyAeOufGoaGoDgdviClchderyxzjyQRH\nZV89IzA0rNl6xfW5cBCk003Xi7gi7S6gW8R12VtF17FxUhEtc4zXcenwRpz94Go7QBv9xY3949TX\n6kCg5RxMxzJwtjDtxDF1jm4B6ZDJBOJui2g13vW/ESAsQBI9LhvjXiPHR3/UsSBjBsJcGXYQya8Y\nlirQ5W/EYFtayCOQWpWBww6sgOnabYOKMOeo2B3YVg48TB6ENAqqu+eWtam5cROoBQCrwdwx1Wxa\nnweICzSgrPj1i6Ix3/mYFyy8nFHUBICKmEhg+IjYGh46gJVcjTAqijY5r9f9lLi0jeWGvWKWGKoX\nZS06yS1iig7SQQ8vEtFbuTdOJobPZAIJ/wAoTXw+8V4/MCeL9ZduvmcmKvuJf+x6itair+YowCpu\nmI6/VF1q79kuqOJQBGr/AAcEAgiXTRdnu3jcxAFW1BsyX1vM4tCoFdUPNFylYOELKK4KuJnAJQDF\nPEYLr5dQjCBXlRhmVrdTe/8AMV6g1VWEFEK+xgry8vmDDmAkhvuU/haF4eIiLlqUVB6D537ngoGx\nZ3C6YDAarJx5hecwBbb4jIO1UczH0LN1iqcnxL88tfeFB45q5WTTBTW1l3dxQlywCsY7Kz6xElZe\nwGVpzfXUJcUmSQTRWE3Kc/Hn2iO6H3h5Yu2NBrdaqFWRMlU+I4QNnDe46qKvRJklIj2mENpdF7jV\n6q1obpjrw/7nvHYv+ojPgEEBvn+qHxhQoAewilyiNtvP+1BKAOBZi/kITlAQzyYmXfoWP4iCphBg\n2lxQC90s1+xGWIbAYO0iQYxUSGsuWk0XFs5WidRQ6PfUpcTLZp7wAGoEXWHLHvF7cGqLCGhWH7EE\nJVVwPFvb5iUQXTBNRsbOwOXd4+Izt0Culpm+wZvuwFLWeFOzHUoOWc5vIpxv3ilYrHgOBHg13bqO\ncU8VhAXhW3OiM0EUjebCWXmXLz/if7qLmXFmJF+kyvWKTkrg9pkZ0PvCpul+X7itGrSiJ2l+EZa5\nb7xsdrOvRuVgzDHk1GRyQKuCAV9EQm59rql/3EtDrSYR5cK9KnZswLjmupj6CUzDqujqVMafadKn\nxr4lt+vKI3YOcleAmsBRj1hqhNuUOXiGTC7FGO4e7mpd8N0qir2LtdygG/MuC/FqvwYj3emDhdH7\nlYhA3qtr6VC0xAcNqL04T5jdak0hl3wGLOoBVQzkK41ZAflh4fA8Z1MlcMnCEhYZNRhS3uXPSbl1\nNo6+EoX1me3/AGJkOwa8x7NT7YiHVvvlj9/lTDyfmRDmwKrNNkvggnTkl6rbWMSqLBlu5WQAWFD0\n+d87llMZIdTAVduVlhw0/GX60Cmrnkr1itSWq1QVvxMVgULMVHkfhhcVhCNlZ9M19BGCoGjb3EXO\nVBqw7rBvphRFzXC3gMm4+A6aNjHPvGfKDYUFv5ZQCsrBTEd4+ZdDoLAlcCqcfEOMrqyKuWc7ai4R\nGxTwEu7zFUzaoVzdFsYtAggXdOGFT4iqsuXL+lxcxwZMfsX4lWbYIYJ0EFh5EZZruAqC6W+6MK8h\nytVDtKqmwHR/iAJFcNbgsnWLfSNWtDKxpaDdpj8I6cKpnJ6v9ZisJQY0y73j2YNsArqHnp+onhJW\nxN5PGkuENMs2rP6uYl1C6rPGdcw5YgAYNZUzfGuZXmpVv7/uXKCxm39xUVivjqOR8OaqBnbc0Ilt\nqF1oesC20c1CBqjxCCa95YP0v63mO46uLcXDgvgfhFXjD7TgJsD9yNIrRTa+Xyn/2Q==',
+        'user_avatar_format': 'jpg', 'user_avatar_size': 12019}]
+
     '''
     try:
         data = request.get_json()
@@ -584,6 +604,7 @@ def forums_back_data():
             }), 400
         parent_id = str(data.get('parent_id', '')).strip()
         forum_data = forum_comments.forum_talks_back(parent_id)
+        # # print(forum_data)
         # forum_data = forum_data.get()
         return jsonify(forum_data), 200
     except Exception as e:
@@ -618,7 +639,7 @@ def forum_add():
             if key != 'parent_id':
                 value = data.get(key)
                 if value == None:
-                    print(f'后端接受到的{key}信息为空')
+                    # # print(f'后端接受到的{key}信息为空')
                     return jsonify({
                         'code': 300,
                         'message': f'后端接受到的{key}信息为空'
@@ -861,7 +882,7 @@ def user_login():
         login_ip = request.remote_addr
 
         # 查询用户
-        print(data['mobile'])
+        # # print(data['mobile'])
         user = sys_user.get_user_by_field('mobile', data['mobile'])
 
         if not user:
@@ -925,9 +946,9 @@ def user_login():
             'last_login_time': user['last_login_time']
         }
 
-        print('shi-1')
-        print(user_info)
-        print('shi-1')
+        # print('shi-1')
+        # print(user_info)
+        # print('shi-1')
 
         return jsonify({
             'code': 200,
@@ -989,7 +1010,7 @@ def get_user_profile():
         })
 
     except Exception as e:
-        print(f'获取个人信息异常: {str(e)}')
+        # print(f'获取个人信息异常: {str(e)}')
         app.logger.error(f'获取个人信息异常: {str(e)}')
         return jsonify({
             'code': 500,
@@ -1298,7 +1319,7 @@ def search_users():
             page=page,
             page_size=page_size
         )
-        print(result)
+        # print(result)
 
         # 过滤敏感信息，只返回公开信息
         public_users = []
@@ -1411,6 +1432,64 @@ def get_user_statistics():
             'message': f'获取统计信息异常: {str(e)}',
             'data': None
         }), 500
+
+
+@app.route('/api/user/get_name_and_avatar', methods=['GET'])
+@login_required
+def get_name_and_avatar():
+    """
+    获取当前登录用户的用户名和头像信息
+
+    接口地址: GET /api/user/get_name_and_avatar
+    认证要求: 需要登录（@login_required）
+
+    Returns:
+        {
+            "code": 200,
+            "message": "获取成功",
+            "data": {
+                "user_name": "张三",              # 用户真实姓名
+                "user_avatar": "iVBORw0KG...",   # Base64编码的头像数据（可能为null）
+                "user_avatar_format": "jpg",      # 头像格式：jpg/png/gif/webp
+                "user_avatar_size": 6961          # 头像大小（字节）
+            }
+        }
+
+    Error Responses:
+        404: 用户不存在
+        500: 服务器内部错误
+    """
+    try:
+        user_id = g.user_id
+
+        # 查询用户名和头像信息
+        user = sys_user.get_user_name_and_avatar_by_user_id(user_id)
+
+        if not user:
+            return jsonify({
+                'code': 404,
+                'message': '用户不存在',
+                'data': None
+            }), 404
+
+        return jsonify({
+            'code': 200,
+            'message': '获取成功',
+            'data': {
+                'user_name': user['user_name'],
+                'user_avatar': user['user_avatar'],
+                'user_avatar_format': user['user_avatar_format'],
+                'user_avatar_size': user['user_avatar_size']
+            }
+        })
+
+    except Exception as e:
+        return jsonify({
+            'code': 500,
+            'message': f'获取用户信息异常: {str(e)}',
+            'data': None
+        }), 500
+
 
 
 # 简历基本信息路由
@@ -2190,7 +2269,7 @@ def get_complaint_types():
         }), 200
 
     except Exception as e:
-        print(f'获取投诉类型列表失败: {e}')
+        # print(f'获取投诉类型列表失败: {e}')
         app.logger.error(f'获取投诉类型列表失败: {e}')
         return jsonify({
             'code': 500,
@@ -3244,9 +3323,9 @@ def api_ask_by_pdf_and_job_name():
 
         # 调用AI分析函数
         ai_answer = ai_job_demo.ask_by_pdf_and_job_name(pdf_path, job_name)
-        print(f'ai_answer:{ai_answer}')
+        # print(f'ai_answer:{ai_answer}')
         ai_answer = ai_answer[-1].get('content')
-        print(f'ai_answer:{ai_answer}')
+        # print(f'ai_answer:{ai_answer}')
 
         # 清理临时文件
         try:
@@ -3630,9 +3709,9 @@ def api_success_rate_by_pdf_and_job_name():
             }), 400
 
         # 调用成功率分析函数
-        print('12')
+        # print('12')
         ai_answer = ai_job_demo.success_rate_by_pdf_and_job_name(pdf_path, job_name)
-        print('34')
+        # print('34')
         # 清理临时文件
         try:
             if os.path.exists(pdf_path):
@@ -4262,8 +4341,8 @@ def start_interview_pdf_job_name():
         job_name = data.get('job_name')
         job_text, error = _get_job_from_db_by_job_id_or_name(job_name=job_name)
         if error:
-            print('123')
-            print(f'error:{error}')
+            # print('123')
+            # print(f'error:{error}')
             return jsonify({'error': error}), 400
 
         return _create_interview_session_by_job_name(resume_text, job_text, 'pdf',
@@ -4652,7 +4731,7 @@ def _generate_audio_sync(session_id, text):
 
     except Exception as e:
         error_msg = str(e)
-        print(f"TTS生成失败: {error_msg}")
+        # print(f"TTS生成失败: {error_msg}")
         return None, error_msg
 
 
@@ -4682,7 +4761,7 @@ def transcribe_audio(session_id):
             return jsonify({'error': '未找到音频文件'}), 400
 
         audio_file = request.files['audio_file']
-        print(f'audio_file:{audio_file}')
+        # print(f'audio_file:{audio_file}')
 
         # 保存临时文件
         temp_filename = f"temp_{session_id}_{int(time.time())}.wav"
@@ -4762,7 +4841,7 @@ def process_answer(session_id):
         audio_filename = f"question_{session_id}_{int(time.time())}.mp3"
         audio_path = os.path.join('static', 'audio', audio_filename)
         manager.generate_tts(next_question, audio_path)  # 改为同步调用
-        print(f'next_question:{next_question}')
+        # print(f'next_question:{next_question}')
 
         return jsonify({
             'code': 200,
@@ -4821,7 +4900,6 @@ def health_check():
             'service': '运行正常'
         }
     }), 200
-
 
 if __name__ == '__main__':
     if __name__ == '__main__':
