@@ -28,6 +28,9 @@ import os
 from flask import Flask, request, jsonify
 from werkzeug.utils import secure_filename
 from set_up import config
+import logging
+import os
+from datetime import datetime
 
 config_data = config()
 
@@ -58,8 +61,25 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 # 存储聊天记录
 chat_history = []
 # 配置日志
-logging.basicConfig(level=logging.INFO)
+# 创建logs目录
+log_dir = 'logs_https'
+os.makedirs(log_dir, exist_ok=True)
+
+# 生成带日期的日志文件名
+log_file = os.path.join(log_dir, f"app_{datetime.now().strftime('%Y%m%d')}.log")
+
+# 配置同时输出到文件和控制台
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.FileHandler(log_file, encoding='utf-8'),  # 文件
+        logging.StreamHandler()  # 控制台
+    ]
+)
+
 logger = logging.getLogger(__name__)
+
 CORS(app)  # 允许跨域
 
 # 配置
