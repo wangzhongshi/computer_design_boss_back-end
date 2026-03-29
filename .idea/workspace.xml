@@ -228,6 +228,9 @@
       <workItem from="1774252054640" duration="585000" />
       <workItem from="1774604442870" duration="326000" />
       <workItem from="1774604790549" duration="1004000" />
+      <workItem from="1774761998541" duration="32000" />
+      <workItem from="1774762048691" duration="3000" />
+      <workItem from="1774774445808" duration="125000" />
     </task>
     <servers />
   </component>
@@ -246,17 +249,18 @@
     </option>
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
-    <SUITE FILE_PATH="coverage/computer_design_boss_back_end$test_sql.coverage" NAME="test_sql 覆盖结果" MODIFIED="1770028723938" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/computer_design_boss_back_end$dowenload_pic.coverage" NAME="dowenload_pic 覆盖结果" MODIFIED="1774527009470" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/computer_design_boss_back-end" />
-    <SUITE FILE_PATH="coverage/computer_design_boss_back_end$app__1_.coverage" NAME="app (1) 覆盖结果" MODIFIED="1774605529555" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/computer_design_boss_back-end" />
+    <SUITE FILE_PATH="coverage/computer_design_boss_back_end$app__1_.coverage" NAME="app (1) 覆盖结果" MODIFIED="1774757717862" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/computer_design_boss_back-end" />
+    <SUITE FILE_PATH="coverage/computer_design_boss_back_end$tts_ws_python3_demo__1_.coverage" NAME="tts_ws_python3_demo (1) 覆盖结果" MODIFIED="1770222754182" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/computer_design_boss_back_end$app.coverage" NAME="app 覆盖结果" MODIFIED="1773132544247" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/computer_design_boss_back_end$test_sql.coverage" NAME="test_sql 覆盖结果" MODIFIED="1770028723938" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/computer_design_boss_back_end$app_sever.coverage" NAME="app_sever 覆盖结果" MODIFIED="1774605019429" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/computer_design_boss_back-end" />
     <SUITE FILE_PATH="coverage/computer_design_boss_back_end$Doctests__tts_ws_python3_demo__.coverage" NAME="Doctests (tts_ws_python3_demo 内) 覆盖结果" MODIFIED="1770220207138" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/讯飞官方接口文档" />
     <SUITE FILE_PATH="coverage/computer_design_boss_back_end$add_data.coverage" NAME="add_data 覆盖结果" MODIFIED="1774527989394" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/computer_design_boss_back-end" />
-    <SUITE FILE_PATH="coverage/computer_design_boss_back_end$tts_ws_python3_demo__1_.coverage" NAME="tts_ws_python3_demo (1) 覆盖结果" MODIFIED="1770222754182" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/computer_design_boss_back_end$demo_boss.coverage" NAME="demo_boss 覆盖结果" MODIFIED="1770888800714" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/computer_design_boss_back_end$sql_data_demo.coverage" NAME="sql_data_demo 覆盖结果" MODIFIED="1769615949268" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/computer_design_boss_back_end$app_sever_http.coverage" NAME="app_sever_http 覆盖结果" MODIFIED="1774605811136" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/computer_design_boss_back-end" />
     <SUITE FILE_PATH="coverage/computer_design_boss_back_end$tts_ws_python3_demo.coverage" NAME="tts_ws_python3_demo 覆盖结果" MODIFIED="1770220953347" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/讯飞官方接口文档" />
-    <SUITE FILE_PATH="coverage/computer_design_boss_back_end$app.coverage" NAME="app 覆盖结果" MODIFIED="1773132544247" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/computer_design_boss_back_end$iat_ws_python3.coverage" NAME="iat_ws_python3 覆盖结果" MODIFIED="1770223168481" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/讯飞官方接口文档" />
   </component>
 </project>

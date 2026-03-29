@@ -229,17 +229,17 @@ def internal_error(error):
 # JWT回调函数
 @jwt.expired_token_loader
 def expired_token_callback(jwt_header, jwt_payload):
-    return jsonify({'code': 401, 'message': '令牌已过期'}), 401
+    return jsonify({'code': 401, 'message': '令牌已过期，请重新登录'}), 401
 
 
 @jwt.invalid_token_loader
 def invalid_token_callback(error):
-    return jsonify({'code': 401, 'message': '无效的令牌'}), 401
+    return jsonify({'code': 401, 'message': '无效的令牌，请登录'}), 401
 
 
 @jwt.unauthorized_loader
 def missing_token_callback(error):
-    return jsonify({'code': 401, 'message': '缺少访问令牌'}), 401
+    return jsonify({'code': 401, 'message': '缺少访问令牌，请登录'}), 401
 
 
 # API路由
