@@ -113,7 +113,8 @@ load_dotenv()
 # 配置
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'dev-secret-key')
 app.config['JWT_SECRET_KEY'] = os.getenv('JWT_SECRET_KEY', 'jwt-secret-key')
-app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(hours=24)
+# app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(hours=24)
+app.config['JWT_ACCESS_TOKEN_EXPIRES'] = False
 
 # 数据库配置
 app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL',

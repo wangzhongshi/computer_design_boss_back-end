@@ -109,8 +109,8 @@ load_dotenv()
 # 配置
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'dev-secret-key')
 app.config['JWT_SECRET_KEY'] = os.getenv('JWT_SECRET_KEY', 'jwt-secret-key')
-app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(hours=24)
-
+# app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(hours=24)
+app.config['JWT_ACCESS_TOKEN_EXPIRES'] = False
 # 数据库配置
 app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL',
                                                   f'mysql+pymysql://root:{config_data.set_db_password}@localhost:3306/boss_job')
@@ -1453,6 +1453,7 @@ def get_user_statistics():
 @app.route('/api/user/get_name_and_avatar', methods=['GET'])
 @login_required
 def get_name_and_avatar():
+    print('get')
     """
     获取当前登录用户的用户名和头像信息
 
@@ -1477,9 +1478,10 @@ def get_name_and_avatar():
     """
     try:
         user_id = g.user_id
-
+        print(f'user_id:{user_id}')
         # 查询用户名和头像信息
         user = sys_user.get_user_name_and_avatar_by_user_id(user_id)
+        print(f'user:{user}')
 
         if not user:
             return jsonify({
