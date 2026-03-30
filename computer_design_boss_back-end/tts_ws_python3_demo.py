@@ -226,7 +226,24 @@ def tts_demo(text, output_path = None):
 
     if success:
         print(f"合成成功！文件大小: {os.path.getsize(output_path) / 1024:.1f} KB")
+        return True
     else:
         print("合成失败")
+        return False
 
-
+def tts_demo_safe(text, output_path=None, max_retry=5):
+    if len(text) > config_data.max_str_len:
+        # print(type(text))
+        text_1 = text[:config_data.max_str_len]
+        text_2 = text_1 + '...'
+    else:
+        text_2 = text
+    for i in range(max_retry):
+        try:
+            result = tts_demo(text_2, output_path)  # 你的原函数
+            if result and os.path.exists(output_path or "data/demo.mp3"):
+                return True
+        except Exception as e:
+            print(f"TTS失败，重试{i+1}/{max_retry}: {e}")
+            time.sleep(2)
+    return False  # 失败也不抛异常，让上层决定如何处理

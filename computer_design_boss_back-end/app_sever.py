@@ -10,7 +10,7 @@ import logging
 from pathlib import Path
 # from sql_data_demo import Job_prot, Job_category_simple, Forum_comments, Sys_user, ResumeManager, ComplaintTypeManager,UserFeedbackManager,UserDeliverJobs,UserFavoriteJobs
 from sql_data_demo_poll import Job_prot, Job_category_simple, Forum_comments, Sys_user, ResumeManager, \
-    ComplaintTypeManager, UserFeedbackManager, UserDeliverJobs, UserFavoriteJobs
+    ComplaintTypeManager, UserFeedbackManager, UserDeliverJobs, UserFavoriteJobs,DatabasePool
 from sqlalchemy import text
 import hashlib
 import re
@@ -28,9 +28,7 @@ import os
 from flask import Flask, request, jsonify
 from werkzeug.utils import secure_filename
 from set_up import config
-import logging
-import os
-from datetime import datetime
+
 
 config_data = config()
 
@@ -62,7 +60,7 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 chat_history = []
 # 配置日志
 # 创建logs目录
-log_dir = 'logs_https'
+log_dir = 'logs_localhost'
 os.makedirs(log_dir, exist_ok=True)
 
 # 生成带日期的日志文件名
@@ -79,7 +77,6 @@ logging.basicConfig(
 )
 
 logger = logging.getLogger(__name__)
-
 CORS(app)  # 允许跨域
 
 # 配置
@@ -115,7 +112,6 @@ app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'dev-secret-key')
 app.config['JWT_SECRET_KEY'] = os.getenv('JWT_SECRET_KEY', 'jwt-secret-key')
 # app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(hours=24)
 app.config['JWT_ACCESS_TOKEN_EXPIRES'] = False
-
 # 数据库配置
 app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL',
                                                   f'mysql+pymysql://root:{config_data.set_db_password}@localhost:3306/boss_job')
@@ -209,6 +205,16 @@ def login_required(func):
 
     return wrapper
 
+# 在你的主 app.py 文件中，添加在创建 app 之后
+@app.teardown_appcontext
+def close_db_connection(exception):
+    """请求结束时自动关闭数据库连接"""
+    conn = g.pop('db_connection', None)
+    if conn is not None:
+        try:
+            conn.close()
+        except Exception as e:
+            app.logger.error(f"连接关闭失败: {e}")
 
 # 错误处理
 @app.errorhandler(400)
@@ -1458,6 +1464,7 @@ def get_user_statistics():
 @app.route('/api/user/get_name_and_avatar', methods=['GET'])
 @login_required
 def get_name_and_avatar():
+    print('get')
     """
     获取当前登录用户的用户名和头像信息
 
@@ -1482,9 +1489,10 @@ def get_name_and_avatar():
     """
     try:
         user_id = g.user_id
-
+        print(f'user_id:{user_id}')
         # 查询用户名和头像信息
         user = sys_user.get_user_name_and_avatar_by_user_id(user_id)
+        print(f'user:{user}')
 
         if not user:
             return jsonify({
@@ -4902,7 +4910,7 @@ def get_history(session_id):
     }), 200
 
 
-@app.route('/api/health', methods=['GET'])
+@app.route('/api/admin/health', methods=['GET'])
 def health_check():
     """健康检查"""
     try:
@@ -4921,6 +4929,21 @@ def health_check():
             'service': '运行正常'
         }
     }), 200
+
+
+@app.route('/api/admin/db-status', methods=['GET'])
+def db_status():
+    """查看连接池状态（仅管理员）"""
+    pool = DatabasePool._pool
+    if not pool:
+        return jsonify({'error': '连接池未初始化'})
+
+    # PooledDB 内部状态
+    return jsonify({
+        'connections': len(pool._connections),  # 当前连接数
+        'available': len(pool._available),  # 可用连接
+        'max_connections': pool._maxconnections,
+    })
 
 if __name__ == '__main__':
     if __name__ == '__main__':

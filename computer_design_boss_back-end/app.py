@@ -10,7 +10,7 @@ import logging
 from pathlib import Path
 # from sql_data_demo import Job_prot, Job_category_simple, Forum_comments, Sys_user, ResumeManager, ComplaintTypeManager,UserFeedbackManager,UserDeliverJobs,UserFavoriteJobs
 from sql_data_demo_poll import Job_prot, Job_category_simple, Forum_comments, Sys_user, ResumeManager, \
-    ComplaintTypeManager, UserFeedbackManager, UserDeliverJobs, UserFavoriteJobs
+    ComplaintTypeManager, UserFeedbackManager, UserDeliverJobs, UserFavoriteJobs,DatabasePool
 from sqlalchemy import text
 import hashlib
 import re
@@ -28,6 +28,7 @@ import os
 from flask import Flask, request, jsonify
 from werkzeug.utils import secure_filename
 from set_up import config
+
 
 config_data = config()
 
@@ -204,6 +205,16 @@ def login_required(func):
 
     return wrapper
 
+# 在你的主 app.py 文件中，添加在创建 app 之后
+@app.teardown_appcontext
+def close_db_connection(exception):
+    """请求结束时自动关闭数据库连接"""
+    conn = g.pop('db_connection', None)
+    if conn is not None:
+        try:
+            conn.close()
+        except Exception as e:
+            app.logger.error(f"连接关闭失败: {e}")
 
 # 错误处理
 @app.errorhandler(400)
@@ -4899,7 +4910,7 @@ def get_history(session_id):
     }), 200
 
 
-@app.route('/api/health', methods=['GET'])
+@app.route('/api/admin/health', methods=['GET'])
 def health_check():
     """健康检查"""
     try:
@@ -4918,6 +4929,22 @@ def health_check():
             'service': '运行正常'
         }
     }), 200
+
+
+@app.route('/api/admin/db-status', methods=['GET'])
+def db_status():
+    """查看连接池状态（仅管理员）"""
+    pool = DatabasePool._pool
+    if not pool:
+        return jsonify({'error': '连接池未初始化'})
+
+    # PooledDB 内部状态
+    return jsonify({
+        'connections': len(pool._connections),  # 当前连接数
+        'available': len(pool._available),  # 可用连接
+        'max_connections': pool._maxconnections,
+    })
+
 
 
 if __name__ == '__main__':

@@ -96,3 +96,5 @@ class config:
         # 大模型的最大生成长度和灵活度
         self.set_LLM_max_tokens = 100  # 通过这个参数设置api的最大生成长度,具体值范围,依照官方文档
         self.set_LLM_temperature = 1
+
+        self.max_str_len = 280

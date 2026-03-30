@@ -12,7 +12,7 @@ import json
 from datetime import datetime
 import threading
 import time
-from tts_ws_python3_demo import tts_demo
+from tts_ws_python3_demo import tts_demo, tts_demo_safe
 from iat_ws_python3 import demo_file_recognition
 from X1_ws import main_answer
 from set_up import config
@@ -622,8 +622,8 @@ class InterviewManager:
 
     def tts_to_file(self, text: str, output_path: str):
         """文本转语音并保存到文件（需你实现）"""
-        tts_demo(text, output_path)
-
+        # tts_demo(text, output_path)
+        tts_demo_safe(text, output_path)
     # 全局配置（实际应从环境变量或配置文件读取）
 
 
