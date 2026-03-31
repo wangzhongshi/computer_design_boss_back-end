@@ -311,6 +311,22 @@ class Job_prot(BaseManager):
                 f"[{datetime.now()}] [ERROR] Job_prot.fetch_one_job_all_data_posts: 查询失败 | 岗位ID: {boss_job_id} | 错误: {e}")
             return None
 
+    def fetch_one_job_all_data_posts_by_name(self, ones_name_part):
+        """
+        用于根据前端提供的信息，输出岗位的详细信息
+        """
+        try:
+            with self.connection.cursor(DictCursor) as cursor:
+                sql = f"SELECT * FROM job_post WHERE title LIKE '%{ones_name_part}%'"
+                # sql = f"SELECT * FROM job_post where title='{ones_title}'"
+                cursor.execute(sql)
+                result = cursor.fetchall()
+                print(result)
+                return result
+        except Exception as e:
+            print('职位展示页详细信息查询失败:', e)
+            return None
+
     def insert_job_post(self, boss_job_id: str, title: str, company_id: int, city_id: int,
                         category_id: int, emp_type: int = 1, salary_min: Optional[float] = None,
                         salary_max: Optional[float] = None, salary_desc: Optional[str] = None,

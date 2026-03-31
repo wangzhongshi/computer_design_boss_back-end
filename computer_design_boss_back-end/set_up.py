@@ -16,20 +16,24 @@ class config:
         self.set_LLM_api_secret = "OGRhOTVkMGY3ZTA2M2U2OWM2MTEyZmM4"  # 填写控制台中获取的 APISecret 信息
         self.set_LLM_api_key = "bbc640957c9754ce610385539be4dcdc"  # 填写控制台中获取的 APIKey 信息
         self.set_LLM_domain = "generalv3"  # 控制请求的模型版本
-        self.set_LLM_Spark_url = "wss://spark-api.xf-yun.com/v3.1/chat"  # 查看接口文档  https://www.xfyun.cn/doc/spark/X1ws.html
+        self.set_LLM_Spark_url = "wss://spark-api.xf-yun.com/v3.5/chat"  # 查看接口文档  https://www.xfyun.cn/doc/spark/X1ws.html
         self.set_request_str_ask = '''\n我：以下是我的简历内容：{user_pdf_text}\n
                                         以下是我的目标岗位的招聘信息：{job_text}\n
-                                        请帮我从简历和岗位的角度分析我这次求职经历。'''
+                                        请帮我从简历和岗位的角度分析我这次求职经历。
+                                        总字数<300字'''
         self.set_request_str_resume = '''\n我：以下是我的简历内容：{user_text}\n
-                                          请为我评估我的简历，并为根据难易与匹配度为我推荐一些岗位。'''
+                                          请为我评估我的简历，并为根据难易与匹配度为我推荐一些岗位。
+                                          总字数<400字'''
         self.set_request_str_success = '''\n我：以下是我的简历内容：{user_pdf_text}\n
                                         以下是我的目标岗位的招聘信息：{job_text}\n
                                         请帮我从简历和岗位的角度给出我这次求职的成功率。
-                                        优先回答成功率，然后再给出得出依据'''
+                                        优先回答成功率，然后再给出得出依据
+                                        总字数<400字'''
         self.set_request_str_uni = '''\n我：以下是我的简历内容：{user_pdf_text}\n
                                         以下是我的目标岗位的招聘信息：{job_text}\n
                                         我现在是一名{user_grade}的学生,
-                                        请为我的大学生活给出一个合理的规划，帮助成功获得目标岗位'''
+                                        请为我的大学生活给出一个合理的规划，帮助成功获得目标岗位
+                                        总字数<400字'''
 
         self.set_interview_start_str = """你现在是一名专业且真实的 AI 面试官。
                                         你将基于【候选人简历】和【目标岗位招聘信息】，对候选人进行一场完整的模拟面试。
@@ -94,7 +98,32 @@ class config:
         self.set_tts_api_key = 'fd79a4d97543e35b2881a64b81b8f124'
         self.set_tts_api_secret = 'NDcwM2M1OWY0NTQxOWZiZjg4YzZiNzY3'
         # 大模型的最大生成长度和灵活度
-        self.set_LLM_max_tokens = 100  # 通过这个参数设置api的最大生成长度,具体值范围,依照官方文档
+        self.set_LLM_max_tokens = 50  # 通过这个参数设置api的最大生成长度,具体值范围,依照官方文档
         self.set_LLM_temperature = 1
 
         self.max_str_len = 280
+
+        self.want_thing_jd = '''招聘岗位：高级Web前端工程师（25-40K）
+                                工作地点：海淀区，中关村软件园二期
+                                学历要求：本科，经验要求：3-5年
+                                岗位职责：负责抖音创作者平台前端架构设计与开发，优化首屏加载性能，建设前端工程化体系
+                                任职要求：
+                                 - 精通React/Vue
+                                 - 熟悉Webpack/Vite
+                                 - 有大型SPA开发经验
+                                 - 了解Node.js
+                                福利待遇：
+                                 - 六险一金
+                                 - 免费三餐
+                                 - 租房补贴
+                                 - 股票期权
+                                岗位发布时间：，最近刷新：'''
+        self.want_thing_form = '''我叫小菜鸟，男，2004-03-17出生，现居北京。
+                                毕业于北京大学，人工智能专业，本科学历，2027年毕业，GPA 1.00。
+                                联系方式：手机 15231231233，邮箱 233@qq.com，微信 。
+                                自我介绍：各位好，我是[你的名字]，目前在北京大学攻读人工智能学士学位。在学习深度学习和各种算法的同时，我也一直在思考技术背后的人文关怀。除了掌握Python和Pytorch这些工具，我更希望能做一个有温度的AI研究者，让技术真正落地去解决一些社会问题。很高兴今天能在这里和大家相遇。
+                                已获得的相关证书包括：Python编程证书（None，Python官方认证）。
+                                共拥有 1 段实习经历，均与目标岗位高度相关。
+                                曾在None担任None，主要工作内容：None。主要成果：None。
+                                求职意向为None方向，优先行业为None，期望工作城市None，期望薪资15000–25000元/月，可协商，到岗时间：None。
+                                工作偏好：0，0，None。'''
