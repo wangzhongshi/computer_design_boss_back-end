@@ -1,6 +1,6 @@
 from X1_ws import main_answer
 import pdfplumber
-from sql_data_demo import ResumeManager, Job_prot, EndDemoDatabase
+from sql_data_demo import ResumeManager, Job_prot, EndDemoDatabase,DatabasePool
 import json
 from datetime import date, datetime
 from tts_ws_python3_demo import tts_demo
@@ -46,9 +46,10 @@ def extract_assistant_content(func):
 
 class Ai_job_demo:
     def __init__(self):
-        self.db = EndDemoDatabase(host='localhost', user='root', password='123456')
-        self.resume_manager = ResumeManager(self.db.connection)
-        self.job_prot = Job_prot(self.db.connection)
+        # 使用连接池获取连接，而不是创建单个连接
+        self.connection = DatabasePool.get_connection()
+        self.resume_manager = ResumeManager(self.connection)
+        self.job_prot = Job_prot(self.connection)
 
         self.appid = config_data.set_LLM_appid  # 填写控制台中获取的 APPID 信息
         self.api_secret = config_data.set_LLM_api_secret  # 填写控制台中获取的 APISecret 信息
@@ -87,7 +88,7 @@ class Ai_job_demo:
         return ""
 
     def generate_job_description(self, job_list: list) -> str:
-        if not job_list:
+        if not job_list or not job_list[0]:
             return ""
 
         job = job_list[0]
@@ -95,31 +96,37 @@ class Ai_job_demo:
 
         # 基本信息
         lines.append(
-            f"招聘岗位：{job.get('title')}（{job.get('salary_desc')}）"
+            f"招聘岗位：{job.get('title', '未知')}（{job.get('salary_desc', '未知')}）"
         )
         lines.append(
-            f"工作地点：{job.get('district')}，{job.get('address')}"
+            f"工作地点：{job.get('district', '未知')}，{job.get('address', '未知')}"
         )
         lines.append(
-            f"学历要求：{job.get('edu_req')}，经验要求：{job.get('exp_req')}"
+            f"学历要求：{job.get('edu_req', '未知')}，经验要求：{job.get('exp_req', '未知')}"
         )
 
         # 岗位描述
-        lines.append(f"岗位职责：{job.get('description')}")
+        lines.append(f"岗位职责：{job.get('description', '暂无')}")
 
         # 任职要求
-        require_list = json.loads(job.get("require_list", "[]"))
-        if require_list:
-            lines.append("任职要求：")
-            for r in require_list:
-                lines.append(f" - {r}")
+        try:
+            require_list = json.loads(job.get("require_list", "[]"))
+            if require_list:
+                lines.append("任职要求：")
+                for r in require_list:
+                    lines.append(f" - {r}")
+        except:
+            lines.append("任职要求：暂无")
 
         # 福利待遇
-        welfare_list = json.loads(job.get("welfare_list", "[]"))
-        if welfare_list:
-            lines.append("福利待遇：")
-            for w in welfare_list:
-                lines.append(f" - {w}")
+        try:
+            welfare_list = json.loads(job.get("welfare_list", "[]"))
+            if welfare_list:
+                lines.append("福利待遇：")
+                for w in welfare_list:
+                    lines.append(f" - {w}")
+        except:
+            lines.append("福利待遇：暂无")
 
         # 时间信息
         lines.append(
@@ -147,14 +154,14 @@ class Ai_job_demo:
         lines = []
 
         # 基本信息
-        lines.append(f"我叫{basic.get('real_name')}，{basic.get('gender') and '男' or '女'}，"
-                     f"{self.format_date(basic.get('birth_date'))}出生，现居{basic.get('city')}。")
+        lines.append(f"我叫{basic.get('real_name', '未知')}，{basic.get('gender') and '男' or '女'}，"
+                     f"{self.format_date(basic.get('birth_date'))}出生，现居{basic.get('city', '未知')}。")
         lines.append(
-            f"毕业于{basic.get('school_name')}，{basic.get('major')}专业，本科学历，"
-            f"{basic.get('graduation_year')}年毕业，GPA {basic.get('gpa')}。"
+            f"毕业于{basic.get('school_name', '未知')}，{basic.get('major', '未知')}专业，本科学历，"
+            f"{basic.get('graduation_year', '未知')}年毕业，GPA {basic.get('gpa', '未知')}。"
         )
         lines.append(
-            f"联系方式：手机 {basic.get('phone')}，邮箱 {basic.get('email')}，微信 {basic.get('wechat')}。"
+            f"联系方式：手机 {basic.get('phone', '未知')}，邮箱 {basic.get('email', '未知')}，微信 {basic.get('wechat', '未知')}。"
         )
 
         # 自我介绍
@@ -162,15 +169,15 @@ class Ai_job_demo:
             lines.append(f"自我介绍：{basic.get('self_introduction')}。")
 
         # 校园经历
-        if campus.get("has_scholarship"):
-            lines.append(f"在校期间获得奖项：{campus.get('scholarship_details')}。")
+        if campus and campus.get("has_scholarship"):
+            lines.append(f"在校期间获得奖项：{campus.get('scholarship_details', '暂无')}。")
 
         # 证书
         if certs:
             cert_text = []
             for c in certs:
                 cert_text.append(
-                    f"{c['cert_name']}（{c['cert_level']}，{c['issuing_authority']}）"
+                    f"{c.get('cert_name', '未知')}（{c.get('cert_level', '未知')}，{c.get('issuing_authority', '未知')}）"
                 )
             lines.append("已获得的相关证书包括：" + "，".join(cert_text) + "。")
 
@@ -178,26 +185,26 @@ class Ai_job_demo:
         lines.append(f"共拥有 {stats.get('total_count', 0)} 段实习经历，均与目标岗位高度相关。")
         for i in internships:
             lines.append(
-                f"曾在{i['company_name']}担任{i['position']}，"
-                f"主要工作内容：{i['work_content']}。"
-                f"主要成果：{i['achievements']}。"
+                f"曾在{i.get('company_name', '未知')}担任{i.get('position', '未知')}，"
+                f"主要工作内容：{i.get('work_content', '暂无')}。"
+                f"主要成果：{i.get('achievements', '暂无')}。"
             )
 
         # 求职意向
         lines.append(
-            f"求职意向为{intention.get('position_priority')}方向，"
-            f"优先行业为{intention.get('industry_priority')}，"
-            f"期望工作城市{intention.get('city_priority')}，"
-            f"期望薪资{intention.get('salary_min')}–{intention.get('salary_max')}元/月，"
+            f"求职意向为{intention.get('position_priority', '未知')}方向，"
+            f"优先行业为{intention.get('industry_priority', '未知')}，"
+            f"期望工作城市{intention.get('city_priority', '未知')}，"
+            f"期望薪资{intention.get('salary_min', '未知')}–{intention.get('salary_max', '未知')}元/月，"
             f"{'可协商' if intention.get('salary_negotiable') else '不可协商'}，"
-            f"到岗时间：{intention.get('availability')}。"
+            f"到岗时间：{intention.get('availability', '未知')}。"
         )
 
         # 工作偏好
         lines.append(
-            f"工作偏好：{preference.get('company_size_preference')}，"
-            f"{preference.get('work_type_preference')}，"
-            f"{preference.get('other_preferences')}。"
+            f"工作偏好：{preference.get('company_size_preference', '未知')}，"
+            f"{preference.get('work_type_preference', '未知')}，"
+            f"{preference.get('other_preferences', '未知')}。"
         )
 
         return "\n".join(lines)
@@ -212,21 +219,77 @@ class Ai_job_demo:
                     text += page_text + "\n"
         return text
 
-    def get_user_app_text(self,user_id):
-        user_app_text = self.resume_manager.get_complete_resume(user_id)
-        user_app_text = self.generate_user_profile(user_app_text)
-        return user_app_text
+    def get_user_app_text(self, user_id):
+        try:
+            # 每次操作前确保连接有效
+            if not self.connection or not self.connection.open:
+                self.connection = DatabasePool.get_connection()
+                self.resume_manager = ResumeManager(self.connection)
+                self.job_prot = Job_prot(self.connection)
+            
+            user_app_text = self.resume_manager.get_complete_resume(user_id)
+            if not user_app_text:
+                return "未找到用户简历信息"
+            user_app_text = self.generate_user_profile(user_app_text)
+            return user_app_text
+        except Exception as e:
+            print(f"获取用户信息失败: {e}")
+            # 连接可能已断开，重新获取连接
+            self.connection = DatabasePool.get_connection()
+            self.resume_manager = ResumeManager(self.connection)
+            self.job_prot = Job_prot(self.connection)
+            return "获取用户信息失败"
 
     def get_job_text_in_db_by_job_id(self, job_id):
-        job_text = self.job_prot.fetch_one_job_all_data_posts(ones_id=job_id)
-        job_text = self.generate_job_description(job_text)
-        return job_text
+        try:
+            # 每次操作前确保连接有效
+            if not self.connection or not self.connection.open:
+                self.connection = DatabasePool.get_connection()
+                self.resume_manager = ResumeManager(self.connection)
+                self.job_prot = Job_prot(self.connection)
+            
+            job_text = self.job_prot.fetch_one_job_all_data_posts(ones_id=job_id)
+            if not job_text:
+                return "未找到相关职位信息"
+            job_text = self.generate_job_description(job_text)
+            return job_text
+        except Exception as e:
+            print(f"获取职位信息失败: {e}")
+            # 连接可能已断开，重新获取连接
+            self.connection = DatabasePool.get_connection()
+            self.resume_manager = ResumeManager(self.connection)
+            self.job_prot = Job_prot(self.connection)
+            return "获取职位信息失败"
+
+    def __del__(self):
+        """析构函数，确保连接归还到连接池"""
+        try:
+            if hasattr(self, 'connection') and self.connection:
+                self.connection.close()
+        except:
+            pass
 
     def get_job_text_in_db_by_job_name(self, job_name):
-        job_text = self.job_prot.fetch_one_job_all_data_posts_by_name(ones_name_part=job_name)
-        print('910')
-        job_text = self.generate_job_description(job_text)
-        return job_text
+        try:
+            # 每次操作前确保连接有效
+            if not self.connection or not self.connection.open:
+                self.connection = DatabasePool.get_connection()
+                self.resume_manager = ResumeManager(self.connection)
+                self.job_prot = Job_prot(self.connection)
+            
+            job_text = self.job_prot.fetch_one_job_all_data_posts_by_name(ones_name_part=job_name)
+            print('910')
+            if not job_text:
+                return "未找到相关职位信息"
+            job_text = self.generate_job_description(job_text)
+            return job_text
+        except Exception as e:
+            print(f"获取职位信息失败: {e}")
+            # 连接可能已断开，重新获取连接
+            self.connection = DatabasePool.get_connection()
+            self.resume_manager = ResumeManager(self.connection)
+            self.job_prot = Job_prot(self.connection)
+            return "获取职位信息失败"
 
     @extract_assistant_content
     def ask_by_pdf_and_job_id(self, pdf_path, job_id):
