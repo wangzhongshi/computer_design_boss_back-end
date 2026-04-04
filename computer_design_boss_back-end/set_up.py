@@ -15,8 +15,8 @@ class config:
         self.set_LLM_appid = "af5d91f0"  # 填写控制台中获取的 APPID 信息
         self.set_LLM_api_secret = "OGRhOTVkMGY3ZTA2M2U2OWM2MTEyZmM4"  # 填写控制台中获取的 APISecret 信息
         self.set_LLM_api_key = "bbc640957c9754ce610385539be4dcdc"  # 填写控制台中获取的 APIKey 信息
-        self.set_LLM_domain = "generalv3"  # 控制请求的模型版本
-        self.set_LLM_Spark_url = "wss://spark-api.xf-yun.com/v3.5/chat"  # 查看接口文档  https://www.xfyun.cn/doc/spark/X1ws.html
+        self.set_LLM_domain = "spark-x"  # 控制请求的模型版本
+        self.set_LLM_Spark_url = "wss://spark-api.xf-yun.com/x2"  # 查看接口文档  https://www.xfyun.cn/doc/spark/X1ws.html
         self.set_request_str_ask = '''\n我：以下是我的简历内容：{user_pdf_text}\n
                                         以下是我的目标岗位的招聘信息：{job_text}\n
                                         请帮我从简历和岗位的角度分析我这次求职经历。
@@ -98,7 +98,7 @@ class config:
         self.set_tts_api_key = 'fd79a4d97543e35b2881a64b81b8f124'
         self.set_tts_api_secret = 'NDcwM2M1OWY0NTQxOWZiZjg4YzZiNzY3'
         # 大模型的最大生成长度和灵活度
-        self.set_LLM_max_tokens = 50  # 通过这个参数设置api的最大生成长度,具体值范围,依照官方文档
+        self.set_LLM_max_tokens = 100  # 通过这个参数设置api的最大生成长度,具体值范围,依照官方文档
         self.set_LLM_temperature = 1
 
         self.max_str_len = 280

@@ -28,7 +28,7 @@ import os
 from flask import Flask, request, jsonify
 from werkzeug.utils import secure_filename
 from set_up import config
-
+import uuid
 
 config_data = config()
 
@@ -3319,46 +3319,83 @@ def api_ask_by_pdf_and_job_id():
             'data': None
         }), 500
 
+
 @app.route('/api/ai/ask_by_pdf_job_name', methods=['POST'])
 @jwt_required()
 def api_ask_by_pdf_and_job_name():
-    """使用PDF文件和职位ID进行分析"""
+    """使用PDF文件和职位ID进行分析 - 支持文件上传和base64编码"""
     try:
-        # 检查文件上传
-        if 'pdf_file' not in request.files:
+        print('0000')
+        pdf_path = None
+
+        # 优先尝试 base64 编码方式（微信小程序推荐）
+        base64_data = request.form.get('pdf_base64') or request.json.get('pdf_base64') if request.is_json else None
+
+        if base64_data:
+            print('使用 base64 编码方式')
+            try:
+                # 解码 base64
+                pdf_bytes = base64.b64decode(base64_data)
+
+                # 生成临时文件名
+                filename = f"resume_{datetime.now().strftime('%Y%m%d%H%M%S')}_{uuid.uuid4().hex[:8]}.pdf"
+                pdf_path = os.path.join(current_app.config.get('UPLOAD_FOLDER', '/tmp'), filename)
+
+                # 写入临时文件
+                with open(pdf_path, 'wb') as f:
+                    f.write(pdf_bytes)
+
+            except Exception as e:
+                return jsonify({
+                    'code': 400,
+                    'message': f'Base64 PDF 解码失败: {str(e)}',
+                    'data': None
+                }), 400
+
+        # 其次尝试传统文件上传方式
+        elif 'pdf_file' in request.files:
+            print('使用传统文件上传方式')
+            pdf_path, error = save_uploaded_file()
+            if error:
+                return jsonify({
+                    'code': 400,
+                    'message': error,
+                    'data': None
+                }), 400
+
+        else:
             return jsonify({
                 'code': 400,
-                'message': '请上传PDF简历文件',
+                'message': '请上传PDF简历文件或提供 pdf_base64 编码',
                 'data': None
             }), 400
 
-        # 获取job_id
-        job_name = request.form.get('job_name')
+        print(f'PDF 路径: {pdf_path}')
+
+        # 获取 job_name（支持 form 和 json 两种格式）
+        job_name = None
+        if request.is_json:
+            job_name = request.json.get('job_name')
+        else:
+            job_name = request.form.get('job_name')
+
         if not job_name:
+            # 清理临时文件
+            if pdf_path and os.path.exists(pdf_path):
+                os.remove(pdf_path)
             return jsonify({
                 'code': 400,
-                'message': '请提供职位ID',
-                'data': None
-            }), 400
-
-        # 保存PDF文件
-        pdf_path, error = save_uploaded_file()
-        if error:
-            return jsonify({
-                'code': 400,
-                'message': error,
+                'message': '请提供职位名称',
                 'data': None
             }), 400
 
         # 调用AI分析函数
         ai_answer = ai_job_demo.ask_by_pdf_and_job_name(pdf_path, job_name)
-        # print(f'ai_answer:{ai_answer}')
         ai_answer = ai_answer[-1].get('content')
-        # print(f'ai_answer:{ai_answer}')
 
         # 清理临时文件
         try:
-            if os.path.exists(pdf_path):
+            if pdf_path and os.path.exists(pdf_path):
                 os.remove(pdf_path)
         except:
             pass
@@ -3372,10 +3409,15 @@ def api_ask_by_pdf_and_job_name():
         }), 200
 
     except Exception as e:
-        current_app.logger.error(f'PDF+职位ID分析异常：{e}')
+        # 确保异常时也能清理文件
+        if 'pdf_path' in locals() and pdf_path and os.path.exists(pdf_path):
+            try:
+                os.remove(pdf_path)
+            except:
+                pass
         return jsonify({
             'code': 500,
-            'message': f'服务器异常: {str(e)}',
+            'message': f'服务器内部错误: {str(e)}',
             'data': None
         }), 500
 
@@ -3383,31 +3425,68 @@ def api_ask_by_pdf_and_job_name():
 @app.route('/api/ai/ask_by_pdf_job_text', methods=['POST'])
 @jwt_required()
 def api_ask_by_pdf_and_job_text():
-    """使用PDF文件和职位文本进行分析"""
+    """使用PDF文件和职位文本进行分析 - 支持文件上传和base64编码"""
     try:
-        # 检查文件上传
-        if 'pdf_file' not in request.files:
+        pdf_path = None
+
+        # 优先尝试 base64 编码方式（微信小程序推荐）
+        base64_data = request.form.get('pdf_base64') or request.json.get('pdf_base64') if request.is_json else None
+
+        if base64_data:
+            print('使用 base64 编码方式')
+            try:
+                # 解码 base64
+                pdf_bytes = base64.b64decode(base64_data)
+
+                # 生成临时文件名
+                filename = f"resume_{datetime.now().strftime('%Y%m%d%H%M%S')}_{uuid.uuid4().hex[:8]}.pdf"
+                pdf_path = os.path.join(current_app.config.get('UPLOAD_FOLDER', '/tmp'), filename)
+
+                # 写入临时文件
+                with open(pdf_path, 'wb') as f:
+                    f.write(pdf_bytes)
+
+            except Exception as e:
+                return jsonify({
+                    'code': 400,
+                    'message': f'Base64 PDF 解码失败: {str(e)}',
+                    'data': None
+                }), 400
+
+        # 其次尝试传统文件上传方式
+        elif 'pdf_file' in request.files:
+            print('使用传统文件上传方式')
+            pdf_path, error = save_uploaded_file()
+            if error:
+                return jsonify({
+                    'code': 400,
+                    'message': error,
+                    'data': None
+                }), 400
+
+        else:
             return jsonify({
                 'code': 400,
-                'message': '请上传PDF简历文件',
+                'message': '请上传PDF简历文件或提供 pdf_base64 编码',
                 'data': None
             }), 400
 
-        # 获取job_text
-        job_text = request.form.get('job_text')
+        print(f'PDF 路径: {pdf_path}')
+
+        # 获取 job_text（支持 form 和 json 两种格式）
+        job_text = None
+        if request.is_json:
+            job_text = request.json.get('job_text')
+        else:
+            job_text = request.form.get('job_text')
+
         if not job_text:
+            # 清理临时文件
+            if pdf_path and os.path.exists(pdf_path):
+                os.remove(pdf_path)
             return jsonify({
                 'code': 400,
                 'message': '请提供职位描述文本',
-                'data': None
-            }), 400
-
-        # 保存PDF文件
-        pdf_path, error = save_uploaded_file()
-        if error:
-            return jsonify({
-                'code': 400,
-                'message': error,
                 'data': None
             }), 400
 
@@ -3416,7 +3495,7 @@ def api_ask_by_pdf_and_job_text():
 
         # 清理临时文件
         try:
-            if os.path.exists(pdf_path):
+            if pdf_path and os.path.exists(pdf_path):
                 os.remove(pdf_path)
         except:
             pass
@@ -3430,6 +3509,12 @@ def api_ask_by_pdf_and_job_text():
         }), 200
 
     except Exception as e:
+        # 确保异常时也能清理文件
+        if 'pdf_path' in locals() and pdf_path and os.path.exists(pdf_path):
+            try:
+                os.remove(pdf_path)
+            except:
+                pass
         current_app.logger.error(f'PDF+职位文本分析异常：{e}')
         return jsonify({
             'code': 500,
@@ -3652,31 +3737,68 @@ def api_resume_evaluation_by_text():
 @app.route('/api/ai/success_rate_pdf_job_id', methods=['POST'])
 @jwt_required()
 def api_success_rate_by_pdf_and_job_id():
-    """成功率分析（PDF+职位ID）"""
+    """成功率分析（PDF+职位ID）- 支持文件上传和base64编码"""
     try:
-        # 检查文件上传
-        if 'pdf_file' not in request.files:
+        pdf_path = None
+
+        # 优先尝试 base64 编码方式（微信小程序推荐）
+        base64_data = request.form.get('pdf_base64') or request.json.get('pdf_base64') if request.is_json else None
+
+        if base64_data:
+            print('使用 base64 编码方式')
+            try:
+                # 解码 base64
+                pdf_bytes = base64.b64decode(base64_data)
+
+                # 生成临时文件名
+                filename = f"resume_{datetime.now().strftime('%Y%m%d%H%M%S')}_{uuid.uuid4().hex[:8]}.pdf"
+                pdf_path = os.path.join(current_app.config.get('UPLOAD_FOLDER', '/tmp'), filename)
+
+                # 写入临时文件
+                with open(pdf_path, 'wb') as f:
+                    f.write(pdf_bytes)
+
+            except Exception as e:
+                return jsonify({
+                    'code': 400,
+                    'message': f'Base64 PDF 解码失败: {str(e)}',
+                    'data': None
+                }), 400
+
+        # 其次尝试传统文件上传方式
+        elif 'pdf_file' in request.files:
+            print('使用传统文件上传方式')
+            pdf_path, error = save_uploaded_file()
+            if error:
+                return jsonify({
+                    'code': 400,
+                    'message': error,
+                    'data': None
+                }), 400
+
+        else:
             return jsonify({
                 'code': 400,
-                'message': '请上传PDF简历文件',
+                'message': '请上传PDF简历文件或提供 pdf_base64 编码',
                 'data': None
             }), 400
 
-        # 获取job_id
-        job_id = request.form.get('job_id')
+        print(f'PDF 路径: {pdf_path}')
+
+        # 获取 job_id（支持 form 和 json 两种格式）
+        job_id = None
+        if request.is_json:
+            job_id = request.json.get('job_id')
+        else:
+            job_id = request.form.get('job_id')
+
         if not job_id:
+            # 清理临时文件
+            if pdf_path and os.path.exists(pdf_path):
+                os.remove(pdf_path)
             return jsonify({
                 'code': 400,
                 'message': '请提供职位ID',
-                'data': None
-            }), 400
-
-        # 保存PDF文件
-        pdf_path, error = save_uploaded_file()
-        if error:
-            return jsonify({
-                'code': 400,
-                'message': error,
                 'data': None
             }), 400
 
@@ -3685,7 +3807,7 @@ def api_success_rate_by_pdf_and_job_id():
 
         # 清理临时文件
         try:
-            if os.path.exists(pdf_path):
+            if pdf_path and os.path.exists(pdf_path):
                 os.remove(pdf_path)
         except:
             pass
@@ -3696,9 +3818,15 @@ def api_success_rate_by_pdf_and_job_id():
             'data': {
                 'analysis': ai_answer
             }
-        })
+        }), 200
 
     except Exception as e:
+        # 确保异常时也能清理文件
+        if 'pdf_path' in locals() and pdf_path and os.path.exists(pdf_path):
+            try:
+                os.remove(pdf_path)
+            except:
+                pass
         current_app.logger.error(f'PDF+职位ID成功率分析异常：{e}')
         return jsonify({
             'code': 500,
@@ -3706,44 +3834,81 @@ def api_success_rate_by_pdf_and_job_id():
             'data': None
         }), 500
 
+
 @app.route('/api/ai/success_rate_pdf_job_name', methods=['POST'])
 @jwt_required()
 def api_success_rate_by_pdf_and_job_name():
-    """成功率分析（PDF+职位ID）"""
+    """成功率分析（PDF+职位名称）- 支持文件上传和base64编码"""
     try:
-        # 检查文件上传
-        if 'pdf_file' not in request.files:
+        pdf_path = None
+
+        # 优先尝试 base64 编码方式（微信小程序推荐）
+        base64_data = request.form.get('pdf_base64') or request.json.get('pdf_base64') if request.is_json else None
+
+        if base64_data:
+            print('使用 base64 编码方式')
+            try:
+                # 解码 base64
+                pdf_bytes = base64.b64decode(base64_data)
+
+                # 生成临时文件名
+                filename = f"resume_{datetime.now().strftime('%Y%m%d%H%M%S')}_{uuid.uuid4().hex[:8]}.pdf"
+                pdf_path = os.path.join(current_app.config.get('UPLOAD_FOLDER', '/tmp'), filename)
+
+                # 写入临时文件
+                with open(pdf_path, 'wb') as f:
+                    f.write(pdf_bytes)
+
+            except Exception as e:
+                return jsonify({
+                    'code': 400,
+                    'message': f'Base64 PDF 解码失败: {str(e)}',
+                    'data': None
+                }), 400
+
+        # 其次尝试传统文件上传方式
+        elif 'pdf_file' in request.files:
+            print('使用传统文件上传方式')
+            pdf_path, error = save_uploaded_file()
+            if error:
+                return jsonify({
+                    'code': 400,
+                    'message': error,
+                    'data': None
+                }), 400
+
+        else:
             return jsonify({
                 'code': 400,
-                'message': '请上传PDF简历文件',
+                'message': '请上传PDF简历文件或提供 pdf_base64 编码',
                 'data': None
             }), 400
 
-        # 获取job_id
-        job_name = request.form.get('job_name')
+        print(f'PDF 路径: {pdf_path}')
+
+        # 获取 job_name（支持 form 和 json 两种格式）
+        job_name = None
+        if request.is_json:
+            job_name = request.json.get('job_name')
+        else:
+            job_name = request.form.get('job_name')
+
         if not job_name:
+            # 清理临时文件
+            if pdf_path and os.path.exists(pdf_path):
+                os.remove(pdf_path)
             return jsonify({
                 'code': 400,
-                'message': '请提供职位ID',
-                'data': None
-            }), 400
-
-        # 保存PDF文件
-        pdf_path, error = save_uploaded_file()
-        if error:
-            return jsonify({
-                'code': 400,
-                'message': error,
+                'message': '请提供职位名称',
                 'data': None
             }), 400
 
         # 调用成功率分析函数
-        # print('12')
         ai_answer = ai_job_demo.success_rate_by_pdf_and_job_name(pdf_path, job_name)
-        # print('34')
+
         # 清理临时文件
         try:
-            if os.path.exists(pdf_path):
+            if pdf_path and os.path.exists(pdf_path):
                 os.remove(pdf_path)
         except:
             pass
@@ -3754,10 +3919,16 @@ def api_success_rate_by_pdf_and_job_name():
             'data': {
                 'analysis': ai_answer
             }
-        })
+        }), 200
 
     except Exception as e:
-        current_app.logger.error(f'PDF+职位ID成功率分析异常：{e}')
+        # 确保异常时也能清理文件
+        if 'pdf_path' in locals() and pdf_path and os.path.exists(pdf_path):
+            try:
+                os.remove(pdf_path)
+            except:
+                pass
+        current_app.logger.error(f'PDF+职位名称成功率分析异常：{e}')
         return jsonify({
             'code': 500,
             'message': f'服务器异常: {str(e)}',
@@ -3768,31 +3939,68 @@ def api_success_rate_by_pdf_and_job_name():
 @app.route('/api/ai/success_rate_pdf_job_text', methods=['POST'])
 @jwt_required()
 def api_success_rate_by_pdf_and_job_text():
-    """成功率分析（PDF+职位文本）"""
+    """成功率分析（PDF+职位文本）- 支持文件上传和base64编码"""
     try:
-        # 检查文件上传
-        if 'pdf_file' not in request.files:
+        pdf_path = None
+
+        # 优先尝试 base64 编码方式（微信小程序推荐）
+        base64_data = request.form.get('pdf_base64') or request.json.get('pdf_base64') if request.is_json else None
+
+        if base64_data:
+            print('使用 base64 编码方式')
+            try:
+                # 解码 base64
+                pdf_bytes = base64.b64decode(base64_data)
+
+                # 生成临时文件名
+                filename = f"resume_{datetime.now().strftime('%Y%m%d%H%M%S')}_{uuid.uuid4().hex[:8]}.pdf"
+                pdf_path = os.path.join(current_app.config.get('UPLOAD_FOLDER', '/tmp'), filename)
+
+                # 写入临时文件
+                with open(pdf_path, 'wb') as f:
+                    f.write(pdf_bytes)
+
+            except Exception as e:
+                return jsonify({
+                    'code': 400,
+                    'message': f'Base64 PDF 解码失败: {str(e)}',
+                    'data': None
+                }), 400
+
+        # 其次尝试传统文件上传方式
+        elif 'pdf_file' in request.files:
+            print('使用传统文件上传方式')
+            pdf_path, error = save_uploaded_file()
+            if error:
+                return jsonify({
+                    'code': 400,
+                    'message': error,
+                    'data': None
+                }), 400
+
+        else:
             return jsonify({
                 'code': 400,
-                'message': '请上传PDF简历文件',
+                'message': '请上传PDF简历文件或提供 pdf_base64 编码',
                 'data': None
             }), 400
 
-        # 获取job_text
-        job_text = request.form.get('job_text')
+        print(f'PDF 路径: {pdf_path}')
+
+        # 获取 job_text（支持 form 和 json 两种格式）
+        job_text = None
+        if request.is_json:
+            job_text = request.json.get('job_text')
+        else:
+            job_text = request.form.get('job_text')
+
         if not job_text:
+            # 清理临时文件
+            if pdf_path and os.path.exists(pdf_path):
+                os.remove(pdf_path)
             return jsonify({
                 'code': 400,
                 'message': '请提供职位描述文本',
-                'data': None
-            }), 400
-
-        # 保存PDF文件
-        pdf_path, error = save_uploaded_file()
-        if error:
-            return jsonify({
-                'code': 400,
-                'message': error,
                 'data': None
             }), 400
 
@@ -3801,7 +4009,7 @@ def api_success_rate_by_pdf_and_job_text():
 
         # 清理临时文件
         try:
-            if os.path.exists(pdf_path):
+            if pdf_path and os.path.exists(pdf_path):
                 os.remove(pdf_path)
         except:
             pass
@@ -3812,9 +4020,15 @@ def api_success_rate_by_pdf_and_job_text():
             'data': {
                 'analysis': ai_answer
             }
-        })
+        }), 200
 
     except Exception as e:
+        # 确保异常时也能清理文件
+        if 'pdf_path' in locals() and pdf_path and os.path.exists(pdf_path):
+            try:
+                os.remove(pdf_path)
+            except:
+                pass
         current_app.logger.error(f'PDF+职位文本成功率分析异常：{e}')
         return jsonify({
             'code': 500,
@@ -3931,24 +4145,70 @@ def api_success_rate_by_user_id_and_job_name():
             'data': None
         }), 500
 
+
 @app.route('/api/ai/university_plan_pdf_job_id', methods=['POST'])
 @jwt_required()
 def api_university_plan_by_pdf_and_job_id():
-    """大学生活规划（PDF+职位ID）"""
+    """大学生活规划（PDF+职位ID）- 支持文件上传和base64编码"""
     try:
-        # 检查文件上传
-        if 'pdf_file' not in request.files:
+        pdf_path = None
+
+        # 优先尝试 base64 编码方式（微信小程序推荐）
+        base64_data = request.form.get('pdf_base64') or request.json.get('pdf_base64') if request.is_json else None
+
+        if base64_data:
+            print('使用 base64 编码方式')
+            try:
+                # 解码 base64
+                pdf_bytes = base64.b64decode(base64_data)
+
+                # 生成临时文件名
+                filename = f"resume_{datetime.now().strftime('%Y%m%d%H%M%S')}_{uuid.uuid4().hex[:8]}.pdf"
+                pdf_path = os.path.join(current_app.config.get('UPLOAD_FOLDER', '/tmp'), filename)
+
+                # 写入临时文件
+                with open(pdf_path, 'wb') as f:
+                    f.write(pdf_bytes)
+
+            except Exception as e:
+                return jsonify({
+                    'code': 400,
+                    'message': f'Base64 PDF 解码失败: {str(e)}',
+                    'data': None
+                }), 400
+
+        # 其次尝试传统文件上传方式
+        elif 'pdf_file' in request.files:
+            print('使用传统文件上传方式')
+            pdf_path, error = save_uploaded_file()
+            if error:
+                return jsonify({
+                    'code': 400,
+                    'message': error,
+                    'data': None
+                }), 400
+
+        else:
             return jsonify({
                 'code': 400,
-                'message': '请上传PDF简历文件',
+                'message': '请上传PDF简历文件或提供 pdf_base64 编码',
                 'data': None
             }), 400
 
-        # 获取job_id和user_grade
-        job_id = request.form.get('job_id')
-        user_grade = request.form.get('user_grade')
+        print(f'PDF 路径: {pdf_path}')
+
+        # 获取参数（支持 form 和 json 两种格式）
+        if request.is_json:
+            job_id = request.json.get('job_id')
+            user_grade = request.json.get('user_grade')
+        else:
+            job_id = request.form.get('job_id')
+            user_grade = request.form.get('user_grade')
 
         if not job_id:
+            # 清理临时文件
+            if pdf_path and os.path.exists(pdf_path):
+                os.remove(pdf_path)
             return jsonify({
                 'code': 400,
                 'message': '请提供职位ID',
@@ -3956,18 +4216,12 @@ def api_university_plan_by_pdf_and_job_id():
             }), 400
 
         if not user_grade:
+            # 清理临时文件
+            if pdf_path and os.path.exists(pdf_path):
+                os.remove(pdf_path)
             return jsonify({
                 'code': 400,
                 'message': '请提供学生年级',
-                'data': None
-            }), 400
-
-        # 保存PDF文件
-        pdf_path, error = save_uploaded_file()
-        if error:
-            return jsonify({
-                'code': 400,
-                'message': error,
                 'data': None
             }), 400
 
@@ -3976,7 +4230,7 @@ def api_university_plan_by_pdf_and_job_id():
 
         # 清理临时文件
         try:
-            if os.path.exists(pdf_path):
+            if pdf_path and os.path.exists(pdf_path):
                 os.remove(pdf_path)
         except:
             pass
@@ -3987,9 +4241,15 @@ def api_university_plan_by_pdf_and_job_id():
             'data': {
                 'plan': ai_answer
             }
-        })
+        }), 200
 
     except Exception as e:
+        # 确保异常时也能清理文件
+        if 'pdf_path' in locals() and pdf_path and os.path.exists(pdf_path):
+            try:
+                os.remove(pdf_path)
+            except:
+                pass
         current_app.logger.error(f'PDF+职位ID大学生活规划异常：{e}')
         return jsonify({
             'code': 500,
@@ -3997,43 +4257,83 @@ def api_university_plan_by_pdf_and_job_id():
             'data': None
         }), 500
 
+
 @app.route('/api/ai/university_plan_pdf_job_name', methods=['POST'])
 @jwt_required()
 def api_university_plan_by_pdf_and_job_name():
-    """大学生活规划（PDF+职位ID）"""
+    """大学生活规划（PDF+职位名称）- 支持文件上传和base64编码"""
     try:
-        # 检查文件上传
-        if 'pdf_file' not in request.files:
+        pdf_path = None
+
+        # 优先尝试 base64 编码方式（微信小程序推荐）
+        base64_data = request.form.get('pdf_base64') or request.json.get('pdf_base64') if request.is_json else None
+
+        if base64_data:
+            print('使用 base64 编码方式')
+            try:
+                # 解码 base64
+                pdf_bytes = base64.b64decode(base64_data)
+
+                # 生成临时文件名
+                filename = f"resume_{datetime.now().strftime('%Y%m%d%H%M%S')}_{uuid.uuid4().hex[:8]}.pdf"
+                pdf_path = os.path.join(current_app.config.get('UPLOAD_FOLDER', '/tmp'), filename)
+
+                # 写入临时文件
+                with open(pdf_path, 'wb') as f:
+                    f.write(pdf_bytes)
+
+            except Exception as e:
+                return jsonify({
+                    'code': 400,
+                    'message': f'Base64 PDF 解码失败: {str(e)}',
+                    'data': None
+                }), 400
+
+        # 其次尝试传统文件上传方式
+        elif 'pdf_file' in request.files:
+            print('使用传统文件上传方式')
+            pdf_path, error = save_uploaded_file()
+            if error:
+                return jsonify({
+                    'code': 400,
+                    'message': error,
+                    'data': None
+                }), 400
+
+        else:
             return jsonify({
                 'code': 400,
-                'message': '请上传PDF简历文件',
+                'message': '请上传PDF简历文件或提供 pdf_base64 编码',
                 'data': None
             }), 400
 
-        # 获取job_id和user_grade
-        job_name = request.form.get('job_name')
-        user_grade = request.form.get('user_grade')
+        print(f'PDF 路径: {pdf_path}')
+
+        # 获取参数（支持 form 和 json 两种格式）
+        if request.is_json:
+            job_name = request.json.get('job_name')
+            user_grade = request.json.get('user_grade')
+        else:
+            job_name = request.form.get('job_name')
+            user_grade = request.form.get('user_grade')
 
         if not job_name:
+            # 清理临时文件
+            if pdf_path and os.path.exists(pdf_path):
+                os.remove(pdf_path)
             return jsonify({
                 'code': 400,
-                'message': '请提供职位ID',
+                'message': '请提供职位名称',
                 'data': None
             }), 400
 
         if not user_grade:
+            # 清理临时文件
+            if pdf_path and os.path.exists(pdf_path):
+                os.remove(pdf_path)
             return jsonify({
                 'code': 400,
                 'message': '请提供学生年级',
-                'data': None
-            }), 400
-
-        # 保存PDF文件
-        pdf_path, error = save_uploaded_file()
-        if error:
-            return jsonify({
-                'code': 400,
-                'message': error,
                 'data': None
             }), 400
 
@@ -4042,7 +4342,7 @@ def api_university_plan_by_pdf_and_job_name():
 
         # 清理临时文件
         try:
-            if os.path.exists(pdf_path):
+            if pdf_path and os.path.exists(pdf_path):
                 os.remove(pdf_path)
         except:
             pass
@@ -4053,34 +4353,86 @@ def api_university_plan_by_pdf_and_job_name():
             'data': {
                 'plan': ai_answer
             }
-        })
+        }), 200
 
     except Exception as e:
-        current_app.logger.error(f'PDF+职位ID大学生活规划异常：{e}')
+        # 确保异常时也能清理文件
+        if 'pdf_path' in locals() and pdf_path and os.path.exists(pdf_path):
+            try:
+                os.remove(pdf_path)
+            except:
+                pass
+        current_app.logger.error(f'PDF+职位名称大学生活规划异常：{e}')
         return jsonify({
             'code': 500,
             'message': f'服务器异常: {str(e)}',
             'data': None
         }), 500
 
+
 @app.route('/api/ai/university_plan_pdf_job_text', methods=['POST'])
 @jwt_required()
 def api_university_plan_by_pdf_and_job_text():
-    """大学生活规划（PDF+职位文本）"""
+    """大学生活规划（PDF+职位文本）- 支持文件上传和base64编码"""
     try:
-        # 检查文件上传
-        if 'pdf_file' not in request.files:
+        pdf_path = None
+
+        # 优先尝试 base64 编码方式（微信小程序推荐）
+        base64_data = request.form.get('pdf_base64') or request.json.get('pdf_base64') if request.is_json else None
+
+        if base64_data:
+            print('使用 base64 编码方式')
+            try:
+                # 解码 base64
+                pdf_bytes = base64.b64decode(base64_data)
+
+                # 生成临时文件名
+                filename = f"resume_{datetime.now().strftime('%Y%m%d%H%M%S')}_{uuid.uuid4().hex[:8]}.pdf"
+                pdf_path = os.path.join(current_app.config.get('UPLOAD_FOLDER', '/tmp'), filename)
+
+                # 写入临时文件
+                with open(pdf_path, 'wb') as f:
+                    f.write(pdf_bytes)
+
+            except Exception as e:
+                return jsonify({
+                    'code': 400,
+                    'message': f'Base64 PDF 解码失败: {str(e)}',
+                    'data': None
+                }), 400
+
+        # 其次尝试传统文件上传方式
+        elif 'pdf_file' in request.files:
+            print('使用传统文件上传方式')
+            pdf_path, error = save_uploaded_file()
+            if error:
+                return jsonify({
+                    'code': 400,
+                    'message': error,
+                    'data': None
+                }), 400
+
+        else:
             return jsonify({
                 'code': 400,
-                'message': '请上传PDF简历文件',
+                'message': '请上传PDF简历文件或提供 pdf_base64 编码',
                 'data': None
             }), 400
 
-        # 获取job_text和user_grade
-        job_text = request.form.get('job_text')
-        user_grade = request.form.get('user_grade')
+        print(f'PDF 路径: {pdf_path}')
+
+        # 获取参数（支持 form 和 json 两种格式）
+        if request.is_json:
+            job_text = request.json.get('job_text')
+            user_grade = request.json.get('user_grade')
+        else:
+            job_text = request.form.get('job_text')
+            user_grade = request.form.get('user_grade')
 
         if not job_text:
+            # 清理临时文件
+            if pdf_path and os.path.exists(pdf_path):
+                os.remove(pdf_path)
             return jsonify({
                 'code': 400,
                 'message': '请提供职位描述文本',
@@ -4088,18 +4440,12 @@ def api_university_plan_by_pdf_and_job_text():
             }), 400
 
         if not user_grade:
+            # 清理临时文件
+            if pdf_path and os.path.exists(pdf_path):
+                os.remove(pdf_path)
             return jsonify({
                 'code': 400,
                 'message': '请提供学生年级',
-                'data': None
-            }), 400
-
-        # 保存PDF文件
-        pdf_path, error = save_uploaded_file()
-        if error:
-            return jsonify({
-                'code': 400,
-                'message': error,
                 'data': None
             }), 400
 
@@ -4108,7 +4454,7 @@ def api_university_plan_by_pdf_and_job_text():
 
         # 清理临时文件
         try:
-            if os.path.exists(pdf_path):
+            if pdf_path and os.path.exists(pdf_path):
                 os.remove(pdf_path)
         except:
             pass
@@ -4119,16 +4465,21 @@ def api_university_plan_by_pdf_and_job_text():
             'data': {
                 'plan': ai_answer
             }
-        })
+        }), 200
 
     except Exception as e:
+        # 确保异常时也能清理文件
+        if 'pdf_path' in locals() and pdf_path and os.path.exists(pdf_path):
+            try:
+                os.remove(pdf_path)
+            except:
+                pass
         current_app.logger.error(f'PDF+职位文本大学生活规划异常：{e}')
         return jsonify({
             'code': 500,
             'message': f'服务器异常: {str(e)}',
             'data': None
         }), 500
-
 
 @app.route('/api/ai/university_plan_user_job_text', methods=['POST'])
 @jwt_required()
